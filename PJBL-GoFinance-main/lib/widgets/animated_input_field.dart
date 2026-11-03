@@ -60,7 +60,7 @@ class _AnimatedInputFieldState extends State<AnimatedInputField> {
         boxShadow: [
           if (_isFocused)
             BoxShadow(
-              color: AppTheme.primaryGreen.withOpacity(0.18),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.18),
               blurRadius: 12,
               offset: const Offset(0, 4),
             )

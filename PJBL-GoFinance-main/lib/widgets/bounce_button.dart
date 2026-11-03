@@ -80,7 +80,7 @@ class _BounceButtonState extends State<BounceButton>
             borderRadius: BorderRadius.circular(widget.borderRadius),
             boxShadow: [
               BoxShadow(
-                color: widget.backgroundColor.withOpacity(0.35),
+                color: widget.backgroundColor.withValues(alpha: 0.35),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),

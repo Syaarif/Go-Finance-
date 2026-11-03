@@ -68,6 +68,7 @@ class _SplashScreenState extends State<SplashScreen>
         animation: _controller,
         builder: (context, _) {
           return Stack(
+            fit: StackFit.expand,
             children: [
               // Background SVG
               Positioned.fill(
@@ -79,101 +80,94 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
 
-              // Center Logo & Piggy
-              Center(
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FloatingWidget(
-                        distance: 6.0,
-                        duration: const Duration(milliseconds: 2200),
-                        child: Image.asset(
-                          'assets/images/piggy_splash.png',
-                          width: 150,
-                          height: 175,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 140,
-                            height: 140,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withOpacity(0.15),
-                              shape: BoxShape.circle,
+              // Konten utama dengan SafeArea mobile
+              SafeArea(
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    FadeTransition(
+                      opacity: _fadeAnim,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FloatingWidget(
+                              distance: 6.0,
+                              duration: const Duration(milliseconds: 2200),
+                              child: Image.asset(
+                                'assets/images/piggy_splash.png',
+                                width: 150,
+                                height: 175,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryGreen
+                                        .withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.savings_rounded,
+                                    size: 80,
+                                    color: Colors.pink,
+                                  ),
+                                ),
+                              ),
                             ),
-                            child: const Icon(Icons.savings_rounded,
-                                size: 80, color: Colors.pink),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Go Finance',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.instrumentSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 36,
+                                height: 44 / 36,
+                                letterSpacing: -0.36,
+                                color: AppTheme.primaryDarkGreen,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Kelola hari ini, untuk masa depan.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.instrumentSans(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                letterSpacing: -0.14,
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Loading Progress Bar di Bawah
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 48),
+                      child: FadeTransition(
+                        opacity: _fadeAnim,
+                        child: SizedBox(
+                          width: 140,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: _progressAnim.value,
+                              backgroundColor:
+                                  AppTheme.primaryGreen.withValues(alpha: 0.2),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppTheme.primaryGreen,
+                              ),
+                              minHeight: 6,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      Text(
-                        'Go Finance',
-                        style: GoogleFonts.instrumentSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 36,
-                          height: 44 / 36,
-                          letterSpacing: -0.36,
-                          color: AppTheme.primaryDarkGreen,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'Kelola hari ini, untuk masa depan.',
-                        style: GoogleFonts.instrumentSans(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          letterSpacing: -0.14,
-                          color: AppTheme.primaryGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Loading Progress Bar di Bawah
-              Positioned(
-                bottom: 64,
-                left: 0,
-                right: 0,
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: Center(
-                    child: SizedBox(
-                      width: 140,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: _progressAnim.value,
-                          backgroundColor:
-                              AppTheme.primaryGreen.withOpacity(0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppTheme.primaryGreen),
-                          minHeight: 6,
-                        ),
-                      ),
                     ),
-                  ),
-                ),
-              ),
-
-              // Home Indicator
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    width: 134,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryDarkGreen.withOpacity(0.35),
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
+                  ],
                 ),
               ),
             ],

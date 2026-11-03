@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/theme/app_theme.dart';
@@ -94,14 +93,14 @@ class _GlowInputFieldState extends State<GlowInputField>
               if (_isFocused) ...[
                 // Efek Cahaya / Light Glow luar
                 BoxShadow(
-                  color: const Color(0xFF347928).withOpacity(0.35 * glowIntensity),
+                  color: const Color(0xFF347928).withValues(alpha: 0.35 * glowIntensity),
                   blurRadius: 16 * glowIntensity + 6,
                   spreadRadius: 2.5 * glowIntensity,
                   offset: const Offset(0, 2),
                 ),
                 // Halo cahaya hijau lembut
                 BoxShadow(
-                  color: const Color(0xFF74E353).withOpacity(0.20 * glowIntensity),
+                  color: const Color(0xFF74E353).withValues(alpha: 0.20 * glowIntensity),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -146,7 +145,7 @@ class _GlowInputFieldState extends State<GlowInputField>
                               color: const Color(0xFF48B32F),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF48B32F).withOpacity(0.8),
+                                  color: const Color(0xFF48B32F).withValues(alpha: 0.8),
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
