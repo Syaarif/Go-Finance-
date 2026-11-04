@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_finance/features/bills/pages/bills_page.dart';
+import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/register_screen.dart';
 import 'package:go_finance/widgets/bounce_button.dart';
@@ -394,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const BillsPage(),
+        pageBuilder: (_, __, ___) => const HomePage(),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 300),
