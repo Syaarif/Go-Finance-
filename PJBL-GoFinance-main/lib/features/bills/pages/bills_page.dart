@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
+import 'package:go_finance/core/widgets/profile_action.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
 import 'package:go_finance/features/bills/widgets/add_bill_sheet.dart';
 import 'package:go_finance/features/bills/widgets/bill_calendar.dart';
 import 'package:go_finance/features/bills/widgets/bill_card.dart';
-import 'package:go_finance/screens/profile_screen.dart';
 
 /// Halaman utama "Kalender Tagihan" Go Finance.
 class BillsPage extends StatelessWidget {
@@ -53,47 +53,19 @@ class BillsPage extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Material(
-                            color: AppColors.transparent,
-                            child: InkWell(
-                              key: const Key('btn_open_add_bill'),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusSm),
-                              onTap: () => AddBillSheet.show(context),
-                              child: const Padding(
-                                padding: EdgeInsets.all(AppSpacing.xs),
-                                child: Icon(
-                                  Icons.add_rounded,
-                                  color: AppColors.primary,
-                                  size: AppSpacing.xxl,
-                                ),
-                              ),
-                            ),
+                          RoundedSquareIcon(
+                            actionKey: const Key('btn_open_add_bill'),
+                            icon: Icons.add_rounded,
+                            backgroundColor: AppColors.primary,
+                            iconColor: AppColors.surface,
+                            size: 40,
+                            iconSize: 22,
+                            borderRadius: AppSpacing.radiusSm,
+                            tooltip: 'Tambah Tagihan',
+                            onTap: () => AddBillSheet.show(context),
                           ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Material(
-                            color: AppColors.transparent,
-                            child: InkWell(
-                              key: const Key('btn_open_profile'),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusSm),
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const ProfileScreen(),
-                                  ),
-                                );
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(AppSpacing.xs),
-                                child: Icon(
-                                  Icons.person_outline_rounded,
-                                  color: AppColors.deepGreen,
-                                  size: AppSpacing.xxl,
-                                ),
-                              ),
-                            ),
-                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          const ProfileAction(),
                         ],
                       ),
                     ],
@@ -211,23 +183,13 @@ class _EmptyBillsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: AppSpacing.billIconCircleSize,
-            height: AppSpacing.billIconCircleSize,
-            decoration: const BoxDecoration(
-              color: AppColors.billHighlight,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              'assets/svg/Bill.svg',
-              width: AppSpacing.billIconSize,
-              height: AppSpacing.billIconSize,
-              colorFilter: const ColorFilter.mode(
-                AppColors.deepGreen,
-                BlendMode.srcIn,
-              ),
-            ),
+          const RoundedSquareIcon(
+            svgAsset: 'assets/svg/Bill.svg',
+            backgroundColor: AppColors.billHighlight,
+            iconColor: AppColors.deepGreen,
+            size: AppSpacing.billIconCircleSize,
+            iconSize: AppSpacing.billIconSize,
+            borderRadius: AppSpacing.radiusSm,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/pages/numpad_page.dart';
 
@@ -266,22 +267,18 @@ class _FormAppBar extends StatelessWidget {
           AppSpacing.pageHorizontal, 16, AppSpacing.pageHorizontal, 0),
       child: Row(
         children: [
-          GestureDetector(
+          RoundedSquareIcon(
+            icon: Icons.chevron_left_rounded,
+            backgroundColor: AppColors.surface,
+            iconColor: AppColors.deepGreen,
+            size: 40,
+            iconSize: 22,
+            borderRadius: AppSpacing.radiusSm,
+            border: Border.all(color: AppColors.border),
             onTap: () {
               HapticFeedback.lightImpact();
               onBack();
             },
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(Icons.chevron_left_rounded,
-                  color: AppColors.deepGreen, size: 22),
-            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Text('Tambah Transaksi', style: AppTextStyles.pageTitle),
@@ -377,21 +374,27 @@ class _CategoryField extends StatelessWidget {
         child: Row(
           children: [
             if (selected != null) ...[
-              Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  color: selected!.iconBg,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-                ),
-                child: Icon(selected!.icon, color: selected!.iconColor, size: 16),
+              RoundedSquareIcon(
+                icon: selected!.icon,
+                backgroundColor: selected!.iconBg,
+                iconColor: selected!.iconColor,
+                size: 32,
+                iconSize: 18,
+                borderRadius: AppSpacing.radiusXs,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(selected!.label, style: AppTextStyles.inputText),
               ),
             ] else ...[
-              Icon(Icons.emoji_emotions_outlined,
-                  color: AppColors.mutedText, size: 20),
+              const RoundedSquareIcon(
+                icon: Icons.emoji_emotions_outlined,
+                backgroundColor: AppColors.softSurface,
+                iconColor: AppColors.mutedText,
+                size: 32,
+                iconSize: 18,
+                borderRadius: AppSpacing.radiusXs,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text('Pilih kategori', style: AppTextStyles.inputHint),
@@ -508,8 +511,14 @@ class _DateField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_outlined,
-                color: AppColors.primary, size: 18),
+            const RoundedSquareIcon(
+              icon: Icons.calendar_today_outlined,
+              backgroundColor: AppColors.softSurface,
+              iconColor: AppColors.primary,
+              size: 32,
+              iconSize: 16,
+              borderRadius: AppSpacing.radiusXs,
+            ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(date, style: AppTextStyles.inputText),
@@ -694,14 +703,13 @@ class _CategoryPicker extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: cat.iconBg,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusXs),
-                      ),
-                      child: Icon(cat.icon, color: cat.iconColor, size: 18),
+                    RoundedSquareIcon(
+                      icon: cat.icon,
+                      backgroundColor: cat.iconBg,
+                      iconColor: cat.iconColor,
+                      size: 40,
+                      iconSize: 20,
+                      borderRadius: AppSpacing.radiusSm,
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(

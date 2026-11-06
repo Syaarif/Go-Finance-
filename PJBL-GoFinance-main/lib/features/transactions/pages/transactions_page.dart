@@ -6,6 +6,9 @@ import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
+import 'package:go_finance/core/widgets/icon_container.dart';
+import 'package:go_finance/core/widgets/profile_action.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/features/transactions/pages/add_transaction_page.dart';
@@ -191,15 +194,28 @@ class _StickyHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row: judul + tombol tambah
+            // Row: judul + tombol tambah + profil
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal, 20, AppSpacing.pageHorizontal, 0),
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+                AppSpacing.pageHorizontal,
+                0,
+              ),
               child: Row(
                 children: [
-                  Text('Transaksi', style: AppTextStyles.pageTitle),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Transaksi',
+                      style: AppTextStyles.pageTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   _AddButton(onTap: onAddTap),
+                  const SizedBox(width: AppSpacing.sm),
+                  const ProfileAction(),
                 ],
               ),
             ),
@@ -270,14 +286,14 @@ class _AddButtonState extends State<_AddButton>
       onTapCancel: () => _ctrl.forward(),
       child: ScaleTransition(
         scale: _ctrl,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: const BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.add, color: AppColors.surface, size: 20),
+        child: const RoundedSquareIcon(
+          icon: Icons.add_rounded,
+          backgroundColor: AppColors.primary,
+          iconColor: AppColors.surface,
+          size: 40,
+          iconSize: 22,
+          borderRadius: AppSpacing.radiusSm,
+          tooltip: 'Tambah Transaksi',
         ),
       ),
     );
@@ -634,19 +650,14 @@ class _TransactionTileState extends State<_TransactionTile>
               horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
           child: Row(
             children: [
-              // Ikon kategori
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: tx.category.iconBg,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  tx.category.icon,
-                  color: tx.category.iconColor,
-                  size: 20,
-                ),
+              // Ikon kategori (rounded square)
+              RoundedSquareIcon(
+                icon: tx.category.icon,
+                backgroundColor: tx.category.iconBg,
+                iconColor: tx.category.iconColor,
+                size: 40,
+                iconSize: 20,
+                borderRadius: AppSpacing.radiusSm,
               ),
               const SizedBox(width: AppSpacing.md),
               // Judul & subtitle
@@ -733,14 +744,13 @@ class _TransactionDetailSheet extends StatelessWidget {
             ),
           ),
           // Ikon besar
-          Container(
-            width: 60, height: 60,
-            decoration: BoxDecoration(
-              color: tx.category.iconBg,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-            ),
-            child: Icon(tx.category.icon,
-                color: tx.category.iconColor, size: 30),
+          IconContainer(
+            icon: tx.category.icon,
+            backgroundColor: tx.category.iconBg,
+            iconColor: tx.category.iconColor,
+            size: 60,
+            iconSize: 30,
+            borderRadius: AppSpacing.radiusCard,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(tx.title, style: AppTextStyles.sheetTitle),
@@ -819,14 +829,13 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 72, height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.softSurface,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.receipt_long_outlined,
-                color: AppColors.primary, size: 36),
+          const IconContainer(
+            icon: Icons.receipt_long_outlined,
+            backgroundColor: AppColors.softSurface,
+            iconColor: AppColors.primary,
+            size: 72,
+            iconSize: 36,
+            isCircular: true,
           ),
           const SizedBox(height: AppSpacing.md),
           Text('Tidak ada transaksi',

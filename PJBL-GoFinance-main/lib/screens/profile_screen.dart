@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_finance/core/theme/app_colors.dart';
+import 'package:go_finance/core/theme/app_spacing.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/screens/edit_profile_screen.dart';
 import 'package:go_finance/screens/security_screen.dart';
 import 'package:go_finance/screens/login_screen.dart';
@@ -784,8 +787,13 @@ class CustomSettingsTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // Ikon PNG (diekstrak dari file SVG Figma yang berisi bitmap)
-            SettingsIcon(iconPath),
+            // Ikon PNG di dalam container rounded square yang seragam
+            RoundedSquareIcon(
+              backgroundColor: AppColors.softSurface,
+              size: 40,
+              borderRadius: AppSpacing.radiusSm,
+              child: SettingsIcon(iconPath),
+            ),
             const SizedBox(width: 14),
 
             // Label
@@ -871,7 +879,12 @@ class _NotifSwitchTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          SettingsIcon(iconPath),
+          RoundedSquareIcon(
+            backgroundColor: AppColors.softSurface,
+            size: 40,
+            borderRadius: AppSpacing.radiusSm,
+            child: SettingsIcon(iconPath),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(

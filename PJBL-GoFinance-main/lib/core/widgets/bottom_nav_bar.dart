@@ -3,10 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/profile_action.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/pages/bills_page.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/features/transactions/pages/transactions_page.dart';
-import 'package:go_finance/screens/profile_screen.dart';
 
 /// Enum tab utama pada Bottom Navigation Go Finance.
 enum NavTab { home, transactions, savings, bills }
@@ -265,6 +266,19 @@ class MainTabPlaceholderPage extends StatelessWidget {
     required this.subtitle,
   });
 
+  String _iconAssetForTab(NavTab currentTab) {
+    switch (currentTab) {
+      case NavTab.home:
+        return 'assets/svg/nav_home.svg';
+      case NavTab.transactions:
+        return 'assets/svg/nav_transactions.svg';
+      case NavTab.savings:
+        return 'assets/svg/nav_savings.svg';
+      case NavTab.bills:
+        return 'assets/svg/nav_bills.svg';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,21 +295,16 @@ class MainTabPlaceholderPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: AppTextStyles.pageTitle),
-                  IconButton(
-                    tooltip: 'Profil & Pengaturan',
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ProfileScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.person_outline_rounded,
-                      color: AppColors.deepGreen,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextStyles.pageTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
+                  const ProfileAction(),
                 ],
               ),
               Expanded(
@@ -315,6 +324,15 @@ class MainTabPlaceholderPage extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        RoundedSquareIcon(
+                          svgAsset: _iconAssetForTab(tab),
+                          backgroundColor: AppColors.softSurface,
+                          iconColor: AppColors.primary,
+                          size: AppSpacing.billIconCircleSize,
+                          iconSize: AppSpacing.billIconSize,
+                          borderRadius: AppSpacing.radiusSm,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         Text(title, style: AppTextStyles.sectionTitle),
                         const SizedBox(height: AppSpacing.sm),
                         Text(

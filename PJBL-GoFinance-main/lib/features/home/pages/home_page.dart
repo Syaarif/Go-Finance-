@@ -6,6 +6,8 @@ import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
+import 'package:go_finance/core/widgets/profile_action.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/pages/add_transaction_page.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
@@ -116,7 +118,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal,
-                  AppSpacing.sm,
+                  AppSpacing.lg,
                   AppSpacing.pageHorizontal,
                   AppSpacing.sm,
                 ),
@@ -134,56 +136,62 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'Go Finance',
-                      style: AppTextStyles.pageTitle.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                    Expanded(
+                      child: Text(
+                        'Go Finance',
+                        style: AppTextStyles.pageTitle.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const Spacer(),
-                    // Notification Bell with interactive badge
-                    GestureDetector(
-                      onTap: _showNotificationSheet,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.border),
+                    const SizedBox(width: AppSpacing.sm),
+                    // Notification Bell with interactive badge (Rounded Square)
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        RoundedSquareIcon(
+                          icon: Icons.notifications_none_rounded,
+                          backgroundColor: AppColors.surface,
+                          iconColor: AppColors.deepGreen,
+                          size: 40,
+                          iconSize: 20,
+                          borderRadius: AppSpacing.radiusSm,
+                          border: Border.all(
+                            color: AppColors.border,
+                            width: AppSpacing.borderThin,
+                          ),
                           boxShadow: const [
                             BoxShadow(
-                              color: Color(0x08234D1C),
+                              color: AppColors.cardShadow,
                               blurRadius: 6,
                               offset: Offset(0, 2),
                             ),
                           ],
+                          tooltip: 'Notifikasi',
+                          onTap: _showNotificationSheet,
                         ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            const Icon(
-                              Icons.notifications_none_rounded,
-                              color: AppColors.deepGreen,
-                              size: 22,
-                            ),
-                            Positioned(
-                              top: 9,
-                              right: 10,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.negative,
-                                  shape: BoxShape.circle,
-                                ),
+                        Positioned(
+                          top: 9,
+                          right: 10,
+                          child: IgnorePointer(
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.negative,
+                                shape: BoxShape.circle,
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    // Profile Action di pojok kanan atas
+                    const ProfileAction(),
                   ],
                 ),
               ),
@@ -584,16 +592,15 @@ class _SaldoTabunganCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Piggy icon
-              Image.asset(
-                'assets/images/piggy_coin.png',
-                width: 38,
-                height: 38,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.savings_outlined,
-                  color: AppColors.primary,
-                  size: 32,
-                ),
+              // Piggy icon dengan rounded square container
+              const RoundedSquareIcon(
+                imageAsset: 'assets/images/piggy_coin.png',
+                icon: Icons.savings_outlined,
+                backgroundColor: AppColors.softSurface,
+                iconColor: AppColors.primary,
+                size: AppSpacing.billIconCircleSize,
+                iconSize: 26,
+                borderRadius: AppSpacing.radiusSm,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -665,14 +672,14 @@ class _AiEvaluationCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // AI Bronze/Gold Star Icon
-              Container(
-                margin: const EdgeInsets.only(top: 2),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFC28B38),
-                  size: 20,
-                ),
+              // AI Bronze/Gold Star Icon dengan rounded square container
+              const RoundedSquareIcon(
+                icon: Icons.auto_awesome,
+                backgroundColor: Color(0xFFFBF4E8),
+                iconColor: Color(0xFFC28B38),
+                size: AppSpacing.billIconCircleSize,
+                iconSize: AppSpacing.billIconSize,
+                borderRadius: AppSpacing.radiusSm,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -1000,7 +1007,7 @@ class _QuickActionButtonState extends State<_QuickActionButton>
       child: ScaleTransition(
         scale: _ctrl,
         child: Container(
-          height: 48,
+          height: 52,
           decoration: BoxDecoration(
             color: AppColors.softSurface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -1012,7 +1019,14 @@ class _QuickActionButtonState extends State<_QuickActionButton>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(widget.icon, color: AppColors.primary, size: 20),
+              RoundedSquareIcon(
+                icon: widget.icon,
+                backgroundColor: AppColors.surface,
+                iconColor: AppColors.primary,
+                size: 32,
+                iconSize: 18,
+                borderRadius: AppSpacing.radiusXs,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 widget.label,
@@ -1059,18 +1073,13 @@ class _HomeTransactionTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: tx.category.iconBg,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Icon(
-                tx.category.icon,
-                color: tx.category.iconColor,
-                size: 20,
-              ),
+            RoundedSquareIcon(
+              icon: tx.category.icon,
+              backgroundColor: tx.category.iconBg,
+              iconColor: tx.category.iconColor,
+              size: 40,
+              iconSize: 20,
+              borderRadius: AppSpacing.radiusSm,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -1139,17 +1148,13 @@ class _AiInsightModal extends StatelessWidget {
           ),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFBF4E8),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFC28B38),
-                  size: 24,
-                ),
+              const RoundedSquareIcon(
+                icon: Icons.auto_awesome,
+                backgroundColor: Color(0xFFFBF4E8),
+                iconColor: Color(0xFFC28B38),
+                size: 40,
+                iconSize: 22,
+                borderRadius: AppSpacing.radiusSm,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -1299,7 +1304,14 @@ class _NotifTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.circle, size: 8, color: AppColors.primary),
+          const RoundedSquareIcon(
+            icon: Icons.notifications_none_rounded,
+            backgroundColor: AppColors.softSurface,
+            iconColor: AppColors.primary,
+            size: 36,
+            iconSize: 18,
+            borderRadius: AppSpacing.radiusSm,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

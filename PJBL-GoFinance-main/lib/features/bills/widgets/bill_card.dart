@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/models/bill.dart';
 
 /// Kartu item pada daftar "Tagihan Mendatang".
@@ -52,24 +52,14 @@ class BillCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ikon dokumen di lingkaran hijau muda
-          Container(
-            width: AppSpacing.billIconCircleSize,
-            height: AppSpacing.billIconCircleSize,
-            decoration: const BoxDecoration(
-              color: AppColors.billHighlight,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              'assets/svg/Bill.svg',
-              width: AppSpacing.billIconSize,
-              height: AppSpacing.billIconSize,
-              colorFilter: const ColorFilter.mode(
-                AppColors.deepGreen,
-                BlendMode.srcIn,
-              ),
-            ),
+          // Ikon dokumen di rounded square hijau muda
+          const RoundedSquareIcon(
+            svgAsset: 'assets/svg/Bill.svg',
+            backgroundColor: AppColors.billHighlight,
+            iconColor: AppColors.deepGreen,
+            size: AppSpacing.billIconCircleSize,
+            iconSize: AppSpacing.billIconSize,
+            borderRadius: AppSpacing.radiusSm,
           ),
           const SizedBox(width: AppSpacing.md),
 

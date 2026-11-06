@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:intl/intl.dart';
 
 /// Halaman numpad custom untuk memasukkan nominal (03b_Numpad_Nominal).
@@ -134,22 +135,18 @@ class _NumpadPageState extends State<NumpadPage>
                   AppSpacing.pageHorizontal, 0),
               child: Row(
                 children: [
-                  GestureDetector(
+                  RoundedSquareIcon(
+                    icon: Icons.chevron_left_rounded,
+                    backgroundColor: AppColors.surface,
+                    iconColor: AppColors.deepGreen,
+                    size: 40,
+                    iconSize: 22,
+                    borderRadius: AppSpacing.radiusSm,
+                    border: Border.all(color: AppColors.border),
                     onTap: () {
                       HapticFeedback.lightImpact();
                       Navigator.pop(context);
                     },
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(Icons.chevron_left_rounded,
-                          color: AppColors.deepGreen, size: 22),
-                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Text('Tambah Transaksi',
@@ -250,18 +247,13 @@ class _NumpadPageState extends State<NumpadPage>
                               _decimalPart = '';
                             });
                           },
-                          child: Container(
-                            width: 36, height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.softSurface,
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusSm),
-                            ),
-                            child: const Icon(
-                              Icons.backspace_outlined,
-                              color: AppColors.mutedText,
-                              size: 18,
-                            ),
+                          child: const RoundedSquareIcon(
+                            icon: Icons.backspace_outlined,
+                            backgroundColor: AppColors.softSurface,
+                            iconColor: AppColors.mutedText,
+                            size: 36,
+                            iconSize: 18,
+                            borderRadius: AppSpacing.radiusSm,
                           ),
                         ),
                       ],

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
 
 /// State tombol Simpan pada sheet Tambah Tagihan.
@@ -314,22 +315,31 @@ class _AddBillSheetState extends State<AddBillSheet> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          _selectedDueDate != null
-                              ? _formatFullDate(_selectedDueDate!)
-                              : 'Pilih tanggal jatuh tempo',
-                          style: _selectedDueDate != null
-                              ? AppTextStyles.inputText
-                              : AppTextStyles.inputHint,
-                        ),
+                    const RoundedSquareIcon(
+                      icon: Icons.calendar_today_outlined,
+                      backgroundColor: AppColors.softSurface,
+                      iconColor: AppColors.primary,
+                      size: 32,
+                      iconSize: 16,
+                      borderRadius: AppSpacing.radiusXs,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        _selectedDueDate != null
+                            ? _formatFullDate(_selectedDueDate!)
+                            : 'Pilih tanggal jatuh tempo',
+                        style: _selectedDueDate != null
+                            ? AppTextStyles.inputText
+                            : AppTextStyles.inputHint,
                       ),
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: AppSpacing.billIconSize,
-                        color: AppColors.secondary,
-                      ),
-                    ],
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: AppColors.mutedText,
+                    ),
+                  ],
                   ),
                 ),
               ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_finance/core/theme/app_colors.dart';
+import 'package:go_finance/core/theme/app_spacing.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/screens/profile_screen.dart';
 
 /// Halaman Edit Profil (frontend only, dummy data).
@@ -61,7 +64,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       builder: (ctx) {
         Widget option(IconData icon, String label) => ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-              leading: Icon(icon, color: ProfileColors.darkGreen),
+              leading: RoundedSquareIcon(
+                icon: icon,
+                backgroundColor: AppColors.softSurface,
+                iconColor: ProfileColors.darkGreen,
+                size: 40,
+                iconSize: 20,
+                borderRadius: AppSpacing.radiusSm,
+              ),
               title: Text(
                 label,
                 style: GoogleFonts.instrumentSans(
@@ -217,10 +227,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: ProfileColors.darkGreen,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusXs),
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
                               ),
-                              child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                              child: const Icon(Icons.camera_alt,
+                                  size: 16, color: Colors.white),
                             ),
                           ),
                         ],

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
 
 /// Kalender kustom (Min–Sab) dengan indikator hari ini, tagihan aktif, dan seleksi tanggal.
@@ -198,23 +199,15 @@ class _MonthNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-        child: Tooltip(
-          message: tooltip,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: Icon(
-              icon,
-              size: AppSpacing.billIconSize,
-              color: AppColors.deepGreen,
-            ),
-          ),
-        ),
-      ),
+    return RoundedSquareIcon(
+      icon: icon,
+      backgroundColor: AppColors.softSurface,
+      iconColor: AppColors.deepGreen,
+      size: 32,
+      iconSize: 18,
+      borderRadius: AppSpacing.radiusXs,
+      tooltip: tooltip,
+      onTap: onTap,
     );
   }
 }

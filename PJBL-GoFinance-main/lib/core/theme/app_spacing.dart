@@ -33,6 +33,8 @@ class AppSpacing {
   static const double nominalInputHeight = 56.0;
   static const double bottomNavHeight = 64.0;
   static const double fabSize = 54.0;
+  static const double iconContainerSize = 40.0;
+  static const double cardIconContainerSize = 44.0;
   static const double billIconCircleSize = 44.0;
   static const double billIconSize = 22.0;
   static const double navIconSize = 22.0;
