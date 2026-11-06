@@ -1,0 +1,15 @@
+# APK Release folder
+APK_RELEASE/
+*.apk
+
+# Android / Gradle
+**/android/.gradle/
+**/android/local.properties
+**/android/app/build/
+**/android/build/
+
+# Flutter / Dart
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/

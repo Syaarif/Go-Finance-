@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
+import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/features/bills/services/notification_service.dart';
 import 'package:go_finance/screens/splash_screen.dart';
 import 'package:go_finance/theme/app_theme.dart';
@@ -28,8 +29,11 @@ class GoFinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<BillProvider>(
-      create: (_) => BillProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<BillProvider>(create: (_) => BillProvider()),
+        ChangeNotifierProvider<TransactionProvider>(create: (_) => TransactionProvider()),
+      ],
       child: MaterialApp(
         title: 'Go Finance',
         debugShowCheckedModeBanner: false,

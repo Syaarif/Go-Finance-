@@ -888,7 +888,7 @@ class _NotifSwitchTile extends StatelessWidget {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: ProfileColors.darkGreen,
+                activeColor: ProfileColors.darkGreen,
                 activeTrackColor: ProfileColors.lightGreenBg,
                 inactiveThumbColor: ProfileColors.textGrey,
                 inactiveTrackColor: ProfileColors.divider,

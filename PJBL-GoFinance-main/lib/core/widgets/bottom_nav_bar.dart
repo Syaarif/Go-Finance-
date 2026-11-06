@@ -4,6 +4,8 @@ import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/features/bills/pages/bills_page.dart';
+import 'package:go_finance/features/home/pages/home_page.dart';
+import 'package:go_finance/features/transactions/pages/transactions_page.dart';
 import 'package:go_finance/screens/profile_screen.dart';
 
 /// Enum tab utama pada Bottom Navigation Go Finance.
@@ -30,18 +32,10 @@ class AppBottomNav extends StatelessWidget {
     final Widget destination;
     switch (tab) {
       case NavTab.home:
-        destination = const MainTabPlaceholderPage(
-          tab: NavTab.home,
-          title: 'Beranda',
-          subtitle: 'Ringkasan keuangan harianmu akan tampil di sini.',
-        );
+        destination = const HomePage();
         break;
       case NavTab.transactions:
-        destination = const MainTabPlaceholderPage(
-          tab: NavTab.transactions,
-          title: 'Transaksi',
-          subtitle: 'Daftar pemasukan dan pengeluaran akan tampil di sini.',
-        );
+        destination = const TransactionsPage();
         break;
       case NavTab.savings:
         destination = const MainTabPlaceholderPage(
