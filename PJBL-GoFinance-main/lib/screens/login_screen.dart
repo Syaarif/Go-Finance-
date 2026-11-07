@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_finance/core/services/app_update_service.dart';
+import 'package:go_finance/core/widgets/login_update_banner.dart';
+import 'package:go_finance/core/widgets/update_notification_sheet.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/register_screen.dart';
@@ -22,6 +25,33 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  AppUpdateInfo? _updateInfo;
+  bool _isCheckingUpdate = false;
+  bool _isUpdateBannerDismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate({bool force = false}) async {
+    setState(() => _isCheckingUpdate = true);
+    final info = await AppUpdateService.instance.checkForUpdate(forceRefresh: force);
+    if (!mounted) return;
+    setState(() {
+      _updateInfo = info;
+      _isCheckingUpdate = false;
+    });
+
+    if (info.hasUpdate && !_isUpdateBannerDismissed && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          UpdateNotificationSheet.show(context, info);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -66,27 +96,105 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Piggy bank coin dengan animasi mengambang
+                                // Header bar dengan Piggy Bank & Tombol Update GitHub
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 100),
-                                  child: Center(
-                                    child: FloatingWidget(
-                                      distance: 5.0,
-                                      duration:
-                                          const Duration(milliseconds: 2400),
-                                      child: Image.asset(
-                                        'assets/images/piggy_coin.png',
-                                        width: 58,
-                                        height: 66,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(
-                                          Icons.savings_rounded,
-                                          size: 58,
-                                          color: Colors.amber,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Center(
+                                        child: FloatingWidget(
+                                          distance: 5.0,
+                                          duration:
+                                              const Duration(milliseconds: 2400),
+                                          child: Image.asset(
+                                            'assets/images/piggy_coin.png',
+                                            width: 58,
+                                            height: 66,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (_, __, ___) =>
+                                                const Icon(
+                                              Icons.savings_rounded,
+                                              size: 58,
+                                              color: Colors.amber,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                      // Tombol Periksa Update di Pojok Kanan Atas
+                                      Positioned(
+                                        right: 0,
+                                        child: Tooltip(
+                                          message: 'Periksa Pembaruan GitHub',
+                                          child: InkWell(
+                                            onTap: () {
+                                              if (_updateInfo != null && _updateInfo!.hasUpdate) {
+                                                UpdateNotificationSheet.show(context, _updateInfo!);
+                                              } else {
+                                                _checkForUpdate(force: true);
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Memeriksa pembaruan di GitHub...',
+                                                      style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
+                                                    ),
+                                                    backgroundColor: AppTheme.primaryGreen,
+                                                    duration: const Duration(seconds: 2),
+                                                    behavior: SnackBarBehavior.floating,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: _updateInfo?.hasUpdate == true
+                                                      ? const Color(0xFF81C784)
+                                                      : const Color(0xFFE0E0E0),
+                                                  width: 1.2,
+                                                ),
+                                                boxShadow: const [
+                                                  BoxShadow(
+                                                    color: Color(0x0C000000),
+                                                    blurRadius: 8,
+                                                    offset: Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Stack(
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  Icon(
+                                                    Icons.sync_rounded,
+                                                    size: 20,
+                                                    color: _isCheckingUpdate
+                                                        ? Colors.grey
+                                                        : AppTheme.primaryDarkGreen,
+                                                  ),
+                                                  if (_updateInfo?.hasUpdate == true)
+                                                    Positioned(
+                                                      top: -2,
+                                                      right: -2,
+                                                      child: Container(
+                                                        width: 8,
+                                                        height: 8,
+                                                        decoration: const BoxDecoration(
+                                                          color: Colors.redAccent,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(height: 20),
@@ -122,7 +230,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 36),
+                                const SizedBox(height: 24),
+
+                                // Banner Notifikasi Pembaruan GitHub
+                                if (!_isUpdateBannerDismissed &&
+                                    (_updateInfo?.hasUpdate == true || _isCheckingUpdate))
+                                  StaggeredFadeSlide(
+                                    delay: const Duration(milliseconds: 250),
+                                    child: LoginUpdateBanner(
+                                      updateInfo: _updateInfo,
+                                      isChecking: _isCheckingUpdate,
+                                      onDismiss: () => setState(
+                                        () => _isUpdateBannerDismissed = true,
+                                      ),
+                                      onCheckUpdate: () =>
+                                          _checkForUpdate(force: true),
+                                    ),
+                                  ),
+
+                                const SizedBox(height: 12),
 
                                 // Kolom Form Email
                                 StaggeredFadeSlide(
