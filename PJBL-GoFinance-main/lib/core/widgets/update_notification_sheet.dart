@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:go_finance/core/services/app_update_service.dart';
 import 'package:go_finance/theme/app_theme.dart';
 
-/// Modal bottom sheet untuk menampilkan rincian update dan mengunduh APK terbaru.
-class UpdateNotificationSheet extends StatelessWidget {
+/// Modal bottom sheet interaktif untuk mengunduh dan menginstal update APK langsung di dalam aplikasi.
+class UpdateNotificationSheet extends StatefulWidget {
   final AppUpdateInfo updateInfo;
 
   const UpdateNotificationSheet({
@@ -23,10 +23,56 @@ class UpdateNotificationSheet extends StatelessWidget {
   }
 
   @override
+  State<UpdateNotificationSheet> createState() => _UpdateNotificationSheetState();
+}
+
+class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+  String _statusMessage = 'Menyiapkan unduhan...';
+  String? _errorMessage;
+
+  Future<void> _startDirectUpdate() async {
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.05;
+      _statusMessage = 'Menghubungkan ke server GitHub...';
+      _errorMessage = null;
+    });
+
+    final success = await AppUpdateService.instance.downloadAndInstall(
+      downloadUrl: widget.updateInfo.downloadUrl,
+      onProgress: (progress, status) {
+        if (!mounted) return;
+        setState(() {
+          _downloadProgress = progress;
+          _statusMessage = status;
+        });
+      },
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() {
+        _isDownloading = false;
+        _errorMessage =
+            'Gagal membuka installer otomatis. Kamu bisa mengunduh lewat browser.';
+      });
+    } else {
+      // Tunggu sebentar lalu tutup modal setelah dialog installer sistem terbuka
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
-    final formattedDate = updateInfo.commitDate != null
-        ? dateFormat.format(updateInfo.commitDate!.toLocal())
+    final formattedDate = widget.updateInfo.commitDate != null
+        ? dateFormat.format(widget.updateInfo.commitDate!.toLocal())
         : 'Baru saja';
 
     return Container(
@@ -171,7 +217,7 @@ class UpdateNotificationSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    updateInfo.commitMessage,
+                    widget.updateInfo.commitMessage,
                     style: GoogleFonts.instrumentSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -182,21 +228,21 @@ class UpdateNotificationSheet extends StatelessWidget {
                   const Divider(height: 1, color: Color(0xFFE0EFE4)),
                   const SizedBox(height: 12),
 
-                  // Metadata row (Author, SHA, Waktu)
+                  // Metadata row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildMetaItem(
                         icon: Icons.person_outline_rounded,
                         label: 'Pengembang',
-                        value: updateInfo.authorName.isNotEmpty
-                            ? updateInfo.authorName
+                        value: widget.updateInfo.authorName.isNotEmpty
+                            ? widget.updateInfo.authorName
                             : 'Tim GitHub',
                       ),
                       _buildMetaItem(
                         icon: Icons.tag_rounded,
                         label: 'Commit',
-                        value: updateInfo.latestSha,
+                        value: widget.updateInfo.latestSha,
                       ),
                       _buildMetaItem(
                         icon: Icons.access_time_rounded,
@@ -211,55 +257,127 @@ class UpdateNotificationSheet extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Info ukuran APK
-            Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_outline_rounded,
-                  size: 16,
-                  color: Color(0xFF2E7D32),
+            // Indikator Progress Unduhan jika sedang berjalan
+            if (_isDownloading) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFA5D6A7), width: 1),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'Ukuran APK: ~9.4 MB (Optimasi Ultra Ringan)',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _statusMessage,
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryDarkGreen,
+                          ),
+                        ),
+                        Text(
+                          '${(_downloadProgress * 100).toInt()}%',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: _downloadProgress,
+                        minHeight: 8,
+                        backgroundColor: Colors.white,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryGreen,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Setelah selesai, jendela instalasi APK akan otomatis muncul di layar.',
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              // Info ukuran APK
+              Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 16,
+                    color: Color(0xFF2E7D32),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ukuran APK: ~9.4 MB (Update langsung tanpa browser)',
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Text(
+                  _errorMessage!,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade700,
+                    color: Colors.red.shade900,
                   ),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Tombol Utama: Unduh APK Sekarang
-            ElevatedButton.icon(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Membuka unduhan APK terbaru...',
-                      style: GoogleFonts.instrumentSans(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    backgroundColor: AppTheme.primaryGreen,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-                await AppUpdateService.instance.launchDownloadUrl(
-                  updateInfo.downloadUrl,
-                );
-              },
-              icon: const Icon(
-                Icons.download_rounded,
-                color: Colors.white,
-                size: 20,
               ),
+            ],
+
+            // Tombol Utama: Update Langsung di APK
+            ElevatedButton.icon(
+              onPressed: _isDownloading ? null : _startDirectUpdate,
+              icon: _isDownloading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.offline_bolt_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
               label: Text(
-                'Unduh APK Sekarang (~9.4 MB)',
+                _isDownloading
+                    ? 'Sedang Mengunduh (${(_downloadProgress * 100).toInt()}%)...'
+                    : 'Update Langsung di APK (~9.4 MB)',
                 style: GoogleFonts.instrumentSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -268,6 +386,7 @@ class UpdateNotificationSheet extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGreen,
+                disabledBackgroundColor: Colors.grey.shade400,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -278,24 +397,26 @@ class UpdateNotificationSheet extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Tombol Sekunder: Buka Halaman GitHub / Nanti Saja
+            // Tombol Sekunder: Unduh via Browser / Nanti Saja
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      await AppUpdateService.instance.launchDownloadUrl(
-                        updateInfo.releasePageUrl,
-                      );
-                    },
+                    onPressed: _isDownloading
+                        ? null
+                        : () async {
+                            Navigator.of(context).pop();
+                            await AppUpdateService.instance.launchDownloadUrl(
+                              widget.updateInfo.downloadUrl,
+                            );
+                          },
                     icon: const Icon(
-                      Icons.open_in_new_rounded,
+                      Icons.open_in_browser_rounded,
                       size: 16,
                       color: AppTheme.primaryDarkGreen,
                     ),
                     label: Text(
-                      'Halaman Rilis',
+                      'Lewat Browser',
                       style: GoogleFonts.instrumentSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -317,7 +438,9 @@ class UpdateNotificationSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isDownloading
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
