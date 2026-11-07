@@ -10,6 +10,7 @@ import 'package:go_finance/core/widgets/profile_action.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/pages/add_transaction_page.dart';
+import 'package:go_finance/features/home/widgets/tabungan_action_sheet.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 
 /// Halaman Beranda / Home (01_Beranda).
@@ -99,10 +100,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final txProvider = context.watch<TransactionProvider>();
     final recentTransactions = txProvider.filtered.take(3).toList();
 
-    // Hitung saldo aktif dinamis
-    const double baseBalance = 2450000;
-    final double dynamicBalance =
-        baseBalance + txProvider.totalPemasukan - txProvider.totalPengeluaran;
+    // Ambil saldo aktif & saldo tabungan langsung dari storage permanen
+    final double dynamicBalance = txProvider.saldoAktif;
+    final double savingsBalance = txProvider.saldoTabungan;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -255,7 +255,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   horizontal: AppSpacing.pageHorizontal,
                 ),
                 child: _SaldoTabunganCard(
-                  onTap: () => AppBottomNav.navigateTo(context, NavTab.savings),
+                  balance: savingsBalance,
+                  onTap: () => TabunganActionSheet.show(context),
                 ),
               ),
 
@@ -563,11 +564,20 @@ class _SaldoAktifCard extends StatelessWidget {
 // CARD 2: SALDO TABUNGAN
 // ───────────────────────────────────────────────────────────────
 class _SaldoTabunganCard extends StatelessWidget {
+  final double balance;
   final VoidCallback onTap;
-  const _SaldoTabunganCard({required this.onTap});
+  const _SaldoTabunganCard({
+    required this.balance,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final formattedBalance = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(balance);
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -616,7 +626,7 @@ class _SaldoTabunganCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Rp 1.250.000',
+                      formattedBalance,
                       style: AppTextStyles.billAmount.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

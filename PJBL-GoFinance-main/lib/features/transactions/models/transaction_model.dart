@@ -134,6 +134,35 @@ class TransactionModel {
   });
 
   bool get isIncome => type == TransactionType.pemasukan;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'subtitle': subtitle,
+        'amount': amount,
+        'type': type.name,
+        'category': category.name,
+        'date': date.toIso8601String(),
+        'note': note,
+      };
+
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    return TransactionModel(
+      id: json['id'] as String? ?? UniqueKey().toString(),
+      title: json['title'] as String? ?? 'Transaksi',
+      subtitle: json['subtitle'] as String? ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      type: (json['type'] == 'pemasukan')
+          ? TransactionType.pemasukan
+          : TransactionType.pengeluaran,
+      category: TransactionCategory.values.firstWhere(
+        (c) => c.name == json['category'],
+        orElse: () => TransactionCategory.lainnya,
+      ),
+      date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime.now(),
+      note: json['note'] as String?,
+    );
+  }
 }
 
 /// Data dummy transaksi untuk preview.
