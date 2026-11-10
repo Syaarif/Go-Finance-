@@ -714,7 +714,7 @@ class _AiEvaluationCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     const Text(
                       'Lihat ringkasan dan saran AI',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
