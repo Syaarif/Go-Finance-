@@ -50,12 +50,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "cupertino_icons",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.9",
-      "packageUri": "lib/",
-      "languageVersion": "3.9"
-    },
-    {
       "name": "dbus",
       "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/dbus-0.7.15",
       "packageUri": "lib/",

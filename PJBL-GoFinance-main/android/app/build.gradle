@@ -26,17 +26,34 @@ android {
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resConfigs "id", "en"
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
     packaging {
         jniLibs {
             useLegacyPackaging = true
+        }
+        resources {
+            excludes += [
+                "DebugProbesKt.bin",
+                "kotlin-tooling-metadata.json",
+                "kotlin/**",
+                "META-INF/*.version",
+                "META-INF/proguard/**",
+                "META-INF/com.android.tools/**"
+            ]
         }
     }
 
