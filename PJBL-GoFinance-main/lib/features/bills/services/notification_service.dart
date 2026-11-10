@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:go_finance/features/bills/models/bill.dart';
 
