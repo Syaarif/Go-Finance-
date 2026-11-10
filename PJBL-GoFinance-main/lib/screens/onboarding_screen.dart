@@ -117,7 +117,7 @@ class OnboardingScreen extends StatelessWidget {
                                 distance: 4.0,
                                 duration: const Duration(milliseconds: 2800),
                                 child: Image.asset(
-                                  'assets/images/plant.png',
+                                  'assets/images/plant.webp',
                                   fit: BoxFit.contain,
                                   alignment: Alignment.bottomCenter,
                                   errorBuilder: (_, __, ___) => Icon(
