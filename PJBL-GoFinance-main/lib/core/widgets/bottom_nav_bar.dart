@@ -7,6 +7,8 @@ import 'package:go_finance/core/widgets/profile_action.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/pages/bills_page.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
+import 'package:go_finance/features/receipts/pages/upload_receipt_page.dart';
+import 'package:go_finance/features/savings/pages/savings_page.dart';
 import 'package:go_finance/features/transactions/pages/transactions_page.dart';
 
 /// Enum tab utama pada Bottom Navigation Go Finance.
@@ -39,11 +41,7 @@ class AppBottomNav extends StatelessWidget {
         destination = const TransactionsPage();
         break;
       case NavTab.savings:
-        destination = const MainTabPlaceholderPage(
-          tab: NavTab.savings,
-          title: 'Tabungan',
-          subtitle: 'Target dan progres tabunganmu akan tampil di sini.',
-        );
+        destination = const SavingsPage();
         break;
       case NavTab.bills:
         destination = const BillsPage();
@@ -74,18 +72,13 @@ class AppBottomNav extends StatelessWidget {
       onScanTap!();
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Fitur Scan struk segera hadir.',
-          style: AppTextStyles.primaryButton,
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: const UploadReceiptPage(),
         ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        duration: const Duration(seconds: 2),
+        transitionDuration: const Duration(milliseconds: 220),
       ),
     );
   }
@@ -354,4 +347,3 @@ class MainTabPlaceholderPage extends StatelessWidget {
     );
   }
 }
-

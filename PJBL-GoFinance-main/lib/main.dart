@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:go_finance/core/utils/date_locale_init.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
+import 'package:go_finance/features/savings/providers/savings_provider.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/features/bills/services/notification_service.dart';
 import 'package:go_finance/screens/splash_screen.dart';
@@ -32,12 +34,23 @@ class GoFinanceApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<BillProvider>(create: (_) => BillProvider()),
+        ChangeNotifierProvider<SavingsProvider>(create: (_) => SavingsProvider()),
         ChangeNotifierProvider<TransactionProvider>(create: (_) => TransactionProvider()),
       ],
       child: MaterialApp(
         title: 'Go Finance',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        locale: const Locale('id', 'ID'),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('id', 'ID'),
+          Locale('en', 'US'),
+        ],
         home: const SplashScreen(),
       ),
     );

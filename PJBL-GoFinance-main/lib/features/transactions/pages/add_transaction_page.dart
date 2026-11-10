@@ -190,7 +190,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.sm),
 
                         // --- Kategori ---
-                        _FieldLabel('Kategori'),
+                        const _FieldLabel('Kategori'),
                         const SizedBox(height: AppSpacing.xs),
                         _CategoryField(
                           selected: _selectedCategory,
@@ -199,7 +199,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Nominal ---
-                        _FieldLabel('Nominal'),
+                        const _FieldLabel('Nominal'),
                         const SizedBox(height: AppSpacing.xs),
                         _AmountField(
                           amount: _formattedAmount,
@@ -209,7 +209,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Tanggal ---
-                        _FieldLabel('Tanggal transaksi'),
+                        const _FieldLabel('Tanggal transaksi'),
                         const SizedBox(height: AppSpacing.xs),
                         _DateField(
                           date: _formattedDate,
@@ -218,7 +218,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Catatan ---
-                        _FieldLabel('Catatan (opsional)'),
+                        const _FieldLabel('Catatan (opsional)'),
                         const SizedBox(height: AppSpacing.xs),
                         _NoteField(
                           controller: _noteController,
@@ -619,7 +619,7 @@ class _SaveButtonState extends State<_SaveButton>
             boxShadow: widget.enabled
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),

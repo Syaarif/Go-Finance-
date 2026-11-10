@@ -17,6 +17,8 @@ class AppTheme {
           seedColor: const Color(0xFF347928),
         ),
         scaffoldBackgroundColor: const Color(0xFFC0EBA6),
-        textTheme: GoogleFonts.instrumentSansTextTheme(),
+        textTheme: ThemeData().textTheme.apply(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+            ),
       );
 }
