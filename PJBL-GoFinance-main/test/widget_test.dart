@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:go_finance/core/utils/date_locale_init.dart';
 import 'package:go_finance/features/bills/pages/bills_page.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
 import 'package:go_finance/screens/login_screen.dart';
@@ -10,7 +10,7 @@ import 'package:go_finance/screens/register_screen.dart';
 
 void main() {
   setUpAll(() async {
-    await initializeDateFormatting('id_ID', null);
+    await initializeIndonesianDateFormatting();
   });
 
   testWidgets(
