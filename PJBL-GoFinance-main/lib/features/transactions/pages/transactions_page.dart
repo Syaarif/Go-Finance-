@@ -182,7 +182,7 @@ class _StickyHeader extends StatelessWidget {
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: AppColors.deepGreen.withOpacity(0.07),
+                  color: AppColors.deepGreen.withValues(alpha: 0.07),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -221,10 +221,10 @@ class _StickyHeader extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             // Tab Harian / Mingguan / Bulanan
-            Padding(
-              padding: const EdgeInsets.symmetric(
+            const Padding(
+              padding: EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal),
-              child: const _PeriodTabBar(),
+              child: _PeriodTabBar(),
             ),
             const SizedBox(height: AppSpacing.md),
             // Search bar
@@ -565,7 +565,7 @@ class _TransactionGroupState extends State<_TransactionGroup>
                           thickness: 1,
                           indent: 56,
                           endIndent: AppSpacing.md,
-                          color: AppColors.border.withOpacity(0.6),
+                          color: AppColors.border.withValues(alpha: 0.6),
                         ),
                     ],
                   );

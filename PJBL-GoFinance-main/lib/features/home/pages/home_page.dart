@@ -383,7 +383,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               thickness: 1,
                               indent: 56,
                               endIndent: AppSpacing.md,
-                              color: AppColors.border.withOpacity(0.6),
+                              color: AppColors.border.withValues(alpha: 0.6),
                             ),
                         ],
                       );
@@ -429,7 +429,7 @@ class _SaldoAktifCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.28),
+            color: AppColors.primary.withValues(alpha: 0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -473,7 +473,7 @@ class _SaldoAktifCard extends StatelessWidget {
                           Text(
                             'SALDO AKTIF',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.6,
@@ -486,7 +486,7 @@ class _SaldoAktifCard extends StatelessWidget {
                               isVisible
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               size: 16,
                             ),
                           ),
@@ -509,7 +509,7 @@ class _SaldoAktifCard extends StatelessWidget {
                       Text(
                         'Pemasukan − pengeluaran − setoran tabungan',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 11,
                           fontWeight: FontWeight.w400,
                         ),
@@ -523,7 +523,7 @@ class _SaldoAktifCard extends StatelessWidget {
                   height: 76,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                   ),
                   padding: const EdgeInsets.all(7),
                   child: Container(
@@ -712,9 +712,9 @@ class _AiEvaluationCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(
+                    const Text(
                       'Lihat ringkasan dan saran AI',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -818,7 +818,7 @@ class _ChartCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.softSurface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -875,7 +875,7 @@ class _ChartCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
-                                  : AppColors.primary.withOpacity(0.9),
+                                  : AppColors.primary.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(4),
                               border: isSelected
                                   ? Border.all(color: Colors.white, width: 1.5)
@@ -1022,7 +1022,7 @@ class _QuickActionButtonState extends State<_QuickActionButton>
             color: AppColors.softSurface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.18),
+              color: AppColors.primary.withValues(alpha: 0.18),
               width: 1,
             ),
           ),
@@ -1265,12 +1265,12 @@ class _NotificationModal extends StatelessWidget {
           ),
           Text('Notifikasi', style: AppTextStyles.sheetTitle),
           const SizedBox(height: AppSpacing.md),
-          _NotifTile(
+          const _NotifTile(
             title: 'Tagihan Internet Jatuh Tempo',
             subtitle: 'Jatuh tempo pada 29 Oktober 2026 sebesar Rp 300.000',
             time: '2 jam lalu',
           ),
-          _NotifTile(
+          const _NotifTile(
             title: 'Gaji Masuk!',
             subtitle: 'Pemasukan Rp 3.500.000 berhasil dicatat.',
             time: 'Kemarin',

@@ -366,8 +366,8 @@ class _NumpadKeyState extends State<_NumpadKey>
           color: AppColors.deepGreen, size: 20);
     }
     if (k == ',') {
-      return Text(',',
-          style: const TextStyle(
+      return const Text(',',
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: AppColors.deepGreen,
@@ -398,7 +398,7 @@ class _NumpadKeyState extends State<_NumpadKey>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-            border: Border.all(color: AppColors.border.withOpacity(0.7)),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x08234D1C),
@@ -472,7 +472,7 @@ class _ConfirmButtonState extends State<_ConfirmButton>
             boxShadow: widget.enabled
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),

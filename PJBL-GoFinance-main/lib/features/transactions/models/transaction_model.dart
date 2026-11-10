@@ -7,6 +7,7 @@ enum TransactionType { pemasukan, pengeluaran }
 enum TransactionCategory {
   semua,
   makananMinuman,
+  belanja,
   tagihan,
   transportasi,
   transfer,
@@ -21,6 +22,8 @@ extension TransactionCategoryX on TransactionCategory {
         return 'Semua';
       case TransactionCategory.makananMinuman:
         return 'Makanan & Minuman';
+      case TransactionCategory.belanja:
+        return 'Belanja';
       case TransactionCategory.tagihan:
         return 'Tagihan';
       case TransactionCategory.transportasi:
@@ -40,6 +43,8 @@ extension TransactionCategoryX on TransactionCategory {
         return 'Semua';
       case TransactionCategory.makananMinuman:
         return 'Makanan';
+      case TransactionCategory.belanja:
+        return 'Belanja';
       case TransactionCategory.tagihan:
         return 'Tagihan';
       case TransactionCategory.transportasi:
@@ -59,6 +64,8 @@ extension TransactionCategoryX on TransactionCategory {
         return Icons.apps_rounded;
       case TransactionCategory.makananMinuman:
         return Icons.restaurant_rounded;
+      case TransactionCategory.belanja:
+        return Icons.shopping_bag_rounded;
       case TransactionCategory.tagihan:
         return Icons.receipt_long_rounded;
       case TransactionCategory.transportasi:
@@ -78,6 +85,8 @@ extension TransactionCategoryX on TransactionCategory {
         return const Color(0xFF347928);
       case TransactionCategory.makananMinuman:
         return const Color(0xFFE87A3A);
+      case TransactionCategory.belanja:
+        return const Color(0xFF347928);
       case TransactionCategory.tagihan:
         return const Color(0xFF6694B5);
       case TransactionCategory.transportasi:
@@ -97,6 +106,8 @@ extension TransactionCategoryX on TransactionCategory {
         return const Color(0xFFEDF5E8);
       case TransactionCategory.makananMinuman:
         return const Color(0xFFFFF0E6);
+      case TransactionCategory.belanja:
+        return const Color(0xFFEDF5E8);
       case TransactionCategory.tagihan:
         return const Color(0xFFE8F0F6);
       case TransactionCategory.transportasi:
