@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
               // Background SVG
               Positioned.fill(
                 child: SvgPicture.asset(
-                  'assets/svg/bg_splash.svg',
+                  'assets/svg/bg_green.svg',
                   fit: BoxFit.cover,
                   placeholderBuilder: (_) =>
                       Container(color: AppTheme.backgroundGreen),

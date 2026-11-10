@@ -39,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // 1. Background SVG Texture
           Positioned.fill(
             child: SvgPicture.asset(
-              'assets/svg/bg_daftar.svg',
+              'assets/svg/bg_green.svg',
               fit: BoxFit.cover,
               placeholderBuilder: (_) =>
                   Container(color: AppTheme.backgroundGreen),
@@ -74,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       duration:
                                           const Duration(milliseconds: 2400),
                                       child: Image.asset(
-                                        'assets/images/piggy_coin_daftar.png',
+                                        'assets/images/piggy_coin.png',
                                         width: 58,
                                         height: 66,
                                         fit: BoxFit.contain,

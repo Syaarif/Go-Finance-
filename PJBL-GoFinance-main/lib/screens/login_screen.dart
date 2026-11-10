@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // 1. Background SVG Texture
           Positioned.fill(
             child: SvgPicture.asset(
-              'assets/svg/bg_masuk.svg',
+              'assets/svg/bg_green.svg',
               fit: BoxFit.cover,
               placeholderBuilder: (_) =>
                   Container(color: AppTheme.backgroundGreen),
