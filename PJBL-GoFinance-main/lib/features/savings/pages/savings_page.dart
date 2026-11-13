@@ -91,7 +91,57 @@ class SavingsPage extends StatelessWidget {
                   ],
                 ),
               ),
-            if (isEmpty) const Expanded(child: SizedBox.shrink()),
+            if (isEmpty)
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.savings_rounded,
+                          size: 72,
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'Yuk, Mulai Menabung!',
+                          style: AppTextStyles.pageTitle,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Tentukan target dan sisihkan sedikit demi sedikit — langkah kecil menuju impian besar.',
+                          style: AppTextStyles.billMeta,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        FilledButton.icon(
+                          onPressed: () => _createTarget(context),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('Buat Tabungan Pertama'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.surface,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                              vertical: AppSpacing.md,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusCard,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
