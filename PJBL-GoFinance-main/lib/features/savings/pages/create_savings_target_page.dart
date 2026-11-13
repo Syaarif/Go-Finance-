@@ -114,50 +114,62 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 2, 20, 6),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.sm,
+                AppSpacing.xs,
+                AppSpacing.pageHorizontal,
+                AppSpacing.sm,
+              ),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
                     tooltip: 'Kembali',
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 18, color: AppColors.deepGreen),
+                        size: AppSpacing.navIconSize,
+                        color: AppColors.deepGreen),
                   ),
                   Text('Buat Target Tabungan',
-                      style: AppTextStyles.pageTitle.copyWith(fontSize: 15)),
+                      style: AppTextStyles.calendarHeader),
                 ],
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(11, 0, 11, 12),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageHorizontal,
+                  0,
+                  AppSpacing.pageHorizontal,
+                  AppSpacing.md,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Buat tujuan baru',
-                        style: AppTextStyles.sectionTitle.copyWith(fontSize: 17)),
-                    const SizedBox(height: 3),
+                        style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: AppSpacing.xs),
                     Text('Tentukan target dan jadwal menabungmu.',
-                        style: AppTextStyles.footnote.copyWith(fontSize: 9)),
-                    const SizedBox(height: 16),
+                        style: AppTextStyles.footnote),
+                    const SizedBox(height: AppSpacing.xl),
                     const _FieldLabel('Nama Target'),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       child: TextField(
                         key: const Key('field_savings_name'),
                         controller: _nameController,
-                        style: AppTextStyles.inputText.copyWith(fontSize: 11),
-                        decoration: const InputDecoration(
+                        style: AppTextStyles.inputText,
+                        decoration: InputDecoration(
                           hintText: 'Contoh: Beli Laptop',
+                          hintStyle: AppTextStyles.inputHint,
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.lg),
                     const _FieldLabel('Nominal Target'),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       child: TextField(
                         key: const Key('field_savings_amount'),
@@ -166,28 +178,29 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (_) => setState(() {}),
                         style: AppTextStyles.inputText.copyWith(
-                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Rp 0',
+                          hintStyle: AppTextStyles.inputHint,
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.lg),
                     const _FieldLabel('Tanggal Target'),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       key: const Key('field_savings_target_date'),
                       onTap: _selectDate,
                       child: Row(
                         children: [
                           const Icon(Icons.calendar_month_outlined,
-                              color: AppColors.primary, size: 17),
-                          const SizedBox(width: 8),
+                              color: AppColors.primary,
+                              size: AppSpacing.navIconSize),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               _targetDate == null
@@ -198,21 +211,21 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                 color: _targetDate == null
                                     ? AppColors.mutedText
                                     : AppColors.deepGreen,
-                                fontSize: 10,
                               ),
                             ),
                           ),
                           const Icon(Icons.chevron_right_rounded,
-                              color: AppColors.secondary, size: 18),
+                              color: AppColors.secondary,
+                              size: AppSpacing.navIconSize),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.lg),
                     const _FieldLabel('Interval Menabung'),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: AppSpacing.xs),
                     Text('Pilih seberapa sering kamu ingin menabung.',
-                        style: AppTextStyles.footnote.copyWith(fontSize: 9)),
-                    const SizedBox(height: 7),
+                        style: AppTextStyles.footnote),
+                    const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
                         Expanded(
@@ -225,7 +238,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                             }),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _IntervalButton(
                             label: '1 Minggu',
@@ -236,7 +249,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                             }),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _IntervalButton(
                             label: 'Custom',
@@ -248,9 +261,9 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ],
                     ),
                     if (_isCustom) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.md),
                       Container(
-                        padding: const EdgeInsets.all(9),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: AppColors.softSurface,
                           borderRadius:
@@ -259,13 +272,11 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         child: Row(
                           children: [
                             Text('Setiap',
-                                style: AppTextStyles.fieldLabel.copyWith(
-                                  fontSize: 9,
-                                )),
-                            const SizedBox(width: 8),
+                                style: AppTextStyles.fieldLabel),
+                            const SizedBox(width: AppSpacing.sm),
                             SizedBox(
                               width: 82,
-                              height: 32,
+                              height: AppSpacing.actionButtonHeight,
                               child: TextField(
                                 key: const Key('field_custom_interval'),
                                 controller: _customIntervalController,
@@ -276,7 +287,6 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                 textAlign: TextAlign.center,
                                 onChanged: (_) => setState(() {}),
                                 style: AppTextStyles.inputText.copyWith(
-                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
                                 decoration: InputDecoration(
@@ -284,33 +294,33 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                   fillColor: AppColors.surface,
                                   contentPadding: EdgeInsets.zero,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusXs),
                                     borderSide: const BorderSide(
                                         color: AppColors.primary),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusXs),
                                     borderSide: const BorderSide(
                                         color: AppColors.primary),
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 7),
+                            const SizedBox(width: AppSpacing.sm),
                             Text('Hari',
-                                style: AppTextStyles.fieldLabel.copyWith(
-                                  fontSize: 9,
-                                )),
+                                style: AppTextStyles.fieldLabel),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: AppSpacing.xs),
                       Text('Masukkan jumlah hari, misalnya 14 atau 30.',
-                          style: AppTextStyles.footnote.copyWith(fontSize: 8)),
+                          style: AppTextStyles.footnote),
                     ],
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.lg),
                     Container(
-                      padding: const EdgeInsets.all(9),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: AppColors.softSurface,
                         borderRadius:
@@ -320,33 +330,30 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Icon(Icons.check_circle_rounded,
-                              color: AppColors.primary, size: 15),
-                          const SizedBox(width: 6),
+                              color: AppColors.primary,
+                              size: AppSpacing.navIconSize),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Jadwal menabung: $intervalLabel',
-                                    style: AppTextStyles.fieldLabel.copyWith(
-                                      fontSize: 9,
-                                    )),
+                                    style: AppTextStyles.fieldLabel),
                                 Text('Kamu tetap bisa menabung kapan saja.',
-                                    style: AppTextStyles.footnote.copyWith(
-                                      fontSize: 8,
-                                    )),
+                                    style: AppTextStyles.footnote),
                               ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 13),
+                    const SizedBox(height: AppSpacing.lg),
                     Text('Ringkasan Target',
-                        style: AppTextStyles.sectionTitle.copyWith(fontSize: 11)),
-                    const SizedBox(height: 5),
+                        style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: AppSpacing.sm),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(9),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         border: Border.all(color: AppColors.border),
@@ -356,7 +363,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       child: Column(
                         children: [
                           _SummaryRow('Target', formattedAmount),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: AppSpacing.xs),
                           _SummaryRow('Jadwal', intervalLabel),
                         ],
                       ),
@@ -366,10 +373,15 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(11, 4, 11, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.xs,
+                AppSpacing.pageHorizontal,
+                AppSpacing.md,
+              ),
               child: SizedBox(
                 width: double.infinity,
-                height: 42,
+                height: AppSpacing.buttonHeight,
                 child: ElevatedButton(
                   key: const Key('btn_save_savings_target'),
                   onPressed: _saveTarget,
@@ -377,11 +389,10 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.surface,
                     elevation: 0,
-                    textStyle: AppTextStyles.primaryButton.copyWith(
-                      fontSize: 12,
-                    ),
+                    textStyle: AppTextStyles.primaryButton,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusCard),
                     ),
                   ),
                   child: const Text('Simpan Target'),
@@ -403,7 +414,7 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         label,
-        style: AppTextStyles.fieldLabel.copyWith(fontSize: 9),
+        style: AppTextStyles.fieldLabel,
       );
 }
 
@@ -422,8 +433,8 @@ class _InputBox extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         child: Container(
-          height: 39,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: AppSpacing.inputHeight,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
@@ -452,28 +463,26 @@ class _IntervalButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 32,
+      height: AppSpacing.buttonHeight,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 7),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           backgroundColor: selected ? AppColors.primary : AppColors.surface,
           foregroundColor: selected ? AppColors.surface : AppColors.deepGreen,
           side: BorderSide(
             color: selected ? AppColors.primary : AppColors.border,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          textStyle: AppTextStyles.billMeta.copyWith(
-            fontSize: 8,
-            fontWeight: FontWeight.w600,
-          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusNav)),
+          textStyle: AppTextStyles.cardActionButton,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 12),
-              const SizedBox(width: 3),
+              Icon(icon, size: AppSpacing.navIconSize),
+              const SizedBox(width: AppSpacing.xs),
             ],
             Flexible(child: Text(label, maxLines: 1)),
           ],
@@ -494,11 +503,9 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(label,
-              style: AppTextStyles.footnote.copyWith(fontSize: 8)),
+          child: Text(label, style: AppTextStyles.footnote),
         ),
-        Text(value,
-            style: AppTextStyles.fieldLabel.copyWith(fontSize: 8)),
+        Text(value, style: AppTextStyles.fieldLabel),
       ],
     );
   }

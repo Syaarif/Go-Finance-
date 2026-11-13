@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
+import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
 import 'package:go_finance/features/savings/models/savings_target.dart';
@@ -32,21 +33,30 @@ class SavingsPage extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+                AppSpacing.pageHorizontal,
+                AppSpacing.sm,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'Target Tabungan',
-                      style: AppTextStyles.pageTitle.copyWith(fontSize: 18),
+                      style: AppTextStyles.pageTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
                   IconButton(
                     key: const Key('btn_add_savings_target'),
                     tooltip: 'Buat target tabungan',
                     onPressed: () => _createTarget(context),
                     icon: const Icon(Icons.add_rounded,
-                        color: AppColors.deepGreen, size: 25),
+                        color: AppColors.deepGreen,
+                        size: AppSpacing.navIconSize),
                   ),
                 ],
               ),
@@ -54,24 +64,29 @@ class SavingsPage extends StatelessWidget {
             if (!isEmpty)
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 18),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageHorizontal,
+                    0,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.xxl,
+                  ),
                   children: [
                     _SavingsSummary(
                       totalSaved: context.watch<SavingsProvider>().totalSaved,
                       targetCount: targets.length,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.lg),
                     Text('Target Aktif', style: AppTextStyles.sectionTitle),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.md),
                     ...targets.map(
                       (target) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: _TargetCard(target: target),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xs),
                     _SavingHabitCard(target: targets.first),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: AppSpacing.lg),
                     const _MonthlyActivity(),
                   ],
                 ),
@@ -99,11 +114,13 @@ class _SavingsSummary extends StatelessWidget {
       decimalDigits: 0,
     ).format(totalSaved);
     return Container(
-      height: 76,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       decoration: BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         gradient: const LinearGradient(
           colors: [AppColors.primary, AppColors.deepGreen],
           begin: Alignment.centerLeft,
@@ -121,34 +138,31 @@ class _SavingsSummary extends StatelessWidget {
                   'Total Tabungan',
                   style: AppTextStyles.footnote.copyWith(
                     color: AppColors.surface.withValues(alpha: 0.82),
-                    fontSize: 9,
                   ),
                 ),
                 Text(
                   money,
                   style: AppTextStyles.pageTitle.copyWith(
                     color: AppColors.surface,
-                    fontSize: 18,
                   ),
                 ),
                 Text(
                   'Terkumpul dari $targetCount target',
-                  style: AppTextStyles.footnote.copyWith(
+                  style: AppTextStyles.billRemainingDays.copyWith(
                     color: AppColors.surface.withValues(alpha: 0.8),
-                    fontSize: 8,
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            width: 48,
-            height: 48,
+            width: AppSpacing.cardIconContainerSize,
+            height: AppSpacing.cardIconContainerSize,
             decoration: const BoxDecoration(
               color: AppColors.surface,
               shape: BoxShape.circle,
             ),
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Image.asset(
               'assets/images/piggy_icon.png',
               errorBuilder: (_, __, ___) => const Icon(
@@ -177,60 +191,65 @@ class _TargetCard extends StatelessWidget {
     );
     final percent = (target.progress * 100).round();
     return Container(
-      padding: const EdgeInsets.all(11),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppSpacing.borderThin,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: AppSpacing.billIconCircleSize,
+            height: AppSpacing.billIconCircleSize,
             decoration: const BoxDecoration(
               color: AppColors.softSurface,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.savings_rounded,
-                color: AppColors.primary, size: 19),
+                color: AppColors.primary, size: AppSpacing.billIconSize),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(target.name,
-                    style: AppTextStyles.billName.copyWith(fontSize: 11)),
-                const SizedBox(height: 2),
+                    style: AppTextStyles.billName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   '${money.format(target.savedAmount)} dari ${money.format(target.amount)}',
-                  style: AppTextStyles.footnote.copyWith(fontSize: 8),
+                  style: AppTextStyles.billMeta,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius:
+                      BorderRadius.circular(AppSpacing.radiusXs),
                   child: LinearProgressIndicator(
                     value: target.progress,
-                    minHeight: 5,
+                    minHeight: AppSpacing.calendarDotSize,
                     backgroundColor: AppColors.softSurface,
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Text('$percent% tercapai',
-                        style: AppTextStyles.billMeta.copyWith(
+                        style: AppTextStyles.billRemainingDays.copyWith(
                           color: AppColors.primary,
-                          fontSize: 8,
                           fontWeight: FontWeight.w700,
                         )),
                     const Spacer(),
                     Text(
                       'Target: ${DateFormat('d MMM yyyy', 'id_ID').format(target.targetDate)}',
-                      style: AppTextStyles.billMeta.copyWith(fontSize: 8),
+                      style: AppTextStyles.billRemainingDays,
                     ),
                   ],
                 ),
@@ -256,40 +275,45 @@ class _SavingHabitCard extends StatelessWidget {
             ? 'Setiap minggu'
             : 'Setiap ${target.intervalDays} hari';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppSpacing.borderThin,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       ),
       child: Row(
         children: [
           const CircleAvatar(
-            radius: 16,
+            radius: AppSpacing.billIconCircleSize / 2,
             backgroundColor: AppColors.todayFill,
             child: Icon(Icons.local_fire_department_rounded,
-                color: AppColors.warningText, size: 19),
+                color: AppColors.warningText, size: AppSpacing.billIconSize),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Mulai kebiasaan menabung',
-                    style: AppTextStyles.billName.copyWith(fontSize: 10)),
+                    style: AppTextStyles.billName),
                 Text('Check-in belum dilakukan',
-                    style: AppTextStyles.billMeta.copyWith(fontSize: 8)),
+                    style: AppTextStyles.billMeta),
                 Text('Target: $interval',
                     style: AppTextStyles.billMeta.copyWith(
                       color: AppColors.deepGreen,
-                      fontSize: 8,
                       fontWeight: FontWeight.w600,
                     )),
               ],
             ),
           ),
           const Icon(Icons.chevron_right_rounded,
-              color: AppColors.secondary, size: 19),
+              color: AppColors.secondary, size: AppSpacing.navIconSize),
         ],
       ),
     );
@@ -309,8 +333,7 @@ class _MonthlyActivity extends StatelessWidget {
     const weekdays = ['Mi', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
     for (final weekday in weekdays) {
       cells.add(Center(
-        child: Text(weekday,
-            style: AppTextStyles.billMeta.copyWith(fontSize: 7)),
+        child: Text(weekday, style: AppTextStyles.weekdayLabel),
       ));
     }
     for (var i = 0; i < firstWeekday; i++) {
@@ -320,8 +343,8 @@ class _MonthlyActivity extends StatelessWidget {
       final isToday = day == now.day;
       cells.add(Center(
         child: Container(
-          width: 19,
-          height: 19,
+          width: AppSpacing.calendarDaySize,
+          height: AppSpacing.calendarDaySize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isToday ? AppColors.softSurface : Colors.transparent,
@@ -329,46 +352,46 @@ class _MonthlyActivity extends StatelessWidget {
             border: isToday ? Border.all(color: AppColors.primary) : null,
           ),
           child: Text('$day',
-              style: AppTextStyles.billMeta.copyWith(
-                color: AppColors.deepGreen,
-                fontSize: 7,
-                fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
-              )),
+              style: isToday
+                  ? AppTextStyles.calendarDayBold
+                  : AppTextStyles.calendarDay),
         ),
       ));
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(11, 10, 11, 8),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppSpacing.borderThin,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       ),
       child: Column(
         children: [
           Row(
             children: [
               Text('Aktivitas Bulan Ini',
-                  style: AppTextStyles.sectionTitle.copyWith(fontSize: 10)),
+                  style: AppTextStyles.sectionTitle),
               const Spacer(),
-              Text(month,
-                  style: AppTextStyles.billMeta.copyWith(fontSize: 8)),
+              Text(month, style: AppTextStyles.billMeta),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.md),
           GridView.count(
             crossAxisCount: 7,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 4,
-            crossAxisSpacing: 2,
-            childAspectRatio: 1.65,
+            mainAxisSpacing: AppSpacing.xs,
+            crossAxisSpacing: AppSpacing.xxs,
+            childAspectRatio: 1.0,
             children: cells,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: AppSpacing.sm),
           Text('Belum ada check-in bulan ini',
-              style: AppTextStyles.billMeta.copyWith(fontSize: 8)),
+              style: AppTextStyles.footnote),
         ],
       ),
     );
