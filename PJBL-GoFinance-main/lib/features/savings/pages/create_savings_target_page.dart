@@ -43,10 +43,10 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
       locale: const Locale('id', 'ID'),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.primary,
-            onPrimary: AppColors.surface,
-            surface: AppColors.canvas,
+          colorScheme: ColorScheme.light(
+            primary: context.colors.primary,
+            onPrimary: Theme.of(context).colorScheme.onPrimary,
+            surface: context.colors.canvas,
           ),
         ),
         child: child!,
@@ -62,7 +62,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
         SnackBar(
           content: Text('Lengkapi nama, nominal, dan tanggal target.',
               style: AppTextStyles.primaryButton),
-          backgroundColor: AppColors.negative,
+          backgroundColor: context.colors.negative,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -75,7 +75,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
         SnackBar(
           content: Text('Interval khusus harus 1 sampai 365 hari.',
               style: AppTextStyles.primaryButton),
-          backgroundColor: AppColors.negative,
+          backgroundColor: context.colors.negative,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -109,7 +109,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
             : 'Setiap 1 minggu';
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -125,9 +125,9 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
                     tooltip: 'Kembali',
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
                         size: AppSpacing.navIconSize,
-                        color: AppColors.deepGreen),
+                        color: context.colors.primaryText),
                   ),
                   Text('Buat Target Tabungan',
                       style: AppTextStyles.calendarHeader),
@@ -145,8 +145,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Buat tujuan baru',
-                        style: AppTextStyles.sectionTitle),
+                    Text('Buat tujuan baru', style: AppTextStyles.sectionTitle),
                     const SizedBox(height: AppSpacing.xs),
                     Text('Tentukan target dan jadwal menabungmu.',
                         style: AppTextStyles.footnote),
@@ -175,7 +174,9 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         key: const Key('field_savings_amount'),
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         onChanged: (_) => setState(() {}),
                         style: AppTextStyles.inputText.copyWith(
                           fontWeight: FontWeight.w700,
@@ -197,8 +198,8 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       onTap: _selectDate,
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_month_outlined,
-                              color: AppColors.primary,
+                          Icon(Icons.calendar_month_outlined,
+                              color: context.colors.primaryText,
                               size: AppSpacing.navIconSize),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
@@ -209,13 +210,13 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                       .format(_targetDate!),
                               style: AppTextStyles.inputText.copyWith(
                                 color: _targetDate == null
-                                    ? AppColors.mutedText
-                                    : AppColors.deepGreen,
+                                    ? context.colors.mutedText
+                                    : context.colors.textPrimary,
                               ),
                             ),
                           ),
-                          const Icon(Icons.chevron_right_rounded,
-                              color: AppColors.secondary,
+                          Icon(Icons.chevron_right_rounded,
+                              color: context.colors.primaryText,
                               size: AppSpacing.navIconSize),
                         ],
                       ),
@@ -265,14 +266,13 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.softSurface,
+                          color: context.colors.softSurface,
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusSm),
                         ),
                         child: Row(
                           children: [
-                            Text('Setiap',
-                                style: AppTextStyles.fieldLabel),
+                            Text('Setiap', style: AppTextStyles.fieldLabel),
                             const SizedBox(width: AppSpacing.sm),
                             SizedBox(
                               width: 82,
@@ -291,26 +291,25 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                 ),
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: AppColors.surface,
+                                  fillColor: context.colors.surface,
                                   contentPadding: EdgeInsets.zero,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(
                                         AppSpacing.radiusXs),
-                                    borderSide: const BorderSide(
-                                        color: AppColors.primary),
+                                    borderSide: BorderSide(
+                                        color: context.colors.primaryText),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(
                                         AppSpacing.radiusXs),
-                                    borderSide: const BorderSide(
-                                        color: AppColors.primary),
+                                    borderSide: BorderSide(
+                                        color: context.colors.primaryText),
                                   ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
-                            Text('Hari',
-                                style: AppTextStyles.fieldLabel),
+                            Text('Hari', style: AppTextStyles.fieldLabel),
                           ],
                         ),
                       ),
@@ -322,15 +321,15 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.softSurface,
+                        color: context.colors.softSurface,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.check_circle_rounded,
-                              color: AppColors.primary,
+                          Icon(Icons.check_circle_rounded,
+                              color: context.colors.primaryText,
                               size: AppSpacing.navIconSize),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
@@ -348,15 +347,14 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    Text('Ringkasan Target',
-                        style: AppTextStyles.sectionTitle),
+                    Text('Ringkasan Target', style: AppTextStyles.sectionTitle),
                     const SizedBox(height: AppSpacing.sm),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        border: Border.all(color: AppColors.border),
+                        color: context.colors.surface,
+                        border: Border.all(color: context.colors.border),
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusSm),
                       ),
@@ -386,8 +384,8 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                   key: const Key('btn_save_savings_target'),
                   onPressed: _saveTarget,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.surface,
+                    backgroundColor: context.colors.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     elevation: 0,
                     textStyle: AppTextStyles.primaryButton,
                     shape: RoundedRectangleBorder(
@@ -427,7 +425,7 @@ class _InputBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       child: InkWell(
         onTap: onTap,
@@ -437,7 +435,7 @@ class _InputBox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.colors.border),
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
           child: child,
@@ -468,10 +466,13 @@ class _IntervalButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          backgroundColor: selected ? AppColors.primary : AppColors.surface,
-          foregroundColor: selected ? AppColors.surface : AppColors.deepGreen,
+          backgroundColor:
+              selected ? context.colors.primary : context.colors.surface,
+          foregroundColor: selected
+              ? Theme.of(context).colorScheme.onPrimary
+              : context.colors.textPrimary,
           side: BorderSide(
-            color: selected ? AppColors.primary : AppColors.border,
+            color: selected ? context.colors.primary : context.colors.border,
           ),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusNav)),

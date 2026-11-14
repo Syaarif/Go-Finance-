@@ -97,17 +97,17 @@ class AppBottomNav extends StatelessWidget {
         child: Container(
           height: AppSpacing.bottomNavHeight,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
             border: Border.all(
-              color: AppColors.border,
+              color: context.colors.border,
               width: AppSpacing.borderThin,
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: AppColors.cardShadow,
+                color: context.colors.cardShadow,
                 blurRadius: AppSpacing.md,
-                offset: Offset(0, -AppSpacing.xxs),
+                offset: const Offset(0, -AppSpacing.xxs),
               ),
             ],
           ),
@@ -175,10 +175,11 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.primary : AppColors.mutedText;
+    final color =
+        isActive ? context.colors.primaryText : context.colors.mutedText;
 
     return Material(
-      color: AppColors.transparent,
+      color: context.colors.canvas.withValues(alpha: 0),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -196,7 +197,9 @@ class _NavBarItem extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 label,
-                style: AppTextStyles.navLabel(isActive: isActive),
+                style: AppTextStyles.navLabel(isActive: isActive).copyWith(
+                  color: color,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -216,7 +219,7 @@ class _ScanCenterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.primary,
+      color: context.colors.primary,
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
@@ -231,13 +234,18 @@ class _ScanCenterButton extends StatelessWidget {
                 'assets/svg/scan.svg',
                 width: AppSpacing.xl,
                 height: AppSpacing.xl,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.surface,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.onPrimary,
                   BlendMode.srcIn,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
-              Text('Scan', style: AppTextStyles.scanLabel),
+              Text(
+                'Scan',
+                style: AppTextStyles.scanLabel.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ],
           ),
         ),

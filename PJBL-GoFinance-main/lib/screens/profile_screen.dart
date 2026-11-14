@@ -7,9 +7,6 @@ import 'package:go_finance/screens/edit_profile_screen.dart';
 import 'package:go_finance/screens/security_screen.dart';
 import 'package:go_finance/screens/login_screen.dart';
 
-// ─────────────────────────────────────────────
-// Warna kustom khusus layar profil
-// ─────────────────────────────────────────────
 class ProfileColors {
   static const Color background = Color(0xFFF4F1EB);
   static const Color darkGreen = Color(0xFF22361B);
@@ -42,7 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _notifTransaksi = true;
   bool _notifTabungan = true;
 
-  String get _initial => _username.isNotEmpty ? _username[0].toUpperCase() : '?';
+  String get _initial =>
+      _username.isNotEmpty ? _username[0].toUpperCase() : '?';
 
   // ── Callback dari EditProfileScreen ──
   void _onProfileUpdated(String newUsername) {
@@ -64,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -80,12 +78,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -93,24 +92,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: ProfileColors.darkGreen,
+                        color: context.colors.deepGreen,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 ...timezones.map((tz) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
                         tz,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _timezone == tz ? FontWeight.w700 : FontWeight.w400,
-                          color: ProfileColors.darkGreen,
+                          fontWeight: _timezone == tz
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: context.colors.deepGreen,
                         ),
                       ),
                       trailing: _timezone == tz
-                          ? const Icon(Icons.check_circle, color: ProfileColors.darkGreen, size: 22)
+                          ? Icon(Icons.check_circle,
+                              color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () {
                         setState(() => _timezone = tz);
@@ -119,7 +122,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SnackBar(
                             content: Text('Zona waktu diubah ke $tz'),
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                       },
@@ -138,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -154,12 +158,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -167,24 +172,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: ProfileColors.darkGreen,
+                        color: context.colors.deepGreen,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 ...themes.map((t) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
                         t,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _theme == t ? FontWeight.w700 : FontWeight.w400,
-                          color: ProfileColors.darkGreen,
+                          fontWeight:
+                              _theme == t ? FontWeight.w700 : FontWeight.w400,
+                          color: context.colors.deepGreen,
                         ),
                       ),
                       trailing: _theme == t
-                          ? const Icon(Icons.check_circle, color: ProfileColors.darkGreen, size: 22)
+                          ? Icon(Icons.check_circle,
+                              color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () {
                         setState(() => _theme = t);
@@ -193,7 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SnackBar(
                             content: Text('Tema diubah ke $t'),
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                       },
@@ -212,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -228,12 +237,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -241,24 +251,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: ProfileColors.darkGreen,
+                        color: context.colors.deepGreen,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 ...sizes.map((s) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
                         s,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _textSize == s ? FontWeight.w700 : FontWeight.w400,
-                          color: ProfileColors.darkGreen,
+                          fontWeight: _textSize == s
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: context.colors.deepGreen,
                         ),
                       ),
                       trailing: _textSize == s
-                          ? const Icon(Icons.check_circle, color: ProfileColors.darkGreen, size: 22)
+                          ? Icon(Icons.check_circle,
+                              color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () {
                         setState(() => _textSize = s);
@@ -267,7 +281,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SnackBar(
                             content: Text('Ukuran teks diubah ke $s'),
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                       },
@@ -286,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -302,12 +317,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -315,24 +331,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: ProfileColors.darkGreen,
+                        color: context.colors.deepGreen,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 ...languages.map((l) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
                         l,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _language == l ? FontWeight.w700 : FontWeight.w400,
-                          color: ProfileColors.darkGreen,
+                          fontWeight: _language == l
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: context.colors.deepGreen,
                         ),
                       ),
                       trailing: _language == l
-                          ? const Icon(Icons.check_circle, color: ProfileColors.darkGreen, size: 22)
+                          ? Icon(Icons.check_circle,
+                              color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () {
                         setState(() => _language = l);
@@ -341,7 +361,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SnackBar(
                             content: Text('Bahasa diubah ke $l'),
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                       },
@@ -359,13 +380,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Detail Email',
           style: GoogleFonts.instrumentSans(
             fontWeight: FontWeight.w700,
-            color: ProfileColors.darkGreen,
+            color: context.colors.deepGreen,
           ),
         ),
         content: Column(
@@ -376,7 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Email terdaftar:',
               style: GoogleFonts.instrumentSans(
                 fontSize: 13,
-                color: ProfileColors.textGrey,
+                color: context.colors.mutedText,
               ),
             ),
             const SizedBox(height: 6),
@@ -385,7 +406,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: GoogleFonts.instrumentSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: ProfileColors.darkGreen,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -393,20 +414,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Status verifikasi:',
               style: GoogleFonts.instrumentSans(
                 fontSize: 13,
-                color: ProfileColors.textGrey,
+                color: context.colors.mutedText,
               ),
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.check_circle, color: Color(0xFF347928), size: 18),
+                Icon(Icons.check_circle,
+                    color: context.colors.primaryText, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   'Terverifikasi',
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF347928),
+                    color: context.colors.primaryText,
                   ),
                 ),
               ],
@@ -420,7 +442,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Tutup',
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w600,
-                color: ProfileColors.darkGreen,
+                color: context.colors.deepGreen,
               ),
             ),
           ),
@@ -434,20 +456,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Keluar Akun',
           style: GoogleFonts.instrumentSans(
             fontWeight: FontWeight.w700,
-            color: ProfileColors.darkGreen,
+            color: context.colors.deepGreen,
           ),
         ),
         content: Text(
           'Apakah Anda yakin ingin keluar dari aplikasi Go Finance?',
           style: GoogleFonts.instrumentSans(
             fontSize: 14,
-            color: ProfileColors.darkGreen,
+            color: context.colors.textPrimary,
           ),
         ),
         actions: [
@@ -457,7 +479,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Batal',
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w600,
-                color: ProfileColors.textGrey,
+                color: context.colors.mutedText,
               ),
             ),
           ),
@@ -474,7 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Ya, Keluar',
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w700,
-                color: ProfileColors.redAccent,
+                color: context.colors.negative,
               ),
             ),
           ),
@@ -486,20 +508,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProfileColors.background,
+      backgroundColor: context.colors.canvas,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: context.colors.canvas,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.chevron_left, size: 28),
-          color: ProfileColors.darkGreen,
+          color: context.colors.primaryText,
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
           'Profil & Pengaturan',
           style: GoogleFonts.instrumentSans(
-            color: ProfileColors.darkGreen,
+            color: context.colors.deepGreen,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -594,10 +616,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          val ? 'Notifikasi transaksi diaktifkan' : 'Notifikasi transaksi dinonaktifkan',
+                          val
+                              ? 'Notifikasi transaksi diaktifkan'
+                              : 'Notifikasi transaksi dinonaktifkan',
                         ),
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         duration: const Duration(seconds: 1),
                       ),
                     );
@@ -613,10 +638,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          val ? 'Notifikasi tabungan diaktifkan' : 'Notifikasi tabungan dinonaktifkan',
+                          val
+                              ? 'Notifikasi tabungan diaktifkan'
+                              : 'Notifikasi tabungan dinonaktifkan',
                         ),
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         duration: const Duration(seconds: 1),
                       ),
                     );
@@ -632,12 +660,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 50,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: ProfileColors.redAccent,
-                  side: const BorderSide(color: ProfileColors.redAccent),
+                  foregroundColor: context.colors.negative,
+                  side: BorderSide(color: context.colors.negative),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: context.colors.canvas,
                 ),
                 onPressed: _showLogoutDialog,
                 child: Text(
@@ -659,7 +687,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Profile Card ──────────────────────────
   Widget _buildProfileCard() {
     return Material(
-      color: ProfileColors.cardWhite,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -684,11 +712,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Avatar inisial
               CircleAvatar(
                 radius: 26,
-                backgroundColor: ProfileColors.lightGreenBg,
+                backgroundColor: context.colors.softSurface,
                 child: Text(
                   _initial,
                   style: GoogleFonts.instrumentSans(
-                    color: ProfileColors.darkGreen,
+                    color: context.colors.deepGreen,
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
                   ),
@@ -706,7 +734,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: ProfileColors.darkGreen,
+                        color: context.colors.deepGreen,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -714,7 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _email,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 13,
-                        color: ProfileColors.textGrey,
+                        color: context.colors.mutedText,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -723,9 +751,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
 
               // Chevron
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: ProfileColors.chevronGrey,
+                color: context.colors.mutedText,
                 size: 22,
               ),
             ],
@@ -742,7 +770,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       style: GoogleFonts.instrumentSans(
         fontWeight: FontWeight.bold,
         fontSize: 15,
-        color: ProfileColors.darkGreen,
+        color: context.colors.deepGreen,
       ),
     );
   }
@@ -751,7 +779,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        color: ProfileColors.cardWhite,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(children: children),
@@ -789,7 +817,7 @@ class CustomSettingsTile extends StatelessWidget {
           children: [
             // Ikon PNG di dalam container rounded square yang seragam
             RoundedSquareIcon(
-              backgroundColor: AppColors.softSurface,
+              backgroundColor: context.colors.softSurface,
               size: 40,
               borderRadius: AppSpacing.radiusSm,
               child: SettingsIcon(iconPath),
@@ -802,7 +830,7 @@ class CustomSettingsTile extends StatelessWidget {
                 label,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 14,
-                  color: ProfileColors.darkGreen,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
@@ -815,16 +843,16 @@ class CustomSettingsTile extends StatelessWidget {
                   trailingText!,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 13,
-                    color: ProfileColors.textGrey,
+                    color: context.colors.mutedText,
                   ),
                 ),
               ),
 
             // Chevron (opsional)
             if (showChevron)
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: ProfileColors.chevronGrey,
+                color: context.colors.mutedText,
                 size: 20,
               ),
           ],
@@ -880,7 +908,7 @@ class _NotifSwitchTile extends StatelessWidget {
       child: Row(
         children: [
           RoundedSquareIcon(
-            backgroundColor: AppColors.softSurface,
+            backgroundColor: context.colors.softSurface,
             size: 40,
             borderRadius: AppSpacing.radiusSm,
             child: SettingsIcon(iconPath),
@@ -891,7 +919,7 @@ class _NotifSwitchTile extends StatelessWidget {
               label,
               style: GoogleFonts.instrumentSans(
                 fontSize: 14,
-                color: ProfileColors.darkGreen,
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -901,10 +929,10 @@ class _NotifSwitchTile extends StatelessWidget {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: ProfileColors.darkGreen,
-                activeTrackColor: ProfileColors.lightGreenBg,
-                inactiveThumbColor: ProfileColors.textGrey,
-                inactiveTrackColor: ProfileColors.divider,
+                activeThumbColor: context.colors.primaryText,
+                activeTrackColor: context.colors.softSurface,
+                inactiveThumbColor: context.colors.mutedText,
+                inactiveTrackColor: context.colors.border,
               ),
             ),
           ),
@@ -922,10 +950,10 @@ class _TileDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
-      color: ProfileColors.divider,
+      color: context.colors.border,
       indent: 54,
       endIndent: 16,
     );

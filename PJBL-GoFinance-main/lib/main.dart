@@ -41,6 +41,8 @@ class GoFinanceApp extends StatelessWidget {
         title: 'Go Finance',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
         locale: const Locale('id', 'ID'),
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,

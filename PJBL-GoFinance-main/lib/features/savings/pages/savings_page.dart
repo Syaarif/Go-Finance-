@@ -27,7 +27,7 @@ class SavingsPage extends StatelessWidget {
     final isEmpty = targets.isEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -54,8 +54,8 @@ class SavingsPage extends StatelessWidget {
                     key: const Key('btn_add_savings_target'),
                     tooltip: 'Buat target tabungan',
                     onPressed: () => _createTarget(context),
-                    icon: const Icon(Icons.add_rounded,
-                        color: AppColors.deepGreen,
+                    icon: Icon(Icons.add_rounded,
+                        color: context.colors.primaryText,
                         size: AppSpacing.navIconSize),
                   ),
                 ],
@@ -104,7 +104,8 @@ class SavingsPage extends StatelessWidget {
                         Icon(
                           Icons.savings_rounded,
                           size: 72,
-                          color: AppColors.primary.withValues(alpha: 0.35),
+                          color: context.colors.primaryText
+                              .withValues(alpha: 0.35),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
@@ -124,8 +125,9 @@ class SavingsPage extends StatelessWidget {
                           icon: const Icon(Icons.add_rounded),
                           label: const Text('Buat Tabungan Pertama'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.surface,
+                            backgroundColor: context.colors.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.lg,
                               vertical: AppSpacing.md,
@@ -169,10 +171,10 @@ class _SavingsSummary extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: context.colors.primary,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.deepGreen],
+        gradient: LinearGradient(
+          colors: [context.colors.primary, context.colors.deepGreen],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -187,19 +189,25 @@ class _SavingsSummary extends StatelessWidget {
                 Text(
                   'Total Tabungan',
                   style: AppTextStyles.footnote.copyWith(
-                    color: AppColors.surface.withValues(alpha: 0.82),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onPrimary
+                        .withValues(alpha: 0.82),
                   ),
                 ),
                 Text(
                   money,
                   style: AppTextStyles.pageTitle.copyWith(
-                    color: AppColors.surface,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
                 Text(
                   'Terkumpul dari $targetCount target',
                   style: AppTextStyles.billRemainingDays.copyWith(
-                    color: AppColors.surface.withValues(alpha: 0.8),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onPrimary
+                        .withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -208,16 +216,16 @@ class _SavingsSummary extends StatelessWidget {
           Container(
             width: AppSpacing.cardIconContainerSize,
             height: AppSpacing.cardIconContainerSize,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
+            decoration: BoxDecoration(
+              color: context.colors.surface,
               shape: BoxShape.circle,
             ),
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Image.asset(
               'assets/images/piggy_icon.png',
-              errorBuilder: (_, __, ___) => const Icon(
+              errorBuilder: (_, __, ___) => Icon(
                 Icons.savings_rounded,
-                color: AppColors.primary,
+                color: context.colors.primaryText,
               ),
             ),
           ),
@@ -243,9 +251,9 @@ class _TargetCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -256,12 +264,13 @@ class _TargetCard extends StatelessWidget {
           Container(
             width: AppSpacing.billIconCircleSize,
             height: AppSpacing.billIconCircleSize,
-            decoration: const BoxDecoration(
-              color: AppColors.softSurface,
+            decoration: BoxDecoration(
+              color: context.colors.softSurface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.savings_rounded,
-                color: AppColors.primary, size: AppSpacing.billIconSize),
+            child: Icon(Icons.savings_rounded,
+                color: context.colors.primaryText,
+                size: AppSpacing.billIconSize),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -279,13 +288,12 @@ class _TargetCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusXs),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                   child: LinearProgressIndicator(
                     value: target.progress,
                     minHeight: AppSpacing.calendarDotSize,
-                    backgroundColor: AppColors.softSurface,
-                    color: AppColors.primary,
+                    backgroundColor: context.colors.softSurface,
+                    color: context.colors.primary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -293,7 +301,7 @@ class _TargetCard extends StatelessWidget {
                   children: [
                     Text('$percent% tercapai',
                         style: AppTextStyles.billRemainingDays.copyWith(
-                          color: AppColors.primary,
+                          color: context.colors.primaryText,
                           fontWeight: FontWeight.w700,
                         )),
                     const Spacer(),
@@ -330,40 +338,39 @@ class _SavingHabitCard extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: AppSpacing.billIconCircleSize / 2,
-            backgroundColor: AppColors.todayFill,
+            backgroundColor: context.colors.todayFill,
             child: Icon(Icons.local_fire_department_rounded,
-                color: AppColors.warningText, size: AppSpacing.billIconSize),
+                color: context.colors.warningText,
+                size: AppSpacing.billIconSize),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Mulai kebiasaan menabung',
-                    style: AppTextStyles.billName),
-                Text('Check-in belum dilakukan',
-                    style: AppTextStyles.billMeta),
+                Text('Mulai kebiasaan menabung', style: AppTextStyles.billName),
+                Text('Check-in belum dilakukan', style: AppTextStyles.billMeta),
                 Text('Target: $interval',
                     style: AppTextStyles.billMeta.copyWith(
-                      color: AppColors.deepGreen,
+                      color: context.colors.primaryText,
                       fontWeight: FontWeight.w600,
                     )),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded,
-              color: AppColors.secondary, size: AppSpacing.navIconSize),
+          Icon(Icons.chevron_right_rounded,
+              color: context.colors.primaryText, size: AppSpacing.navIconSize),
         ],
       ),
     );
@@ -397,9 +404,12 @@ class _MonthlyActivity extends StatelessWidget {
           height: AppSpacing.calendarDaySize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isToday ? AppColors.softSurface : Colors.transparent,
+            color: isToday
+                ? context.colors.softSurface
+                : context.colors.canvas.withValues(alpha: 0),
             shape: BoxShape.circle,
-            border: isToday ? Border.all(color: AppColors.primary) : null,
+            border:
+                isToday ? Border.all(color: context.colors.primaryText) : null,
           ),
           child: Text('$day',
               style: isToday
@@ -412,9 +422,9 @@ class _MonthlyActivity extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -423,8 +433,7 @@ class _MonthlyActivity extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Aktivitas Bulan Ini',
-                  style: AppTextStyles.sectionTitle),
+              Text('Aktivitas Bulan Ini', style: AppTextStyles.sectionTitle),
               const Spacer(),
               Text(month, style: AppTextStyles.billMeta),
             ],
@@ -440,8 +449,7 @@ class _MonthlyActivity extends StatelessWidget {
             children: cells,
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text('Belum ada check-in bulan ini',
-              style: AppTextStyles.footnote),
+          Text('Belum ada check-in bulan ini', style: AppTextStyles.footnote),
         ],
       ),
     );
