@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/onboarding_screen.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Splash Screen - "Beranda awal 2" dari Figma (node 84:313)
 /// Background hijau muda #C0EBA6 + celengan babi mengambang + "Go Finance" + loading bar
@@ -62,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGreen,
       body: AnimatedBuilder(
@@ -130,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Kelola hari ini, untuk masa depan.',
+                              l10n.splashTagline,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.instrumentSans(
                                 fontWeight: FontWeight.w600,

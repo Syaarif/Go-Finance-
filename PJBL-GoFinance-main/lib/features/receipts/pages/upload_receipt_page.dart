@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/features/receipts/pages/analysis_progress_page.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class UploadReceiptPage extends StatefulWidget {
   const UploadReceiptPage({super.key});
@@ -30,6 +32,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -42,7 +45,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   IconButton(
                     key: const Key('btn_back_upload_receipt'),
                     onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: 'Kembali',
+                    tooltip: l10n.back,
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
@@ -50,15 +53,18 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                     ),
                   ),
                   Text(
-                    'AI Analisis Struk',
+                    l10n.receiptAnalysisTitle,
                     style: AppTextStyles.pageTitle.copyWith(fontSize: 17),
                   ),
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(18, 2, 18, 12),
-              child: _UploadProgress(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 2, 18, 12),
+              child: _UploadProgress(
+                uploadLabel: l10n.upload,
+                reviewLabel: l10n.review,
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -67,12 +73,12 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Unggah file struk',
+                      l10n.uploadReceiptFile,
                       style: AppTextStyles.sectionTitle.copyWith(fontSize: 20),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Pilih foto atau PDF bukti transaksi kamu.',
+                      l10n.receiptUploadInstructions,
                       style: AppTextStyles.footnote.copyWith(fontSize: 11),
                     ),
                     const SizedBox(height: 15),
@@ -80,19 +86,20 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                       onTap: () {
                         HapticFeedback.lightImpact();
                         _showMessage(
-                          'Pemilih file akan tersedia setelah integrasi.',
+                          l10n.filePickerUnavailable,
                         );
                       },
                     ),
                     const SizedBox(height: 17),
                     Text(
-                      'File dipilih',
+                      l10n.selectedFile,
                       style: AppTextStyles.fieldLabel.copyWith(fontSize: 11),
                     ),
                     if (_hasSelectedFile) ...[
                       const SizedBox(height: 8),
                       _SelectedFileTile(
-                        onRemove: () => setState(() => _hasSelectedFile = false),
+                        onRemove: () =>
+                            setState(() => _hasSelectedFile = false),
                       ),
                     ] else ...[
                       const SizedBox(height: 8),
@@ -107,7 +114,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                               BorderRadius.circular(AppSpacing.radiusMd),
                         ),
                         child: Text(
-                          'Belum ada file dipilih',
+                          l10n.noFileSelected,
                           style: AppTextStyles.footnote,
                         ),
                       ),
@@ -132,8 +139,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                               HapticFeedback.mediumImpact();
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      const AnalysisProgressPage(),
+                                  builder: (_) => const AnalysisProgressPage(),
                                 ),
                               );
                             }
@@ -151,19 +157,19 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                               BorderRadius.circular(AppSpacing.radiusMd),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Mulai Analisis AI'),
-                          SizedBox(width: 8),
-                          Icon(Icons.auto_awesome, size: 16),
+                          Text(l10n.startAiAnalysis),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.auto_awesome, size: 16),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'File akan diproses setelah kamu menekan tombol.',
+                    l10n.fileProcessingNotice,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.footnote.copyWith(fontSize: 9),
                   ),
@@ -178,24 +184,30 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
 }
 
 class _UploadProgress extends StatelessWidget {
-  const _UploadProgress();
+  final String uploadLabel;
+  final String reviewLabel;
+
+  const _UploadProgress({
+    required this.uploadLabel,
+    required this.reviewLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(
           child: _ProgressStep(
             number: '1',
-            label: 'Upload',
+            label: uploadLabel,
             isActive: true,
           ),
         ),
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         Expanded(
           child: _ProgressStep(
             number: '2',
-            label: 'Review',
+            label: reviewLabel,
             isActive: false,
           ),
         ),
@@ -269,6 +281,7 @@ class _UploadDropZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return CustomPaint(
       painter: _DashedBorderPainter(),
       child: Material(
@@ -298,18 +311,18 @@ class _UploadDropZone extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ketuk untuk Unggah File Struk',
+                  l10n.tapToUploadReceipt,
                   style: AppTextStyles.fieldLabel.copyWith(fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Mendukung format JPG, PNG, PDF',
+                  l10n.supportedReceiptFormats,
                   style: AppTextStyles.footnote.copyWith(fontSize: 10),
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'Ukuran maksimal 10 MB',
+                  l10n.maxFileSize,
                   style: AppTextStyles.footnote.copyWith(fontSize: 9),
                   textAlign: TextAlign.center,
                 ),
@@ -329,6 +342,8 @@ class _SelectedFileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return Container(
       height: 61,
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -366,7 +381,9 @@ class _SelectedFileTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'JPG · 2,4 MB',
+                  l10n.receiptFileSize(
+                    NumberFormat.decimalPattern(locale).format(2.4),
+                  ),
                   style: AppTextStyles.footnote.copyWith(fontSize: 9),
                 ),
               ],
@@ -375,7 +392,7 @@ class _SelectedFileTile extends StatelessWidget {
           IconButton(
             key: const Key('btn_remove_receipt_file'),
             onPressed: onRemove,
-            tooltip: 'Hapus file',
+            tooltip: l10n.removeFile,
             constraints: const BoxConstraints.tightFor(width: 30, height: 30),
             padding: EdgeInsets.zero,
             style: IconButton.styleFrom(
@@ -396,6 +413,7 @@ class _PhotoTip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(11),
@@ -429,12 +447,12 @@ class _PhotoTip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pastikan struk terlihat jelas',
+                  l10n.receiptPhotoTipTitle,
                   style: AppTextStyles.fieldLabel.copyWith(fontSize: 10),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'dan semua informasi terbaca agar hasil analisis AI lebih akurat.',
+                  l10n.receiptPhotoTipBody,
                   style: AppTextStyles.footnote.copyWith(fontSize: 9),
                 ),
               ],

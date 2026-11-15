@@ -7,6 +7,8 @@ import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/pages/numpad_page.dart';
+import 'package:go_finance/features/transactions/utils/transaction_localization.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Halaman form tambah transaksi (03_Tambah_Transaksi).
 class AddTransactionPage extends StatefulWidget {
@@ -27,21 +29,19 @@ class _AddTransactionPageState extends State<AddTransactionPage>
   final _noteController = TextEditingController();
   final _noteFocus = FocusNode();
 
-  String get _formattedAmount {
+  String _formattedAmount(String locale) {
     if (_amount == 0) return 'Rp 0';
     return NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(_amount);
   }
 
-  String get _formattedDate {
-    return DateFormat('d MMMM yyyy', 'id_ID').format(_date);
-  }
+  String _formattedDate(String locale) =>
+      DateFormat('d MMMM yyyy', locale).format(_date);
 
-  bool get _isValid =>
-      _selectedCategory != null && _amount > 0;
+  bool get _isValid => _selectedCategory != null && _amount > 0;
 
   @override
   void initState() {
@@ -86,7 +86,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
       initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      locale: const Locale('id', 'ID'),
+      locale: Localizations.localeOf(context),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(
@@ -116,7 +116,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lengkapi kategori dan nominal terlebih dahulu.',
+          content: Text(AppLocalizations.of(context)!.transactionFormIncomplete,
               style: AppTextStyles.primaryButton),
           backgroundColor: AppColors.negative,
           behavior: SnackBarBehavior.floating,
@@ -136,8 +136,11 @@ class _AddTransactionPageState extends State<AddTransactionPage>
       type: _type,
       category: _selectedCategory!,
       date: DateTime(
-        _date.year, _date.month, _date.day,
-        DateTime.now().hour, DateTime.now().minute,
+        _date.year,
+        _date.month,
+        _date.day,
+        DateTime.now().hour,
+        DateTime.now().minute,
       ),
       note: _noteController.text.trim(),
     );
@@ -146,6 +149,8 @@ class _AddTransactionPageState extends State<AddTransactionPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -159,7 +164,8 @@ class _AddTransactionPageState extends State<AddTransactionPage>
               // ===== TYPE TOGGLE =====
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageHorizontal, vertical: AppSpacing.sm),
+                    horizontal: AppSpacing.pageHorizontal,
+                    vertical: AppSpacing.sm),
                 child: _TypeToggle(
                   selected: _type,
                   onChanged: (t) => setState(() => _type = t),
@@ -190,7 +196,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.sm),
 
                         // --- Kategori ---
-                        const _FieldLabel('Kategori'),
+                        _FieldLabel(l10n.transactionCategory),
                         const SizedBox(height: AppSpacing.xs),
                         _CategoryField(
                           selected: _selectedCategory,
@@ -199,26 +205,26 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Nominal ---
-                        const _FieldLabel('Nominal'),
+                        _FieldLabel(l10n.amount),
                         const SizedBox(height: AppSpacing.xs),
                         _AmountField(
-                          amount: _formattedAmount,
+                          amount: _formattedAmount(locale),
                           onTap: _openNumpad,
                           isEmpty: _amount == 0,
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Tanggal ---
-                        const _FieldLabel('Tanggal transaksi'),
+                        _FieldLabel(l10n.transactionDate),
                         const SizedBox(height: AppSpacing.xs),
                         _DateField(
-                          date: _formattedDate,
+                          date: _formattedDate(locale),
                           onTap: _pickDate,
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
                         // --- Catatan ---
-                        const _FieldLabel('Catatan (opsional)'),
+                        _FieldLabel(l10n.optionalNote),
                         const SizedBox(height: AppSpacing.xs),
                         _NoteField(
                           controller: _noteController,
@@ -234,8 +240,9 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         const SizedBox(height: AppSpacing.sm),
                         Center(
                           child: Text(
-                            'Data dapat diedit kembali di riwayat transaksi.',
-                            style: AppTextStyles.footnote.copyWith(fontSize: 11),
+                            l10n.transactionEditableNote,
+                            style:
+                                AppTextStyles.footnote.copyWith(fontSize: 11),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -281,7 +288,8 @@ class _FormAppBar extends StatelessWidget {
             },
           ),
           const SizedBox(width: AppSpacing.md),
-          Text('Tambah Transaksi', style: AppTextStyles.pageTitle),
+          Text(AppLocalizations.of(context)!.addTransaction,
+              style: AppTextStyles.pageTitle),
         ],
       ),
     );
@@ -296,6 +304,7 @@ class _TypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: 44,
       decoration: BoxDecoration(
@@ -306,7 +315,7 @@ class _TypeToggle extends StatelessWidget {
       child: Row(
         children: TransactionType.values.map((t) {
           final isActive = selected == t;
-          final label = t == TransactionType.pemasukan ? 'Pemasukan' : 'Pengeluaran';
+          final label = localizedTransactionType(l10n, t);
           return Expanded(
             child: GestureDetector(
               onTap: () {
@@ -326,8 +335,7 @@ class _TypeToggle extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight:
-                        isActive ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                     color: isActive ? AppColors.surface : AppColors.mutedText,
                   ),
                 ),
@@ -358,6 +366,7 @@ class _CategoryField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
         onTap();
@@ -384,7 +393,12 @@ class _CategoryField extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(selected!.label, style: AppTextStyles.inputText),
+                child: Text(
+                  localizedCategoryLabel(l10n, selected!),
+                  style: AppTextStyles.inputText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ] else ...[
               const RoundedSquareIcon(
@@ -397,7 +411,8 @@ class _CategoryField extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text('Pilih kategori', style: AppTextStyles.inputHint),
+                child:
+                    Text(l10n.selectCategory, style: AppTextStyles.inputHint),
               ),
             ],
             const Icon(Icons.chevron_right_rounded,
@@ -477,7 +492,8 @@ class _AmountFieldState extends State<_AmountField>
               FadeTransition(
                 opacity: _pulse,
                 child: Container(
-                  width: 2, height: 22,
+                  width: 2,
+                  height: 22,
                   color: AppColors.primary,
                 ),
               ),
@@ -540,6 +556,7 @@ class _NoteField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -554,7 +571,7 @@ class _NoteField extends StatelessWidget {
         minLines: 3,
         style: AppTextStyles.inputText,
         decoration: InputDecoration(
-          hintText: 'Contoh: uang makan siang',
+          hintText: l10n.transactionNoteExample,
           hintStyle: AppTextStyles.inputHint,
           border: InputBorder.none,
           isDense: true,
@@ -598,6 +615,7 @@ class _SaveButtonState extends State<_SaveButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTapDown: widget.enabled ? (_) => _ctrl.reverse() : null,
       onTapUp: widget.enabled
@@ -614,7 +632,8 @@ class _SaveButtonState extends State<_SaveButton>
           width: double.infinity,
           height: AppSpacing.buttonHeight,
           decoration: BoxDecoration(
-            color: widget.enabled ? AppColors.primary : AppColors.disabledSurface,
+            color:
+                widget.enabled ? AppColors.primary : AppColors.disabledSurface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
             boxShadow: widget.enabled
                 ? [
@@ -628,7 +647,7 @@ class _SaveButtonState extends State<_SaveButton>
           ),
           alignment: Alignment.center,
           child: Text(
-            'Simpan Transaksi',
+            l10n.saveTransaction,
             style: AppTextStyles.primaryButton.copyWith(
               color: widget.enabled ? AppColors.surface : AppColors.mutedText,
             ),
@@ -657,6 +676,7 @@ class _CategoryPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -671,7 +691,8 @@ class _CategoryPicker extends StatelessWidget {
         children: [
           Center(
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.border,
@@ -679,7 +700,7 @@ class _CategoryPicker extends StatelessWidget {
               ),
             ),
           ),
-          Text('Pilih Kategori', style: AppTextStyles.sheetTitle),
+          Text(l10n.chooseCategory, style: AppTextStyles.sheetTitle),
           const SizedBox(height: AppSpacing.lg),
           ..._cats.map((cat) {
             final isSelected = selected == cat;
@@ -713,7 +734,10 @@ class _CategoryPicker extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Text(cat.label, style: AppTextStyles.inputText),
+                      child: Text(
+                        localizedCategoryLabel(l10n, cat),
+                        style: AppTextStyles.inputText,
+                      ),
                     ),
                     if (isSelected)
                       const Icon(Icons.check_circle_rounded,

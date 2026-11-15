@@ -4,6 +4,7 @@ import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 /// Halaman numpad custom untuk memasukkan nominal (03b_Numpad_Nominal).
@@ -42,20 +43,22 @@ class _NumpadPageState extends State<NumpadPage>
     super.dispose();
   }
 
-  String get _displayAmount {
+  String _displayAmount(String locale) {
+    final decimalSeparator =
+        NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP;
     if (_raw.isEmpty && !_hasDecimal) return 'Rp 0';
     final intPart = _raw.isEmpty ? '0' : _raw;
-    final formatted = _formatInt(intPart);
+    final formatted = _formatInt(intPart, locale);
     if (_hasDecimal) {
-      return 'Rp $formatted,$_decimalPart';
+      return 'Rp $formatted$decimalSeparator$_decimalPart';
     }
     return 'Rp $formatted';
   }
 
-  String _formatInt(String s) {
+  String _formatInt(String s, String locale) {
     if (s.isEmpty) return '0';
     final n = int.tryParse(s) ?? 0;
-    return NumberFormat('#,###', 'id_ID').format(n);
+    return NumberFormat.decimalPattern(locale).format(n);
   }
 
   double get _currentValue {
@@ -122,6 +125,10 @@ class _NumpadPageState extends State<NumpadPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final decimalSeparator =
+        NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP;
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -131,8 +138,7 @@ class _NumpadPageState extends State<NumpadPage>
             // --- App Bar ---
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pageHorizontal, 16,
-                  AppSpacing.pageHorizontal, 0),
+                  AppSpacing.pageHorizontal, 16, AppSpacing.pageHorizontal, 0),
               child: Row(
                 children: [
                   RoundedSquareIcon(
@@ -149,17 +155,15 @@ class _NumpadPageState extends State<NumpadPage>
                     },
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  Text('Tambah Transaksi',
-                      style: AppTextStyles.pageTitle),
+                  Text(l10n.addTransaction, style: AppTextStyles.pageTitle),
                 ],
               ),
             ),
 
             // --- Type toggle (dekoratif) ---
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal, AppSpacing.lg,
-                AppSpacing.pageHorizontal, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
+                  AppSpacing.lg, AppSpacing.pageHorizontal, 0),
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
@@ -177,7 +181,7 @@ class _NumpadPageState extends State<NumpadPage>
                               BorderRadius.circular(AppSpacing.radiusCard - 3),
                         ),
                         alignment: Alignment.center,
-                        child: Text('Pemasukan',
+                        child: Text(l10n.income,
                             style: AppTextStyles.primaryButton
                                 .copyWith(fontSize: 14)),
                       ),
@@ -185,7 +189,7 @@ class _NumpadPageState extends State<NumpadPage>
                     Expanded(
                       child: Container(
                         alignment: Alignment.center,
-                        child: Text('Pengeluaran',
+                        child: Text(l10n.expense,
                             style: AppTextStyles.inputHint
                                 .copyWith(fontWeight: FontWeight.w500)),
                       ),
@@ -205,8 +209,8 @@ class _NumpadPageState extends State<NumpadPage>
                 position: Tween<Offset>(
                   begin: const Offset(0, -0.2),
                   end: Offset.zero,
-                ).animate(CurvedAnimation(
-                    parent: _anim, curve: Curves.easeOutCubic)),
+                ).animate(
+                    CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic)),
                 child: FadeTransition(
                   opacity: _anim,
                   child: Container(
@@ -215,8 +219,7 @@ class _NumpadPageState extends State<NumpadPage>
                         horizontal: AppSpacing.md, vertical: AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Row(
@@ -229,8 +232,8 @@ class _NumpadPageState extends State<NumpadPage>
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                _displayAmount,
-                                key: ValueKey(_displayAmount),
+                                _displayAmount(locale),
+                                key: ValueKey(_displayAmount(locale)),
                                 style: AppTextStyles.nominalInputText
                                     .copyWith(fontSize: 28),
                               ),
@@ -270,15 +273,17 @@ class _NumpadPageState extends State<NumpadPage>
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal),
-                child: _Numpad(onKey: _onKey),
+                child: _Numpad(
+                  onKey: _onKey,
+                  decimalSeparator: decimalSeparator,
+                ),
               ),
             ),
 
             // ===== TOMBOL LANJUTKAN =====
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal, 0,
-                AppSpacing.pageHorizontal, AppSpacing.lg),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 0,
+                  AppSpacing.pageHorizontal, AppSpacing.lg),
               child: _ConfirmButton(
                 enabled: _currentValue > 0,
                 onTap: _confirm,
@@ -296,7 +301,11 @@ class _NumpadPageState extends State<NumpadPage>
 // ───────────────────────────────────────────────────────────────
 class _Numpad extends StatelessWidget {
   final ValueChanged<String> onKey;
-  const _Numpad({required this.onKey});
+  final String decimalSeparator;
+  const _Numpad({
+    required this.onKey,
+    required this.decimalSeparator,
+  });
 
   static const _keys = [
     ['1', '2', '3'],
@@ -316,7 +325,11 @@ class _Numpad extends StatelessWidget {
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xs),
-                  child: _NumpadKey(keyLabel: key, onTap: () => onKey(key)),
+                  child: _NumpadKey(
+                    keyLabel: key,
+                    displayLabel: key == ',' ? decimalSeparator : key,
+                    onTap: () => onKey(key),
+                  ),
                 ),
               );
             }).toList(),
@@ -329,8 +342,13 @@ class _Numpad extends StatelessWidget {
 
 class _NumpadKey extends StatefulWidget {
   final String keyLabel;
+  final String displayLabel;
   final VoidCallback onTap;
-  const _NumpadKey({required this.keyLabel, required this.onTap});
+  const _NumpadKey({
+    required this.keyLabel,
+    required this.displayLabel,
+    required this.onTap,
+  });
 
   @override
   State<_NumpadKey> createState() => _NumpadKeyState();
@@ -366,8 +384,8 @@ class _NumpadKeyState extends State<_NumpadKey>
           color: AppColors.deepGreen, size: 20);
     }
     if (k == ',') {
-      return const Text(',',
-          style: TextStyle(
+      return Text(widget.displayLabel,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: AppColors.deepGreen,
@@ -451,6 +469,7 @@ class _ConfirmButtonState extends State<_ConfirmButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTapDown: widget.enabled ? (_) => _ctrl.reverse() : null,
       onTapUp: widget.enabled
@@ -467,7 +486,8 @@ class _ConfirmButtonState extends State<_ConfirmButton>
           width: double.infinity,
           height: AppSpacing.buttonHeight,
           decoration: BoxDecoration(
-            color: widget.enabled ? AppColors.primary : AppColors.disabledSurface,
+            color:
+                widget.enabled ? AppColors.primary : AppColors.disabledSurface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
             boxShadow: widget.enabled
                 ? [
@@ -481,7 +501,7 @@ class _ConfirmButtonState extends State<_ConfirmButton>
           ),
           alignment: Alignment.center,
           child: Text(
-            'Lanjutkan',
+            l10n.continueButton,
             style: AppTextStyles.primaryButton.copyWith(
               color: widget.enabled ? AppColors.surface : AppColors.mutedText,
               fontSize: 16,

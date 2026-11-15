@@ -5,6 +5,7 @@ import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/features/savings/models/savings_target.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class CreateSavingsTargetPage extends StatefulWidget {
   const CreateSavingsTargetPage({super.key});
@@ -40,17 +41,42 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
       initialDate: _targetDate ?? today.add(const Duration(days: 30)),
       firstDate: today,
       lastDate: DateTime(today.year + 15),
-      locale: const Locale('id', 'ID'),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(
-            primary: context.colors.primary,
-            onPrimary: Theme.of(context).colorScheme.onPrimary,
-            surface: context.colors.canvas,
+      locale: Localizations.localeOf(context),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final onPrimary =
+            isDark ? Colors.white : Theme.of(context).colorScheme.onPrimary;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: context.colors.primary,
+              onPrimary: onPrimary,
+              surface: context.colors.canvas,
+              onSurface: isDark
+                  ? context.colors.textPrimary
+                  : const ColorScheme.light().onSurface,
+              onSurfaceVariant: isDark
+                  ? context.colors.textPrimary
+                  : const ColorScheme.light().onSurfaceVariant,
+            ),
+            datePickerTheme: isDark
+                ? Theme.of(context).datePickerTheme.copyWith(
+                      headerForegroundColor: context.colors.textPrimary,
+                      weekdayStyle: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(color: context.colors.textPrimary),
+                      todayForegroundColor:
+                          WidgetStatePropertyAll(context.colors.textPrimary),
+                      todayBackgroundColor:
+                          WidgetStatePropertyAll(context.colors.todayFill),
+                      todayBorder: BorderSide(color: context.colors.todayRing),
+                    )
+                : Theme.of(context).datePickerTheme,
           ),
-        ),
-        child: child!,
-      ),
+          child: child!,
+        );
+      },
     );
     if (date != null) setState(() => _targetDate = date);
   }
@@ -60,8 +86,10 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
     if (name.isEmpty || _amount <= 0 || _targetDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lengkapi nama, nominal, dan tanggal target.',
-              style: AppTextStyles.primaryButton),
+          content: Text(AppLocalizations.of(context)!.targetCreationIncomplete,
+              style: AppTextStyles.primaryButton.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              )),
           backgroundColor: context.colors.negative,
           behavior: SnackBarBehavior.floating,
         ),
@@ -73,8 +101,10 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
     if (_isCustom && (customDays < 1 || customDays > 365)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Interval khusus harus 1 sampai 365 hari.',
-              style: AppTextStyles.primaryButton),
+          content: Text(AppLocalizations.of(context)!.customIntervalInvalid,
+              style: AppTextStyles.primaryButton.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              )),
           backgroundColor: context.colors.negative,
           behavior: SnackBarBehavior.floating,
         ),
@@ -95,18 +125,20 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final formattedAmount = _amount > 0
         ? NumberFormat.currency(
-            locale: 'id_ID',
+            locale: locale,
             symbol: 'Rp ',
             decimalDigits: 0,
           ).format(_amount)
         : 'Rp 0';
     final intervalLabel = _isCustom
-        ? 'Setiap ${_customIntervalController.text} hari'
+        ? l10n.everyDays(int.tryParse(_customIntervalController.text) ?? 0)
         : _intervalDays == 1
-            ? 'Setiap 1 hari'
-            : 'Setiap 1 minggu';
+            ? l10n.everyDay
+            : l10n.everyWeek;
 
     return Scaffold(
       backgroundColor: context.colors.canvas,
@@ -124,13 +156,15 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: 'Kembali',
+                    tooltip: l10n.back,
                     icon: Icon(Icons.arrow_back_ios_new_rounded,
                         size: AppSpacing.navIconSize,
                         color: context.colors.primaryText),
                   ),
-                  Text('Buat Target Tabungan',
-                      style: AppTextStyles.calendarHeader),
+                  Text(l10n.createSavingsTarget,
+                      style: AppTextStyles.calendarHeader.copyWith(
+                        color: context.colors.textPrimary,
+                      )),
                 ],
               ),
             ),
@@ -145,21 +179,32 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Buat tujuan baru', style: AppTextStyles.sectionTitle),
+                    Text(
+                      l10n.createNewGoal,
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text('Tentukan target dan jadwal menabungmu.',
-                        style: AppTextStyles.footnote),
+                    Text(l10n.setGoalSchedule,
+                        style: AppTextStyles.footnote.copyWith(
+                          color: context.colors.mutedText,
+                        )),
                     const SizedBox(height: AppSpacing.xl),
-                    const _FieldLabel('Nama Target'),
+                    _FieldLabel(l10n.targetName),
                     const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       child: TextField(
                         key: const Key('field_savings_name'),
                         controller: _nameController,
-                        style: AppTextStyles.inputText,
+                        style: AppTextStyles.inputText.copyWith(
+                          color: context.colors.textPrimary,
+                        ),
                         decoration: InputDecoration(
-                          hintText: 'Contoh: Beli Laptop',
-                          hintStyle: AppTextStyles.inputHint,
+                          hintText: l10n.sampleLaptop,
+                          hintStyle: AppTextStyles.inputHint.copyWith(
+                            color: context.colors.mutedText,
+                          ),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
@@ -167,7 +212,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _FieldLabel('Nominal Target'),
+                    _FieldLabel(l10n.targetAmount),
                     const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       child: TextField(
@@ -179,11 +224,14 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         ],
                         onChanged: (_) => setState(() {}),
                         style: AppTextStyles.inputText.copyWith(
+                          color: context.colors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         decoration: InputDecoration(
                           hintText: 'Rp 0',
-                          hintStyle: AppTextStyles.inputHint,
+                          hintStyle: AppTextStyles.inputHint.copyWith(
+                            color: context.colors.mutedText,
+                          ),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
@@ -191,7 +239,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _FieldLabel('Tanggal Target'),
+                    _FieldLabel(l10n.targetDateLabel),
                     const SizedBox(height: AppSpacing.sm),
                     _InputBox(
                       key: const Key('field_savings_target_date'),
@@ -205,8 +253,8 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                           Expanded(
                             child: Text(
                               _targetDate == null
-                                  ? 'Pilih tanggal target'
-                                  : DateFormat('d MMMM yyyy', 'id_ID')
+                                  ? l10n.chooseTargetDate
+                                  : DateFormat('d MMMM yyyy', locale)
                                       .format(_targetDate!),
                               style: AppTextStyles.inputText.copyWith(
                                 color: _targetDate == null
@@ -222,16 +270,18 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _FieldLabel('Interval Menabung'),
+                    _FieldLabel(l10n.savingInterval),
                     const SizedBox(height: AppSpacing.xs),
-                    Text('Pilih seberapa sering kamu ingin menabung.',
-                        style: AppTextStyles.footnote),
+                    Text(l10n.chooseSavingFrequency,
+                        style: AppTextStyles.footnote.copyWith(
+                          color: context.colors.mutedText,
+                        )),
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
                         Expanded(
                           child: _IntervalButton(
-                            label: '1 Hari',
+                            label: l10n.oneDay,
                             selected: !_isCustom && _intervalDays == 1,
                             onTap: () => setState(() {
                               _isCustom = false;
@@ -242,7 +292,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _IntervalButton(
-                            label: '1 Minggu',
+                            label: l10n.oneWeek,
                             selected: !_isCustom && _intervalDays == 7,
                             onTap: () => setState(() {
                               _isCustom = false;
@@ -253,7 +303,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _IntervalButton(
-                            label: 'Custom',
+                            label: l10n.custom,
                             icon: Icons.edit_outlined,
                             selected: _isCustom,
                             onTap: () => setState(() => _isCustom = true),
@@ -272,7 +322,12 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                         ),
                         child: Row(
                           children: [
-                            Text('Setiap', style: AppTextStyles.fieldLabel),
+                            Text(
+                              l10n.every,
+                              style: AppTextStyles.fieldLabel.copyWith(
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
                             const SizedBox(width: AppSpacing.sm),
                             SizedBox(
                               width: 82,
@@ -287,6 +342,7 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                                 textAlign: TextAlign.center,
                                 onChanged: (_) => setState(() {}),
                                 style: AppTextStyles.inputText.copyWith(
+                                  color: context.colors.textPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                                 decoration: InputDecoration(
@@ -309,13 +365,20 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
-                            Text('Hari', style: AppTextStyles.fieldLabel),
+                            Text(
+                              l10n.days,
+                              style: AppTextStyles.fieldLabel.copyWith(
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      Text('Masukkan jumlah hari, misalnya 14 atau 30.',
-                          style: AppTextStyles.footnote),
+                      Text(l10n.customIntervalHint,
+                          style: AppTextStyles.footnote.copyWith(
+                            color: context.colors.mutedText,
+                          )),
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     Container(
@@ -336,10 +399,14 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Jadwal menabung: $intervalLabel',
-                                    style: AppTextStyles.fieldLabel),
-                                Text('Kamu tetap bisa menabung kapan saja.',
-                                    style: AppTextStyles.footnote),
+                                Text(l10n.savingSchedule(intervalLabel),
+                                    style: AppTextStyles.fieldLabel.copyWith(
+                                      color: context.colors.textPrimary,
+                                    )),
+                                Text(l10n.saveAnytime,
+                                    style: AppTextStyles.footnote.copyWith(
+                                      color: context.colors.mutedText,
+                                    )),
                               ],
                             ),
                           ),
@@ -347,7 +414,12 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    Text('Ringkasan Target', style: AppTextStyles.sectionTitle),
+                    Text(
+                      l10n.goalSummary,
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     Container(
                       width: double.infinity,
@@ -360,9 +432,9 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                       ),
                       child: Column(
                         children: [
-                          _SummaryRow('Target', formattedAmount),
+                          _SummaryRow(l10n.target, formattedAmount),
                           const SizedBox(height: AppSpacing.xs),
-                          _SummaryRow('Jadwal', intervalLabel),
+                          _SummaryRow(l10n.schedule, intervalLabel),
                         ],
                       ),
                     ),
@@ -387,13 +459,15 @@ class _CreateSavingsTargetPageState extends State<CreateSavingsTargetPage> {
                     backgroundColor: context.colors.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     elevation: 0,
-                    textStyle: AppTextStyles.primaryButton,
+                    textStyle: AppTextStyles.primaryButton.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(AppSpacing.radiusCard),
                     ),
                   ),
-                  child: const Text('Simpan Target'),
+                  child: Text(l10n.saveTargetButton),
                 ),
               ),
             ),
@@ -412,7 +486,9 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         label,
-        style: AppTextStyles.fieldLabel,
+        style: AppTextStyles.fieldLabel.copyWith(
+          color: context.colors.textPrimary,
+        ),
       );
 }
 
@@ -476,7 +552,11 @@ class _IntervalButton extends StatelessWidget {
           ),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusNav)),
-          textStyle: AppTextStyles.cardActionButton,
+          textStyle: AppTextStyles.cardActionButton.copyWith(
+            color: selected
+                ? Theme.of(context).colorScheme.onPrimary
+                : context.colors.textPrimary,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -504,9 +584,19 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(label, style: AppTextStyles.footnote),
+          child: Text(
+            label,
+            style: AppTextStyles.footnote.copyWith(
+              color: context.colors.mutedText,
+            ),
+          ),
         ),
-        Text(value, style: AppTextStyles.fieldLabel),
+        Text(
+          value,
+          style: AppTextStyles.fieldLabel.copyWith(
+            color: context.colors.textPrimary,
+          ),
+        ),
       ],
     );
   }

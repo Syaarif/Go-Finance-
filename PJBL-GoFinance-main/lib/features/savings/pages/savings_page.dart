@@ -8,6 +8,7 @@ import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
 import 'package:go_finance/features/savings/models/savings_target.dart';
 import 'package:go_finance/features/savings/pages/create_savings_target_page.dart';
 import 'package:go_finance/features/savings/providers/savings_provider.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class SavingsPage extends StatelessWidget {
   const SavingsPage({super.key});
@@ -23,6 +24,7 @@ class SavingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final targets = context.watch<SavingsProvider>().targets;
     final isEmpty = targets.isEmpty;
 
@@ -43,8 +45,10 @@ class SavingsPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Target Tabungan',
-                      style: AppTextStyles.pageTitle,
+                      l10n.targetSavings,
+                      style: AppTextStyles.pageTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -52,7 +56,7 @@ class SavingsPage extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   IconButton(
                     key: const Key('btn_add_savings_target'),
-                    tooltip: 'Buat target tabungan',
+                    tooltip: l10n.createSavingsTargetTooltip,
                     onPressed: () => _createTarget(context),
                     icon: Icon(Icons.add_rounded,
                         color: context.colors.primaryText,
@@ -76,7 +80,12 @@ class SavingsPage extends StatelessWidget {
                       targetCount: targets.length,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    Text('Target Aktif', style: AppTextStyles.sectionTitle),
+                    Text(
+                      l10n.activeTargets,
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     ...targets.map(
                       (target) => Padding(
@@ -109,21 +118,25 @@ class SavingsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
-                          'Yuk, Mulai Menabung!',
-                          style: AppTextStyles.pageTitle,
+                          l10n.startSavingTitle,
+                          style: AppTextStyles.pageTitle.copyWith(
+                            color: context.colors.textPrimary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'Tentukan target dan sisihkan sedikit demi sedikit — langkah kecil menuju impian besar.',
-                          style: AppTextStyles.billMeta,
+                          l10n.savingEmptyMessage,
+                          style: AppTextStyles.billMeta.copyWith(
+                            color: context.colors.mutedText,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         FilledButton.icon(
                           onPressed: () => _createTarget(context),
                           icon: const Icon(Icons.add_rounded),
-                          label: const Text('Buat Tabungan Pertama'),
+                          label: Text(l10n.createFirstSavings),
                           style: FilledButton.styleFrom(
                             backgroundColor: context.colors.primary,
                             foregroundColor:
@@ -160,8 +173,13 @@ class _SavingsSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final onPrimary = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Theme.of(context).colorScheme.onPrimary;
     final money = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(totalSaved);
@@ -187,28 +205,24 @@ class _SavingsSummary extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Total Tabungan',
+                  l10n.totalSavings,
                   style: AppTextStyles.footnote.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onPrimary
-                        .withValues(alpha: 0.82),
+                    color: onPrimary.withValues(alpha: 0.82),
                   ),
                 ),
                 Text(
                   money,
                   style: AppTextStyles.pageTitle.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
+                    color: onPrimary,
                   ),
                 ),
                 Text(
-                  'Terkumpul dari $targetCount target',
+                  l10n.collectedFromTargets(targetCount),
                   style: AppTextStyles.billRemainingDays.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onPrimary
-                        .withValues(alpha: 0.8),
+                    color: onPrimary.withValues(alpha: 0.8),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -242,8 +256,10 @@ class _TargetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final money = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     );
@@ -278,13 +294,22 @@ class _TargetCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(target.name,
-                    style: AppTextStyles.billName,
+                    style: AppTextStyles.billName.copyWith(
+                      color: context.colors.textPrimary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '${money.format(target.savedAmount)} dari ${money.format(target.amount)}',
-                  style: AppTextStyles.billMeta,
+                  l10n.savedAmountSummary(
+                    money.format(target.savedAmount),
+                    money.format(target.amount),
+                  ),
+                  style: AppTextStyles.billMeta.copyWith(
+                    color: context.colors.mutedText,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 ClipRRect(
@@ -299,15 +324,31 @@ class _TargetCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Text('$percent% tercapai',
+                    Flexible(
+                      child: Text(
+                        l10n.targetReached(percent),
                         style: AppTextStyles.billRemainingDays.copyWith(
                           color: context.colors.primaryText,
                           fontWeight: FontWeight.w700,
-                        )),
-                    const Spacer(),
-                    Text(
-                      'Target: ${DateFormat('d MMM yyyy', 'id_ID').format(target.targetDate)}',
-                      style: AppTextStyles.billRemainingDays,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        l10n.targetDate(
+                          DateFormat('d MMM yyyy', locale)
+                              .format(target.targetDate),
+                        ),
+                        style: AppTextStyles.billRemainingDays.copyWith(
+                          color: context.colors.mutedText,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
                     ),
                   ],
                 ),
@@ -327,11 +368,12 @@ class _SavingHabitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final interval = target.intervalDays == 1
-        ? 'Setiap hari'
+        ? l10n.everyDay
         : target.intervalDays == 7
-            ? 'Setiap minggu'
-            : 'Setiap ${target.intervalDays} hari';
+            ? l10n.everyWeek
+            : l10n.everyDays(target.intervalDays);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -359,9 +401,19 @@ class _SavingHabitCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Mulai kebiasaan menabung', style: AppTextStyles.billName),
-                Text('Check-in belum dilakukan', style: AppTextStyles.billMeta),
-                Text('Target: $interval',
+                Text(
+                  l10n.savingHabitTitle,
+                  style: AppTextStyles.billName.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+                Text(
+                  l10n.checkInNotDone,
+                  style: AppTextStyles.billMeta.copyWith(
+                    color: context.colors.mutedText,
+                  ),
+                ),
+                Text(l10n.targetPrefix(interval),
                     style: AppTextStyles.billMeta.copyWith(
                       color: context.colors.primaryText,
                       fontWeight: FontWeight.w600,
@@ -382,15 +434,23 @@ class _MonthlyActivity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final now = DateTime.now();
     final firstWeekday = DateTime(now.year, now.month, 1).weekday % 7;
     final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
-    final month = DateFormat('MMMM yyyy', 'id_ID').format(now);
+    final month = DateFormat('MMMM yyyy', locale).format(now);
     final cells = <Widget>[];
-    const weekdays = ['Mi', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    for (final weekday in weekdays) {
+    for (var index = 0; index < 7; index++) {
+      final weekday =
+          DateFormat('E', locale).format(DateTime(2023, 1, index + 1));
       cells.add(Center(
-        child: Text(weekday, style: AppTextStyles.weekdayLabel),
+        child: Text(
+          weekday,
+          style: AppTextStyles.weekdayLabel.copyWith(
+            color: context.colors.textPrimary,
+          ),
+        ),
       ));
     }
     for (var i = 0; i < firstWeekday; i++) {
@@ -405,16 +465,17 @@ class _MonthlyActivity extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isToday
-                ? context.colors.softSurface
+                ? context.colors.todayFill
                 : context.colors.canvas.withValues(alpha: 0),
             shape: BoxShape.circle,
             border:
-                isToday ? Border.all(color: context.colors.primaryText) : null,
+                isToday ? Border.all(color: context.colors.todayRing) : null,
           ),
           child: Text('$day',
-              style: isToday
-                  ? AppTextStyles.calendarDayBold
-                  : AppTextStyles.calendarDay),
+              style: (isToday
+                      ? AppTextStyles.calendarDayBold
+                      : AppTextStyles.calendarDay)
+                  .copyWith(color: context.colors.textPrimary)),
         ),
       ));
     }
@@ -433,9 +494,28 @@ class _MonthlyActivity extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Aktivitas Bulan Ini', style: AppTextStyles.sectionTitle),
-              const Spacer(),
-              Text(month, style: AppTextStyles.billMeta),
+              Flexible(
+                child: Text(
+                  l10n.monthlyActivity,
+                  style: AppTextStyles.sectionTitle.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  month,
+                  style: AppTextStyles.billMeta.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -449,7 +529,12 @@ class _MonthlyActivity extends StatelessWidget {
             children: cells,
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text('Belum ada check-in bulan ini', style: AppTextStyles.footnote),
+          Text(
+            l10n.noMonthlyCheckIn,
+            style: AppTextStyles.footnote.copyWith(
+              color: context.colors.mutedText,
+            ),
+          ),
         ],
       ),
     );

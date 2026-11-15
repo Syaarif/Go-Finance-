@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:go_finance/core/services/app_update_service.dart';
 import 'package:go_finance/theme/app_theme.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Modal bottom sheet interaktif untuk mengunduh dan menginstal update APK langsung di dalam aplikasi.
 class UpdateNotificationSheet extends StatefulWidget {
@@ -23,30 +24,47 @@ class UpdateNotificationSheet extends StatefulWidget {
   }
 
   @override
-  State<UpdateNotificationSheet> createState() => _UpdateNotificationSheetState();
+  State<UpdateNotificationSheet> createState() =>
+      _UpdateNotificationSheetState();
 }
 
 class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
-  String _statusMessage = 'Menyiapkan unduhan...';
+  String _statusMessage = '';
   String? _errorMessage;
 
   Future<void> _startDirectUpdate() async {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0.05;
-      _statusMessage = 'Menghubungkan ke server GitHub...';
+      _statusMessage = l10n.downloadPreparing;
       _errorMessage = null;
     });
 
     final success = await AppUpdateService.instance.downloadAndInstall(
       downloadUrl: widget.updateInfo.downloadUrl,
-      onProgress: (progress, status) {
+      onProgress: (
+        progress,
+        status, {
+        receivedMegabytes,
+        totalMegabytes,
+      }) {
         if (!mounted) return;
         setState(() {
           _downloadProgress = progress;
-          _statusMessage = status;
+          _statusMessage = switch (status) {
+            AppUpdateProgressStatus.connecting => l10n.downloadConnecting,
+            AppUpdateProgressStatus.downloading => l10n.downloadProgress(
+                NumberFormat.decimalPattern(locale)
+                    .format(receivedMegabytes ?? 0),
+                NumberFormat.decimalPattern(locale).format(totalMegabytes ?? 0),
+                (progress * 100).toInt(),
+              ),
+            AppUpdateProgressStatus.installing => l10n.openingInstaller,
+          };
         });
       },
     );
@@ -56,8 +74,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
     if (!success) {
       setState(() {
         _isDownloading = false;
-        _errorMessage =
-            'Gagal membuka installer otomatis. Kamu bisa mengunduh lewat browser.';
+        _errorMessage = l10n.updateFailed;
       });
     } else {
       // Tunggu sebentar lalu tutup modal setelah dialog installer sistem terbuka
@@ -70,10 +87,12 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', locale);
     final formattedDate = widget.updateInfo.commitDate != null
         ? dateFormat.format(widget.updateInfo.commitDate!.toLocal())
-        : 'Baru saja';
+        : l10n.justNow;
 
     return Container(
       decoration: const BoxDecoration(
@@ -133,12 +152,16 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            'Pembaruan Tersedia',
-                            style: GoogleFonts.instrumentSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primaryDarkGreen,
+                          Expanded(
+                            child: Text(
+                              l10n.updateAvailable,
+                              style: GoogleFonts.instrumentSans(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primaryDarkGreen,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -156,7 +179,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                               ),
                             ),
                             child: Text(
-                              'BARU',
+                              l10n.newLabel,
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
@@ -168,7 +191,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Versi terbaru dari GitHub repo',
+                        l10n.latestGithubVersion,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -206,7 +229,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Pesan Perubahan:',
+                        l10n.changeMessage,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -217,7 +240,9 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    widget.updateInfo.commitMessage,
+                    widget.updateInfo.commitMessage.isNotEmpty
+                        ? widget.updateInfo.commitMessage
+                        : l10n.latestCommitFallback,
                     style: GoogleFonts.instrumentSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -232,22 +257,28 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildMetaItem(
-                        icon: Icons.person_outline_rounded,
-                        label: 'Pengembang',
-                        value: widget.updateInfo.authorName.isNotEmpty
-                            ? widget.updateInfo.authorName
-                            : 'Tim GitHub',
+                      Expanded(
+                        child: _buildMetaItem(
+                          icon: Icons.person_outline_rounded,
+                          label: l10n.developer,
+                          value: widget.updateInfo.authorName.isNotEmpty
+                              ? widget.updateInfo.authorName
+                              : l10n.githubTeam,
+                        ),
                       ),
-                      _buildMetaItem(
-                        icon: Icons.tag_rounded,
-                        label: 'Commit',
-                        value: widget.updateInfo.latestSha,
+                      Expanded(
+                        child: _buildMetaItem(
+                          icon: Icons.tag_rounded,
+                          label: l10n.commit,
+                          value: widget.updateInfo.latestSha,
+                        ),
                       ),
-                      _buildMetaItem(
-                        icon: Icons.access_time_rounded,
-                        label: 'Waktu',
-                        value: formattedDate,
+                      Expanded(
+                        child: _buildMetaItem(
+                          icon: Icons.access_time_rounded,
+                          label: l10n.time,
+                          value: formattedDate,
+                        ),
                       ),
                     ],
                   ),
@@ -304,7 +335,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Setelah selesai, jendela instalasi APK akan otomatis muncul di layar.',
+                      l10n.installerInstructions,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 11,
                         color: Colors.grey.shade700,
@@ -325,7 +356,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Ukuran APK: ~9.4 MB (Update langsung tanpa browser)',
+                    l10n.apkSizeInfo,
                     style: GoogleFonts.instrumentSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -376,8 +407,10 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                     ),
               label: Text(
                 _isDownloading
-                    ? 'Sedang Mengunduh (${(_downloadProgress * 100).toInt()}%)...'
-                    : 'Update Langsung di APK (~9.4 MB)',
+                    ? l10n.downloadingProgress(
+                        (_downloadProgress * 100).toInt(),
+                      )
+                    : l10n.directApkUpdate,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -416,7 +449,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                       color: AppTheme.primaryDarkGreen,
                     ),
                     label: Text(
-                      'Lewat Browser',
+                      l10n.browserDownload,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -448,7 +481,7 @@ class _UpdateNotificationSheetState extends State<UpdateNotificationSheet> {
                       ),
                     ),
                     child: Text(
-                      'Nanti Saja (Masuk)',
+                      l10n.laterLogin,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

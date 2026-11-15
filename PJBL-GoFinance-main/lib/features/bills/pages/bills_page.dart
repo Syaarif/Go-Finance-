@@ -11,6 +11,7 @@ import 'package:go_finance/features/bills/providers/bill_provider.dart';
 import 'package:go_finance/features/bills/widgets/add_bill_sheet.dart';
 import 'package:go_finance/features/bills/widgets/bill_calendar.dart';
 import 'package:go_finance/features/bills/widgets/bill_card.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Halaman utama "Kalender Tagihan" Go Finance.
 class BillsPage extends StatelessWidget {
@@ -20,11 +21,12 @@ class BillsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BillProvider>(
       builder: (context, provider, _) {
+        final l10n = AppLocalizations.of(context)!;
         final bills = provider.filteredBills;
         final selectedDate = provider.selectedDate;
 
         return Scaffold(
-          backgroundColor: AppColors.canvas,
+          backgroundColor: context.colors.canvas,
           body: SafeArea(
             bottom: false,
             child: SingleChildScrollView(
@@ -43,8 +45,10 @@ class BillsPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Kalender Tagihan',
-                          style: AppTextStyles.pageTitle,
+                          l10n.billCalendarTitle,
+                          style: AppTextStyles.pageTitle.copyWith(
+                            color: context.colors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -56,12 +60,12 @@ class BillsPage extends StatelessWidget {
                           RoundedSquareIcon(
                             actionKey: const Key('btn_open_add_bill'),
                             icon: Icons.add_rounded,
-                            backgroundColor: AppColors.primary,
-                            iconColor: AppColors.surface,
+                            backgroundColor: context.colors.primary,
+                            iconColor: Colors.white,
                             size: 40,
                             iconSize: 22,
                             borderRadius: AppSpacing.radiusSm,
-                            tooltip: 'Tambah Tagihan',
+                            tooltip: l10n.addBillTooltip,
                             onTap: () => AddBillSheet.show(context),
                           ),
                           const SizedBox(width: AppSpacing.sm),
@@ -90,8 +94,10 @@ class BillsPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Tagihan Mendatang',
-                          style: AppTextStyles.sectionTitle,
+                          l10n.upcomingBills,
+                          style: AppTextStyles.sectionTitle.copyWith(
+                            color: context.colors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -108,8 +114,10 @@ class BillsPage extends StatelessWidget {
                             vertical: AppSpacing.xxs,
                           ),
                           child: Text(
-                            'Lihat semua',
-                            style: AppTextStyles.sectionAction,
+                            l10n.seeAll,
+                            style: AppTextStyles.sectionAction.copyWith(
+                              color: context.colors.primaryText,
+                            ),
                           ),
                         ),
                       ),
@@ -142,8 +150,10 @@ class BillsPage extends StatelessWidget {
 
                   // 4. Catatan kaki sesuai instruksi
                   Text(
-                    'Tagihan yang ditandai selesai akan\ndihapus dari daftar.',
-                    style: AppTextStyles.footnote,
+                    l10n.completedBillsFootnote,
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                    ),
                   ),
                 ],
               ),
@@ -168,25 +178,29 @@ class _EmptyBillsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = selectedDate != null ? _formatShort(selectedDate!) : null;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final dateText = selectedDate != null
+        ? DateFormat('d MMM yyyy', locale).format(selectedDate!)
+        : null;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
       ),
       child: Column(
         children: [
-          const RoundedSquareIcon(
+          RoundedSquareIcon(
             svgAsset: 'assets/svg/Bill.svg',
-            backgroundColor: AppColors.billHighlight,
-            iconColor: AppColors.deepGreen,
+            backgroundColor: context.colors.billHighlight,
+            iconColor: context.colors.primaryText,
             size: AppSpacing.billIconCircleSize,
             iconSize: AppSpacing.billIconSize,
             borderRadius: AppSpacing.radiusSm,
@@ -194,37 +208,35 @@ class _EmptyBillsCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             dateText != null
-                ? 'Tidak ada tagihan pada $dateText'
-                : 'Belum ada tagihan mendatang',
-            style: AppTextStyles.billName,
+                ? l10n.noBillsForDate(dateText)
+                : l10n.noUpcomingBills,
+            style: AppTextStyles.billName.copyWith(
+              color: context.colors.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            dateText != null
-                ? 'Ketuk tanggal yang sama atau tombol di bawah untuk melihat semua tagihan.'
-                : 'Tambahkan tagihan baru melalui tombol + di kanan atas.',
-            style: AppTextStyles.footnote,
+            dateText != null ? l10n.filteredBillsHint : l10n.addBillHint,
+            style: AppTextStyles.footnote.copyWith(
+              color: context.colors.mutedText,
+            ),
             textAlign: TextAlign.center,
           ),
           if (dateText != null) ...[
             const SizedBox(height: AppSpacing.md),
             TextButton(
               onPressed: onResetFilter,
-              child: Text('Lihat semua', style: AppTextStyles.sectionAction),
+              child: Text(
+                l10n.seeAll,
+                style: AppTextStyles.sectionAction.copyWith(
+                  color: context.colors.primaryText,
+                ),
+              ),
             ),
           ],
         ],
       ),
     );
   }
-
-  static String _formatShort(DateTime date) {
-    try {
-      return DateFormat('d MMM yyyy', 'id_ID').format(date);
-    } catch (_) {
-      return DateFormat('d MMM yyyy').format(date);
-    }
-  }
 }
-

@@ -1,0 +1,563 @@
+{
+  "@@locale": "id",
+  "smallTextSize": "Kecil",
+  "mediumTextSize": "Sedang",
+  "largeTextSize": "Besar",
+  "languageSystem": "Ikut sistem",
+  "languageIndonesian": "Indonesia",
+  "languageEnglish": "English",
+  "themeLight": "Terang",
+  "themeDark": "Gelap",
+  "themeSystem": "Mengikuti Sistem",
+  "timezonePickerTitle": "Pilih Zona Waktu",
+  "timezoneChanged": "Zona waktu diubah ke {timezone}",
+  "@timezoneChanged": {
+    "placeholders": {
+      "timezone": {}
+    }
+  },
+  "themePickerTitle": "Pilih Tema",
+  "themeChanged": "Tema diubah ke {theme}",
+  "@themeChanged": {
+    "placeholders": {
+      "theme": {}
+    }
+  },
+  "themeSaveFailed": "Tema gagal disimpan. Coba lagi.",
+  "textSizePickerTitle": "Pilih Ukuran Teks",
+  "textSizeSaveFailed": "Ukuran teks gagal disimpan. Coba lagi.",
+  "languagePickerTitle": "Pilih Bahasa",
+  "languageSaveFailed": "Bahasa gagal disimpan. Coba lagi.",
+  "emailDetailsTitle": "Detail Email",
+  "registeredEmail": "Email terdaftar:",
+  "verificationStatus": "Status verifikasi:",
+  "verified": "Terverifikasi",
+  "close": "Tutup",
+  "back": "Kembali",
+  "logoutTitle": "Keluar Akun",
+  "logoutConfirmation": "Apakah Anda yakin ingin keluar dari aplikasi Go Finance?",
+  "cancel": "Batal",
+  "logoutAction": "Ya, Keluar",
+  "profileSettingsTitle": "Profil & Pengaturan",
+  "accountSection": "Akun",
+  "email": "Email",
+  "timezone": "Zona waktu",
+  "security": "Keamanan",
+  "preferencesSection": "Preferensi",
+  "theme": "Tema",
+  "textSize": "Ukuran teks",
+  "language": "Bahasa",
+  "notificationsSection": "Notifikasi",
+  "transactionNotifications": "Notifikasi transaksi",
+  "transactionNotificationsEnabled": "Notifikasi transaksi diaktifkan",
+  "transactionNotificationsDisabled": "Notifikasi transaksi dinonaktifkan",
+  "savingsNotifications": "Notifikasi tabungan",
+  "savingsNotificationsEnabled": "Notifikasi tabungan diaktifkan",
+  "savingsNotificationsDisabled": "Notifikasi tabungan dinonaktifkan",
+  "logoutFromAccount": "Keluar dari akun",
+  "home": "Beranda",
+  "transactions": "Transaksi",
+  "savings": "Tabungan",
+  "bills": "Tagihan",
+  "scan": "Scan",
+  "editProfile": "Edit Profil",
+  "profilePhoto": "Foto Profil",
+  "takePhoto": "Ambil dari kamera",
+  "chooseFromGallery": "Pilih dari galeri",
+  "removePhoto": "Hapus foto",
+  "photoUploadSimulation": "{label} (simulasi) — fitur unggah foto belum tersedia",
+  "@photoUploadSimulation": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "profileUpdated": "Profil berhasil diperbarui",
+  "changeProfilePhoto": "Ubah foto profil",
+  "username": "Username",
+  "enterUsername": "Masukkan username",
+  "usernameRequired": "Username tidak boleh kosong",
+  "usernameMinLength": "Username minimal {minimum} karakter",
+  "@usernameMinLength": {
+    "placeholders": {
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "emailNotEditable": "Email tidak dapat diubah di halaman ini",
+  "saveChanges": "Simpan perubahan",
+  "passwordChangedSimulation": "Password berhasil diubah (simulasi)",
+  "changePassword": "Ubah Password",
+  "passwordGuidance": "Gunakan minimal 8 karakter dengan kombinasi huruf dan angka.",
+  "oldPassword": "Password lama",
+  "enterOldPassword": "Masukkan password lama",
+  "oldPasswordRequired": "Password lama wajib diisi",
+  "oldPasswordIncorrect": "Password lama salah",
+  "newPassword": "Password baru",
+  "enterNewPassword": "Masukkan password baru",
+  "newPasswordRequired": "Password baru wajib diisi",
+  "passwordMinLength": "Password minimal 8 karakter",
+  "passwordMustContainLettersAndNumbers": "Password harus mengandung huruf dan angka",
+  "newPasswordMustDiffer": "Password baru tidak boleh sama dengan password lama",
+  "confirmNewPassword": "Konfirmasi password baru",
+  "repeatNewPassword": "Ulangi password baru",
+  "passwordConfirmationRequired": "Konfirmasi password wajib diisi",
+  "passwordConfirmationMismatch": "Konfirmasi password tidak cocok",
+  "demoPasswordNotice": "Mode demo: password lama dummy adalah \"{password}\".",
+  "@demoPasswordNotice": {
+    "placeholders": {
+      "password": {}
+    }
+  },
+  "savePassword": "Simpan password",
+  "targetSavings": "Target Tabungan",
+  "createSavingsTargetTooltip": "Buat target tabungan",
+  "activeTargets": "Target Aktif",
+  "startSavingTitle": "Yuk, Mulai Menabung!",
+  "savingEmptyMessage": "Tentukan target dan sisihkan sedikit demi sedikit — langkah kecil menuju impian besar.",
+  "createFirstSavings": "Buat Tabungan Pertama",
+  "totalSavings": "Total Tabungan",
+  "collectedFromTargets": "Terkumpul dari {count} target",
+  "@collectedFromTargets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "targetReached": "{percent}% tercapai",
+  "@targetReached": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "targetDate": "Target: {date}",
+  "@targetDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "savedAmountSummary": "{saved} dari {target}",
+  "@savedAmountSummary": {
+    "placeholders": {
+      "saved": {},
+      "target": {}
+    }
+  },
+  "everyDay": "Setiap hari",
+  "everyWeek": "Setiap minggu",
+  "everyDays": "Setiap {days} hari",
+  "@everyDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "savingHabitTitle": "Mulai kebiasaan menabung",
+  "checkInNotDone": "Check-in belum dilakukan",
+  "targetPrefix": "Target: {interval}",
+  "@targetPrefix": {
+    "placeholders": {
+      "interval": {}
+    }
+  },
+  "monthlyActivity": "Aktivitas Bulan Ini",
+  "noMonthlyCheckIn": "Belum ada check-in bulan ini",
+  "targetCreationIncomplete": "Lengkapi nama, nominal, dan tanggal target.",
+  "customIntervalInvalid": "Interval khusus harus 1 sampai 365 hari.",
+  "createSavingsTarget": "Buat Target Tabungan",
+  "createNewGoal": "Buat tujuan baru",
+  "setGoalSchedule": "Tentukan target dan jadwal menabungmu.",
+  "targetName": "Nama Target",
+  "sampleLaptop": "Contoh: Beli Laptop",
+  "targetAmount": "Nominal Target",
+  "targetDateLabel": "Tanggal Target",
+  "chooseTargetDate": "Pilih tanggal target",
+  "savingInterval": "Interval Menabung",
+  "chooseSavingFrequency": "Pilih seberapa sering kamu ingin menabung.",
+  "oneDay": "1 Hari",
+  "oneWeek": "1 Minggu",
+  "custom": "Custom",
+  "every": "Setiap",
+  "days": "Hari",
+  "customIntervalHint": "Masukkan jumlah hari, misalnya 14 atau 30.",
+  "savingSchedule": "Jadwal menabung: {interval}",
+  "@savingSchedule": {
+    "placeholders": {
+      "interval": {}
+    }
+  },
+  "saveAnytime": "Kamu tetap bisa menabung kapan saja.",
+  "goalSummary": "Ringkasan Target",
+  "target": "Target",
+  "schedule": "Jadwal",
+  "saveTargetButton": "Simpan Target",
+  "validAmount": "Masukkan nominal yang valid!",
+  "insufficientActiveBalance": "Saldo aktif tidak mencukupi untuk menabung {amount}!",
+  "@insufficientActiveBalance": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "depositSuccess": "🎉 Berhasil menabung {amount}! Saldo tersimpan permanen.",
+  "@depositSuccess": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "insufficientSavingsBalance": "Saldo tabungan tidak mencukupi untuk ditarik!",
+  "withdrawSuccess": "Berhasil mencairkan {amount} ke saldo aktif!",
+  "@withdrawSuccess": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "depositTitle": "Setor Tabungan",
+  "withdrawTitle": "Tarik Tabungan",
+  "savingManageDescription": "Kelola uang tabunganmu secara nyata & persisten",
+  "depositTab": "+ Setor (Nabung)",
+  "withdrawTab": "- Tarik Tabungan",
+  "activeBalance": "Saldo Aktif",
+  "savingsBalance": "Saldo Tabungan",
+  "amountCurrency": "Nominal (Rp)",
+  "optionalPurpose": "Tujuan / Catatan (Opsional)",
+  "depositExample": "Contoh: Beli laptop, Dana darurat",
+  "withdrawExample": "Contoh: Keperluan mendesak",
+  "savePermanently": "Simpan ke Tabungan (Tersimpan Permanen)",
+  "withdrawToActive": "Cairkan ke Saldo Aktif",
+  "billCalendarTitle": "Kalender Tagihan",
+  "addBillTooltip": "Tambah Tagihan",
+  "upcomingBills": "Tagihan Mendatang",
+  "seeAll": "Lihat semua",
+  "completedBillsFootnote": "Tagihan yang ditandai selesai akan\ndihapus dari daftar.",
+  "noBillsForDate": "Tidak ada tagihan pada {date}",
+  "@noBillsForDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "noUpcomingBills": "Belum ada tagihan mendatang",
+  "filteredBillsHint": "Ketuk tanggal yang sama atau tombol di bawah untuk melihat semua tagihan.",
+  "addBillHint": "Tambahkan tagihan baru melalui tombol + di kanan atas.",
+  "previousMonth": "Bulan sebelumnya",
+  "nextMonth": "Bulan berikutnya",
+  "overdue": "TERLAMBAT",
+  "pending": "MENUNGGU",
+  "dueDatePrefix": "Jatuh tempo {date}",
+  "@dueDatePrefix": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "payNow": "Bayar sekarang",
+  "markBillDoneTitle": "Tandai Selesai?",
+  "markBillDoneConfirmation": "Tandai tagihan \"{billName}\" (Rp {amount}) sebagai selesai? Tagihan akan dihapus dari daftar dan pengingat dibatalkan.",
+  "@markBillDoneConfirmation": {
+    "placeholders": {
+      "billName": {},
+      "amount": {}
+    }
+  },
+  "markDone": "Tandai Selesai",
+  "overdueDays": "Terlambat {days} hari",
+  "@overdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "Hari ini",
+  "tomorrow": "Besok",
+  "daysRemaining": "{days} hari lagi",
+  "@daysRemaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "addBillTitle": "Tambah Tagihan",
+  "billAmount": "Nominal Tagihan",
+  "billName": "Nama Tagihan",
+  "billNameExample": "Mis. Internet rumah, Listrik, Streaming",
+  "billDueDate": "Tanggal Jatuh Tempo",
+  "chooseDueDate": "Pilih tanggal jatuh tempo",
+  "billReminderInfo": "Pengingat otomatis 7 hari & 1 hari sebelum jatuh tempo.",
+  "checkInputAndSave": "Periksa Input & Simpan",
+  "save": "Simpan",
+  "billNameRequired": "Nama tagihan wajib diisi",
+  "billAmountMustBePositive": "Nominal harus lebih dari Rp 0",
+  "billDateRequired": "Tanggal jatuh tempo wajib dipilih",
+  "billReminderChannel": "Pengingat Tagihan",
+  "billReminderChannelDescription": "Notifikasi pengingat tagihan H-7 dan H-1 sebelum jatuh tempo",
+  "billReminderTitle": "Tagihan {billName} segera jatuh tempo",
+  "@billReminderTitle": {
+    "placeholders": {
+      "billName": {}
+    }
+  },
+  "billReminderBody": "Rp {amount} jatuh tempo {date} ({remaining})",
+  "@billReminderBody": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "remaining": {}
+    }
+  },
+  "homeInternetBill": "Internet rumah",
+  "electricityBill": "Listrik",
+  "streamingBill": "Streaming",
+  "addTransaction": "Tambah Transaksi",
+  "daily": "Harian",
+  "weekly": "Mingguan",
+  "monthly": "Bulanan",
+  "searchTransactions": "Cari transaksi...",
+  "yesterday": "Kemarin",
+  "allCategories": "Semua",
+  "foodAndDrinks": "Makanan & Minuman",
+  "food": "Makanan",
+  "shopping": "Belanja",
+  "transportation": "Transportasi",
+  "transport": "Transport",
+  "transfer": "Transfer",
+  "income": "Pemasukan",
+  "expense": "Pengeluaran",
+  "other": "Lainnya",
+  "transactionFormIncomplete": "Lengkapi kategori dan nominal terlebih dahulu.",
+  "transactionCategory": "Kategori",
+  "amount": "Nominal",
+  "transactionDate": "Tanggal transaksi",
+  "optionalNote": "Catatan (opsional)",
+  "transactionEditableNote": "Data dapat diedit kembali di riwayat transaksi.",
+  "selectCategory": "Pilih kategori",
+  "transactionNoteExample": "Contoh: uang makan siang",
+  "saveTransaction": "Simpan Transaksi",
+  "chooseCategory": "Pilih Kategori",
+  "date": "Tanggal",
+  "type": "Tipe",
+  "noTransactions": "Tidak ada transaksi",
+  "noTransactionsInPeriod": "Belum ada transaksi pada periode ini.",
+  "continueButton": "Lanjutkan",
+  "notifications": "Notifikasi",
+  "greeting": "Halo, {name}",
+  "@greeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "homeGreetingSubtitle": "Yuk, kelola keuanganmu dengan bijak.",
+  "manualEntry": "Catat Manual",
+  "payBill": "Bayar Tagihan",
+  "recentTransactions": "Transaksi Terbaru",
+  "balanceCalculation": "Pemasukan − pengeluaran − setoran tabungan",
+  "monthlyAiEvaluation": "Evaluasi Keuangan Bulan Ini",
+  "foodSpendingIncrease": "Pengeluaran makan naik {percent}% dari bulan lalu.",
+  "@foodSpendingIncrease": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSummaryHint": "Lihat ringkasan dan saran AI",
+  "lastSevenDays": "Ringkasan 7 Hari Terakhir",
+  "detail": "Detail",
+  "chartIncome": "{day}: Masuk Rp {amount}",
+  "@chartIncome": {
+    "placeholders": {
+      "day": {},
+      "amount": {}
+    }
+  },
+  "chartExpense": "Keluar Rp {amount}",
+  "@chartExpense": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "todayAt": "Hari ini · {time}",
+  "@todayAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "aiAnalysisTitle": "Analisis AI Go Finance",
+  "aiBasedOnMonth": "Berdasarkan pengeluaran bulan ini",
+  "smartRecommendation": "💡 Rekomendasi Pintar",
+  "aiRecommendationBody": "Pengeluaran makanan & minuman kamu mencapai {percent}% dari total pengeluaran bulan ini. Coba batasi pesanan pesan-antar maksimal {times} kali seminggu untuk menghemat sekitar Rp {amount}.",
+  "@aiRecommendationBody": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "times": {
+        "type": "int"
+      },
+      "amount": {}
+    }
+  },
+  "viewTransactionDetails": "Lihat Rincian Transaksi",
+  "billNotificationTitle": "Tagihan Internet Jatuh Tempo",
+  "billNotificationDetails": "Jatuh tempo pada {date} sebesar Rp {amount}",
+  "@billNotificationDetails": {
+    "placeholders": {
+      "date": {},
+      "amount": {}
+    }
+  },
+  "hoursAgo": "{hours} jam lalu",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryNotificationTitle": "Gaji Masuk!",
+  "salaryNotificationDetails": "Pemasukan Rp {amount} berhasil dicatat.",
+  "@salaryNotificationDetails": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "splashTagline": "Kelola hari ini, untuk masa depan.",
+  "onboardingHeadline": "Tumbuh lebih\ncerdas, Menjadi\nlebih kaya",
+  "onboardingSubtitle": "Perjalanan kamu mengelola keuangan\nlebih baik dimulai dari sini!",
+  "welcomeBack": "Selamat datang\nkembali!",
+  "loginSubtitle": "Masuk untuk melanjutkan perjalanan\nkamu bersama Go Finance!",
+  "welcomeNew": "Selamat datang!",
+  "registerSubtitle": "Daftar untuk memulai perjalanan\nkamu bersama Go Finance!",
+  "emailFieldLabel": "Email:",
+  "passwordFieldLabel": "Password:",
+  "emailHint": "nama@email.com",
+  "rememberMe": "Ingat saya",
+  "forgotPassword": "Lupa password?",
+  "login": "Masuk",
+  "register": "Daftar",
+  "existingAccountPrompt": "Sudah punya akun? ",
+  "noAccountPrompt": "Belum punya akun? ",
+  "passwordRecoveryMessage": "Tautan pemulihan password akan dikirim ke email Anda.",
+  "emailPasswordRequired": "Email dan password harus diisi!",
+  "loginSuccess": "Masuk berhasil! Selamat datang di Go Finance.",
+  "registerSuccess": "Akun berhasil dibuat! Silakan masuk.",
+  "checkGithubUpdates": "Periksa Pembaruan GitHub",
+  "checkingGithubUpdates": "Memeriksa pembaruan di GitHub...",
+  "checkingGithubUpdatesBanner": "Memeriksa pembaruan dari GitHub...",
+  "updateAvailable": "Pembaruan Tersedia",
+  "newUpdateAvailable": "Pembaruan Baru Tersedia!",
+  "updateTag": "PEMBARUAN",
+  "updateAction": "Perbarui",
+  "justNow": "Baru saja",
+  "latestCommitFallback": "Pembaruan terbaru",
+  "updateCommitByAuthor": "{message} ({author})",
+  "@updateCommitByAuthor": {
+    "placeholders": {
+      "message": {},
+      "author": {}
+    }
+  },
+  "newLabel": "BARU",
+  "latestGithubVersion": "Versi terbaru dari GitHub repo",
+  "changeMessage": "Pesan Perubahan:",
+  "developer": "Pengembang",
+  "githubTeam": "Tim GitHub",
+  "commit": "Commit",
+  "time": "Waktu",
+  "installerInstructions": "Setelah selesai, jendela instalasi APK akan otomatis muncul di layar.",
+  "apkSizeInfo": "Ukuran APK: ~9.4 MB (Update langsung tanpa browser)",
+  "downloadingProgress": "Sedang Mengunduh ({percent}%)...",
+  "@downloadingProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "directApkUpdate": "Update Langsung di APK (~9.4 MB)",
+  "browserDownload": "Lewat Browser",
+  "laterLogin": "Nanti Saja (Masuk)",
+  "updateFailed": "Gagal membuka installer otomatis. Kamu bisa mengunduh lewat browser.",
+  "downloadPreparing": "Menyiapkan unduhan...",
+  "downloadConnecting": "Menghubungkan ke server GitHub...",
+  "downloadFailedStatus": "Gagal mengunduh: status {status}",
+  "@downloadFailedStatus": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "downloadProgress": "Mengunduh APK: {received} MB / {total} MB ({percent}%)",
+  "@downloadProgress": {
+    "placeholders": {
+      "received": {},
+      "total": {},
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "openingInstaller": "Membuka pemasang paket Android...",
+  "receiptAnalysisTitle": "AI Analisis Struk",
+  "uploadReceiptFile": "Unggah file struk",
+  "receiptUploadInstructions": "Pilih foto atau PDF bukti transaksi kamu.",
+  "filePickerUnavailable": "Pemilih file akan tersedia setelah integrasi.",
+  "selectedFile": "File dipilih",
+  "noFileSelected": "Belum ada file dipilih",
+  "startAiAnalysis": "Mulai Analisis AI",
+  "fileProcessingNotice": "File akan diproses setelah kamu menekan tombol.",
+  "upload": "Upload",
+  "review": "Review",
+  "tapToUploadReceipt": "Ketuk untuk Unggah File Struk",
+  "supportedReceiptFormats": "Mendukung format JPG, PNG, PDF",
+  "maxFileSize": "Ukuran maksimal 10 MB",
+  "removeFile": "Hapus file",
+  "receiptPhotoTipTitle": "Pastikan struk terlihat jelas",
+  "receiptPhotoTipBody": "dan semua informasi terbaca agar hasil analisis AI lebih akurat.",
+  "receiptFileSize": "JPG · {size} MB",
+  "@receiptFileSize": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "analysisComplete": "Analisis selesai",
+  "processingReceipt": "Memproses struk",
+  "analysisSimulationComplete": "Simulasi selesai. Hasil OCR belum tersedia.",
+  "transactionExtractionSimulation": "Simulasi ekstraksi data transaksi...",
+  "uploadingPhoto": "Mengunggah foto",
+  "readingMerchantDate": "Membaca merchant dan tanggal",
+  "calculatingItems": "Menghitung total dan item",
+  "backToUpload": "Kembali ke halaman upload",
+  "doNotCloseApp": "Jangan tutup aplikasi dulu",
+  "checkAiResults": "Periksa Hasil AI",
+  "extractionSuccessful": "Ekstraksi berhasil",
+  "checkBeforeSave": "Periksa kembali data sebelum disimpan.",
+  "ocrNotIntegrated": "Data contoh; OCR/AI belum terhubung.",
+  "transactionDraft": "Draft transaksi",
+  "editAiResults": "Hasil AI bisa kamu edit jika ada yang kurang tepat.",
+  "merchantName": "Nama Merchant",
+  "totalAmount": "Nominal Total",
+  "transactionDateLabel": "Tanggal Transaksi",
+  "tapPencilToEdit": "Ketuk ikon pensil untuk mengubah data.",
+  "receiptSource": "Sumber: {fileName}",
+  "@receiptSource": {
+    "placeholders": {
+      "fileName": {}
+    }
+  },
+  "confirmAndSave": "Konfirmasi & Simpan",
+  "editFieldTooltip": "Ubah {label}",
+  "@editFieldTooltip": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "receiptTransactionSaved": "Transaksi {merchant} berhasil disimpan.",
+  "@receiptTransactionSaved": {
+    "placeholders": {
+      "merchant": {}
+    }
+  }
+}

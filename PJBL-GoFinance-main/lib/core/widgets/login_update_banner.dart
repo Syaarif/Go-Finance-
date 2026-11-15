@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/core/services/app_update_service.dart';
 import 'package:go_finance/core/widgets/update_notification_sheet.dart';
 import 'package:go_finance/theme/app_theme.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Banner interaktif notifikasi pembaruan di layar Login.
 class LoginUpdateBanner extends StatelessWidget {
@@ -21,6 +22,7 @@ class LoginUpdateBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isChecking) {
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -37,12 +39,13 @@ class LoginUpdateBanner extends StatelessWidget {
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
               ),
             ),
             const SizedBox(width: 10),
             Text(
-              'Memeriksa pembaruan dari GitHub...',
+              l10n.checkingGithubUpdatesBanner,
               style: GoogleFonts.instrumentSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -59,6 +62,11 @@ class LoginUpdateBanner extends StatelessWidget {
     }
 
     final info = updateInfo!;
+    final commitMessage = info.commitMessage.isNotEmpty
+        ? info.commitMessage
+        : l10n.latestCommitFallback;
+    final authorName =
+        info.authorName.isNotEmpty ? info.authorName : l10n.githubTeam;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -112,7 +120,7 @@ class LoginUpdateBanner extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              'Pembaruan Baru Tersedia!',
+                              l10n.newUpdateAvailable,
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -133,7 +141,7 @@ class LoginUpdateBanner extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'UPDATE',
+                              l10n.updateTag,
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
@@ -145,7 +153,7 @@ class LoginUpdateBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${info.commitMessage} (${info.authorName})',
+                        l10n.updateCommitByAuthor(commitMessage, authorName),
                         style: GoogleFonts.instrumentSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -177,7 +185,7 @@ class LoginUpdateBanner extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'Update',
+                    l10n.updateAction,
                     style: GoogleFonts.instrumentSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,

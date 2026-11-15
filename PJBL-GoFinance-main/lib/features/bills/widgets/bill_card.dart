@@ -5,6 +5,7 @@ import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/models/bill.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Kartu item pada daftar "Tagihan Mendatang".
 /// Tombol menggunakan teks sesuai desain ("Bayar sekarang") yang berfungsi
@@ -23,29 +24,42 @@ class BillCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final status = bill.statusAt(referenceDate);
     final isOverdue = status == BillStatus.overdue;
-    final statusLabel = isOverdue ? 'OVERDUE' : 'PENDING';
-    final statusColor = isOverdue ? AppColors.negative : AppColors.warning;
+    final statusLabel = isOverdue ? l10n.overdue : l10n.pending;
+    final statusColor =
+        isOverdue ? context.colors.negative : context.colors.warning;
 
-    final formattedAmount = _formatCurrency(bill.amount);
-    final formattedDue = _formatDueDate(bill.dueDate);
-    final remainingText = bill.remainingLabelFrom(referenceDate);
+    final formattedAmount = NumberFormat.decimalPattern(locale).format(
+      bill.amount,
+    );
+    final formattedDue = DateFormat('d MMM', locale).format(bill.dueDate);
+    final billName = _localizedBillName(l10n);
+    final daysRemaining = bill.daysRemainingFrom(referenceDate);
+    final remainingText = daysRemaining < 0
+        ? l10n.overdueDays(daysRemaining.abs())
+        : daysRemaining == 0
+            ? l10n.today
+            : daysRemaining == 1
+                ? l10n.tomorrow
+                : l10n.daysRemaining(daysRemaining);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: context.colors.cardShadow,
             blurRadius: AppSpacing.sm,
-            offset: Offset(0, AppSpacing.xxs),
+            offset: const Offset(0, AppSpacing.xxs),
           ),
         ],
       ),
@@ -53,10 +67,10 @@ class BillCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Ikon dokumen di rounded square hijau muda
-          const RoundedSquareIcon(
+          RoundedSquareIcon(
             svgAsset: 'assets/svg/Bill.svg',
-            backgroundColor: AppColors.billHighlight,
-            iconColor: AppColors.deepGreen,
+            backgroundColor: context.colors.billHighlight,
+            iconColor: context.colors.primaryText,
             size: AppSpacing.billIconCircleSize,
             iconSize: AppSpacing.billIconSize,
             borderRadius: AppSpacing.radiusSm,
@@ -69,20 +83,26 @@ class BillCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  bill.name,
-                  style: AppTextStyles.billName,
+                  billName,
+                  style: AppTextStyles.billName.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Rp $formattedAmount',
-                  style: AppTextStyles.billAmount,
+                  style: AppTextStyles.billAmount.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Jatuh tempo $formattedDue',
-                  style: AppTextStyles.billMeta,
+                  l10n.dueDatePrefix(formattedDue),
+                  style: AppTextStyles.billMeta.copyWith(
+                    color: context.colors.mutedText,
+                  ),
                 ),
               ],
             ),
@@ -95,20 +115,28 @@ class BillCard extends StatelessWidget {
             children: [
               Text(
                 statusLabel,
-                style: AppTextStyles.badgeStatus(statusColor),
+                style: AppTextStyles.badgeStatus(statusColor).copyWith(
+                  color: statusColor,
+                ),
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
                 remainingText,
-                style: AppTextStyles.billRemainingDays,
+                style: AppTextStyles.billRemainingDays.copyWith(
+                  color: context.colors.mutedText,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Material(
-                color: AppColors.softSurface,
+                color: context.colors.softSurface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  onTap: () => _confirmMarkAsDone(context, formattedAmount),
+                  onTap: () => _confirmMarkAsDone(
+                    context,
+                    billName,
+                    formattedAmount,
+                  ),
                   child: Container(
                     height: AppSpacing.actionButtonHeight,
                     padding: const EdgeInsets.symmetric(
@@ -118,13 +146,15 @@ class BillCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       border: Border.all(
-                        color: AppColors.border,
+                        color: context.colors.border,
                         width: AppSpacing.borderThin,
                       ),
                     ),
                     child: Text(
-                      'Bayar sekarang',
-                      style: AppTextStyles.cardActionButton,
+                      l10n.payNow,
+                      style: AppTextStyles.cardActionButton.copyWith(
+                        color: context.colors.primaryText,
+                      ),
                     ),
                   ),
                 ),
@@ -138,37 +168,55 @@ class BillCard extends StatelessWidget {
 
   Future<void> _confirmMarkAsDone(
     BuildContext context,
+    String billName,
     String formattedAmount,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         ),
-        title: Text('Tandai Selesai?', style: AppTextStyles.sheetTitle),
+        title: Text(
+          l10n.markBillDoneTitle,
+          style: AppTextStyles.sheetTitle.copyWith(
+            color: context.colors.textPrimary,
+          ),
+        ),
         content: Text(
-          'Tandai tagihan "${bill.name}" (Rp $formattedAmount) sebagai selesai? '
-          'Tagihan akan dihapus dari daftar dan pengingat dibatalkan.',
-          style: AppTextStyles.inputText,
+          l10n.markBillDoneConfirmation(billName, formattedAmount),
+          style: AppTextStyles.inputText.copyWith(
+            color: context.colors.textPrimary,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Batal', style: AppTextStyles.billMeta),
+            child: Text(
+              l10n.cancel,
+              style: AppTextStyles.billMeta.copyWith(
+                color: context.colors.mutedText,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.surface,
+              backgroundColor: context.colors.primary,
+              foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Tandai Selesai', style: AppTextStyles.primaryButton),
+            child: Text(
+              l10n.markDone,
+              style: AppTextStyles.primaryButton.copyWith(
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -179,20 +227,16 @@ class BillCard extends StatelessWidget {
     }
   }
 
-  static String _formatCurrency(int value) {
-    try {
-      return NumberFormat.decimalPattern('id_ID').format(value);
-    } catch (_) {
-      return value.toString();
-    }
-  }
-
-  static String _formatDueDate(DateTime date) {
-    try {
-      return DateFormat('d MMM', 'id_ID').format(date);
-    } catch (_) {
-      return DateFormat('d MMM').format(date);
+  String _localizedBillName(AppLocalizations l10n) {
+    switch (bill.id) {
+      case 'bill_internet_rumah':
+        return l10n.homeInternetBill;
+      case 'bill_listrik':
+        return l10n.electricityBill;
+      case 'bill_streaming':
+        return l10n.streamingBill;
+      default:
+        return bill.name;
     }
   }
 }
-

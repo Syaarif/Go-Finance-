@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 import 'package:go_finance/screens/profile_screen.dart';
 
 /// Halaman Edit Profil (frontend only, dummy data).
@@ -43,6 +44,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return text.isNotEmpty ? text[0].toUpperCase() : '?';
   }
 
+  Color _themeColor(Color lightColor, Color darkColor) =>
+      Theme.of(context).brightness == Brightness.dark ? darkColor : lightColor;
+
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -57,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _showPhotoOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -66,8 +70,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 24),
               leading: RoundedSquareIcon(
                 icon: icon,
-                backgroundColor: AppColors.softSurface,
-                iconColor: ProfileColors.darkGreen,
+                backgroundColor: ctx.colors.softSurface,
+                iconColor: _themeColor(
+                    ProfileColors.darkGreen, ctx.colors.textPrimary),
                 size: 40,
                 iconSize: 20,
                 borderRadius: AppSpacing.radiusSm,
@@ -76,12 +81,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 label,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 15,
-                  color: ProfileColors.darkGreen,
+                  color: _themeColor(
+                      ProfileColors.darkGreen, ctx.colors.textPrimary),
                 ),
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                _showSnack('$label (simulasi) — fitur unggah foto belum tersedia');
+                _showSnack(
+                    AppLocalizations.of(context)!.photoUploadSimulation(label));
               },
             );
 
@@ -96,27 +103,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: _themeColor(
+                      Colors.grey.shade300,
+                      ctx.colors.border,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Foto Profil',
+                      AppLocalizations.of(ctx)!.profilePhoto,
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: ProfileColors.darkGreen,
+                        color: _themeColor(
+                          ProfileColors.darkGreen,
+                          ctx.colors.textPrimary,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                option(Icons.photo_camera_outlined, 'Ambil dari kamera'),
-                option(Icons.photo_library_outlined, 'Pilih dari galeri'),
-                option(Icons.delete_outline, 'Hapus foto'),
+                option(Icons.photo_camera_outlined,
+                    AppLocalizations.of(ctx)!.takePhoto),
+                option(Icons.photo_library_outlined,
+                    AppLocalizations.of(ctx)!.chooseFromGallery),
+                option(Icons.delete_outline,
+                    AppLocalizations.of(ctx)!.removePhoto),
               ],
             ),
           ),
@@ -128,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final newName = _usernameController.text.trim();
-    _showSnack('Profil berhasil diperbarui');
+    _showSnack(AppLocalizations.of(context)!.profileUpdated);
     Navigator.pop(context, newName);
   }
 
@@ -136,7 +153,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return InputDecoration(
       hintText: hint,
       filled: true,
-      fillColor: ProfileColors.cardWhite,
+      fillColor: context.colors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -144,15 +161,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: ProfileColors.darkGreen),
+        borderSide: BorderSide(
+          color: _themeColor(
+            ProfileColors.darkGreen,
+            context.colors.primary,
+          ),
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: ProfileColors.redAccent),
+        borderSide: BorderSide(
+          color: _themeColor(
+            ProfileColors.redAccent,
+            context.colors.negative,
+          ),
+        ),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: ProfileColors.redAccent),
+        borderSide: BorderSide(
+          color: _themeColor(
+            ProfileColors.redAccent,
+            context.colors.negative,
+          ),
+        ),
       ),
     );
   }
@@ -164,7 +196,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: GoogleFonts.instrumentSans(
             fontWeight: FontWeight.bold,
             fontSize: 15,
-            color: ProfileColors.darkGreen,
+            color: _themeColor(
+              ProfileColors.darkGreen,
+              context.colors.textPrimary,
+            ),
           ),
         ),
       );
@@ -172,20 +207,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProfileColors.background,
+      backgroundColor: _themeColor(
+        ProfileColors.background,
+        context.colors.canvas,
+      ),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: context.colors.canvas.withValues(alpha: 0),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.chevron_left, size: 28),
-          color: ProfileColors.darkGreen,
+          color: _themeColor(
+            ProfileColors.darkGreen,
+            context.colors.primaryText,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          'Edit Profil',
+          AppLocalizations.of(context)!.editProfile,
           style: GoogleFonts.instrumentSans(
-            color: ProfileColors.darkGreen,
+            color: _themeColor(
+              ProfileColors.darkGreen,
+              context.colors.textPrimary,
+            ),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -210,11 +254,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 48,
-                            backgroundColor: ProfileColors.lightGreenBg,
+                            backgroundColor: _themeColor(
+                              ProfileColors.lightGreenBg,
+                              context.colors.softSurface,
+                            ),
                             child: Text(
                               _initial,
                               style: GoogleFonts.instrumentSans(
-                                color: ProfileColors.darkGreen,
+                                color: _themeColor(
+                                  ProfileColors.darkGreen,
+                                  context.colors.textPrimary,
+                                ),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 38,
                               ),
@@ -226,7 +276,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: ProfileColors.darkGreen,
+                                color: _themeColor(
+                                  ProfileColors.darkGreen,
+                                  context.colors.primary,
+                                ),
                                 borderRadius:
                                     BorderRadius.circular(AppSpacing.radiusXs),
                                 border:
@@ -242,10 +295,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextButton(
                       onPressed: _showPhotoOptions,
                       child: Text(
-                        'Ubah foto profil',
+                        AppLocalizations.of(context)!.changeProfilePhoto,
                         style: GoogleFonts.instrumentSans(
                           fontWeight: FontWeight.w600,
-                          color: ProfileColors.darkGreen,
+                          color: _themeColor(
+                            ProfileColors.darkGreen,
+                            context.colors.primaryText,
+                          ),
                         ),
                       ),
                     ),
@@ -255,28 +311,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 16),
 
               // ── Username ──
-              _label('Username'),
+              _label(AppLocalizations.of(context)!.username),
               TextFormField(
                 controller: _usernameController,
-                style: GoogleFonts.instrumentSans(fontSize: 14, color: ProfileColors.darkGreen),
-                decoration: _inputDecoration(hint: 'Masukkan username'),
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 14,
+                  color: _themeColor(
+                    ProfileColors.darkGreen,
+                    context.colors.textPrimary,
+                  ),
+                ),
+                decoration: _inputDecoration(
+                  hint: AppLocalizations.of(context)!.enterUsername,
+                ),
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Username tidak boleh kosong';
-                  if (value.length < 3) return 'Username minimal 3 karakter';
+                  if (value.isEmpty) {
+                    return AppLocalizations.of(context)!.usernameRequired;
+                  }
+                  if (value.length < 3) {
+                    return AppLocalizations.of(context)!.usernameMinLength(3);
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 20),
 
               // ── Email (read-only) ──
-              _label('Email'),
+              _label(AppLocalizations.of(context)!.email),
               TextFormField(
                 initialValue: widget.currentEmail,
                 readOnly: true,
-                style: GoogleFonts.instrumentSans(fontSize: 14, color: ProfileColors.textGrey),
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 14,
+                  color: _themeColor(
+                    ProfileColors.textGrey,
+                    context.colors.mutedText,
+                  ),
+                ),
                 decoration: _inputDecoration(),
-                onTap: () => _showSnack('Email tidak dapat diubah di halaman ini'),
+                onTap: () => _showSnack(
+                  AppLocalizations.of(context)!.emailNotEditable,
+                ),
               ),
               const SizedBox(height: 32),
 
@@ -286,15 +362,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ProfileColors.darkGreen,
+                    backgroundColor: _themeColor(
+                      ProfileColors.darkGreen,
+                      context.colors.primary,
+                    ),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: _save,
                   child: Text(
-                    'Simpan perubahan',
-                    style: GoogleFonts.instrumentSans(fontSize: 15, fontWeight: FontWeight.w600),
+                    AppLocalizations.of(context)!.saveChanges,
+                    style: GoogleFonts.instrumentSans(
+                        fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -306,4 +387,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
-

@@ -12,6 +12,8 @@ import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/features/transactions/pages/add_transaction_page.dart';
+import 'package:go_finance/features/transactions/utils/transaction_localization.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Halaman utama daftar transaksi (02_Transaksi).
 class TransactionsPage extends StatefulWidget {
@@ -94,7 +96,8 @@ class _TransactionsViewState extends State<_TransactionsView>
 
   void _openAddTransaction() async {
     final provider = context.read<TransactionProvider>();
-    await Navigator.of(context).push<TransactionModel>(
+    await Navigator.of(context)
+        .push<TransactionModel>(
       PageRouteBuilder(
         pageBuilder: (_, anim, __) => FadeTransition(
           opacity: anim,
@@ -102,13 +105,15 @@ class _TransactionsViewState extends State<_TransactionsView>
             position: Tween<Offset>(
               begin: const Offset(0, 0.08),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+            ).animate(
+                CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
             child: const AddTransactionPage(),
           ),
         ),
         transitionDuration: const Duration(milliseconds: 320),
       ),
-    ).then((tx) {
+    )
+        .then((tx) {
       if (tx != null) provider.addTransaction(tx);
     });
   }
@@ -119,7 +124,7 @@ class _TransactionsViewState extends State<_TransactionsView>
     final grouped = provider.groupedByDate;
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: Column(
         children: [
           // ===== STICKY HEADER =====
@@ -154,7 +159,8 @@ class _TransactionsViewState extends State<_TransactionsView>
           ),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: NavTab.transactions),
+      bottomNavigationBar:
+          const AppBottomNav(currentIndex: NavTab.transactions),
     );
   }
 }
@@ -175,14 +181,15 @@ class _StickyHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: AppColors.canvas,
+        color: context.colors.canvas,
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: AppColors.deepGreen.withValues(alpha: 0.07),
+                  color: context.colors.deepGreen.withValues(alpha: 0.07),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -206,8 +213,10 @@ class _StickyHeader extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Transaksi',
-                      style: AppTextStyles.pageTitle,
+                      l10n.transactions,
+                      style: AppTextStyles.pageTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -222,8 +231,8 @@ class _StickyHeader extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             // Tab Harian / Mingguan / Bulanan
             const Padding(
-              padding: EdgeInsets.symmetric(
-                  horizontal: AppSpacing.pageHorizontal),
+              padding:
+                  EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
               child: _PeriodTabBar(),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -276,6 +285,7 @@ class _AddButtonState extends State<_AddButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTapDown: (_) => _ctrl.reverse(),
       onTapUp: (_) {
@@ -286,14 +296,14 @@ class _AddButtonState extends State<_AddButton>
       onTapCancel: () => _ctrl.forward(),
       child: ScaleTransition(
         scale: _ctrl,
-        child: const RoundedSquareIcon(
+        child: RoundedSquareIcon(
           icon: Icons.add_rounded,
-          backgroundColor: AppColors.primary,
-          iconColor: AppColors.surface,
+          backgroundColor: context.colors.primary,
+          iconColor: Colors.white,
           size: 40,
           iconSize: 22,
           borderRadius: AppSpacing.radiusSm,
-          tooltip: 'Tambah Transaksi',
+          tooltip: l10n.addTransaction,
         ),
       ),
     );
@@ -306,11 +316,12 @@ class _PeriodTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
-    final tabs = ['Harian', 'Mingguan', 'Bulanan'];
+    final l10n = AppLocalizations.of(context)!;
+    final tabs = [l10n.daily, l10n.weekly, l10n.monthly];
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.softSurface,
+        color: context.colors.softSurface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       ),
       padding: const EdgeInsets.all(3),
@@ -327,7 +338,9 @@ class _PeriodTabBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  color: isActive ? AppColors.primary : Colors.transparent,
+                  color: isActive
+                      ? context.colors.primary
+                      : context.colors.canvas.withValues(alpha: 0),
                   borderRadius:
                       BorderRadius.circular(AppSpacing.radiusCard - 3),
                 ),
@@ -336,9 +349,8 @@ class _PeriodTabBar extends StatelessWidget {
                   tabs[i],
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        isActive ? FontWeight.w700 : FontWeight.w500,
-                    color: isActive ? AppColors.surface : AppColors.mutedText,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                    color: isActive ? Colors.white : context.colors.mutedText,
                   ),
                 ),
               ),
@@ -348,7 +360,6 @@ class _PeriodTabBar extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _SearchBar extends StatelessWidget {
@@ -358,27 +369,33 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<TransactionProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           const SizedBox(width: AppSpacing.md),
-          const Icon(Icons.search_rounded,
-              color: AppColors.mutedText, size: 18),
+          Icon(Icons.search_rounded, color: context.colors.mutedText, size: 18),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: TextField(
               controller: controller,
               onChanged: provider.setSearch,
-              style: AppTextStyles.inputText.copyWith(fontSize: 13),
+              style: AppTextStyles.inputText.copyWith(
+                color: context.colors.textPrimary,
+                fontSize: 13,
+              ),
               decoration: InputDecoration(
-                hintText: 'Cari transaksi...',
-                hintStyle: AppTextStyles.inputHint.copyWith(fontSize: 13),
+                hintText: l10n.searchTransactions,
+                hintStyle: AppTextStyles.inputHint.copyWith(
+                  color: context.colors.mutedText,
+                  fontSize: 13,
+                ),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -391,10 +408,10 @@ class _SearchBar extends StatelessWidget {
                 controller.clear();
                 provider.setSearch('');
               },
-              child: const Padding(
-                padding: EdgeInsets.all(AppSpacing.sm),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Icon(Icons.close_rounded,
-                    color: AppColors.mutedText, size: 16),
+                    color: context.colors.mutedText, size: 16),
               ),
             ),
           const SizedBox(width: AppSpacing.xs),
@@ -410,6 +427,7 @@ class _CategoryChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
+    final l10n = AppLocalizations.of(context)!;
     final cats = [
       TransactionCategory.semua,
       TransactionCategory.makananMinuman,
@@ -420,8 +438,8 @@ class _CategoryChips extends StatelessWidget {
       height: 32,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.pageHorizontal),
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
         itemCount: cats.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
@@ -437,19 +455,22 @@ class _CategoryChips extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md, vertical: AppSpacing.xs),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surface,
+                color: isSelected
+                    ? context.colors.primary
+                    : context.colors.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
+                  color: isSelected
+                      ? context.colors.primary
+                      : context.colors.border,
                 ),
               ),
               child: Text(
-                cat.shortLabel,
+                localizedCategoryLabel(l10n, cat, short: true),
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? AppColors.surface : AppColors.mutedText,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? Colors.white : context.colors.mutedText,
                   fontFamily: 'InstrumentSans',
                 ),
               ),
@@ -508,22 +529,28 @@ class _TransactionGroupState extends State<_TransactionGroup>
     super.dispose();
   }
 
-  String _formatDate(DateTime d) {
+  String _formatDate(
+    DateTime d,
+    AppLocalizations l10n,
+    String locale,
+  ) {
     final now = DateTime.now();
     if (d.year == now.year && d.month == now.month && d.day == now.day) {
-      return 'Hari Ini';
+      return l10n.today;
     }
     final yesterday = now.subtract(const Duration(days: 1));
     if (d.year == yesterday.year &&
         d.month == yesterday.month &&
         d.day == yesterday.day) {
-      return 'Kemarin';
+      return l10n.yesterday;
     }
-    return DateFormat('d MMMM yyyy', 'id_ID').format(d);
+    return DateFormat('d MMMM yyyy', locale).format(d);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
@@ -535,20 +562,23 @@ class _TransactionGroupState extends State<_TransactionGroup>
               padding: const EdgeInsets.only(
                   top: AppSpacing.lg, bottom: AppSpacing.sm),
               child: Text(
-                _formatDate(widget.date),
-                style: AppTextStyles.sectionTitle.copyWith(fontSize: 14),
+                _formatDate(widget.date, l10n, locale),
+                style: AppTextStyles.sectionTitle.copyWith(
+                  color: context.colors.textPrimary,
+                  fontSize: 14,
+                ),
               ),
             ),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                border: Border.all(color: AppColors.border),
-                boxShadow: const [
+                border: Border.all(color: context.colors.border),
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x06234D1C),
+                    color: context.colors.deepGreen.withValues(alpha: 0.024),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -565,7 +595,7 @@ class _TransactionGroupState extends State<_TransactionGroup>
                           thickness: 1,
                           indent: 56,
                           endIndent: AppSpacing.md,
-                          color: AppColors.border.withValues(alpha: 0.6),
+                          color: context.colors.border.withValues(alpha: 0.6),
                         ),
                     ],
                   );
@@ -609,9 +639,9 @@ class _TransactionTileState extends State<_TransactionTile>
     super.dispose();
   }
 
-  String _formatAmount(double amount) {
+  String _formatAmount(double amount, String locale) {
     final formatted = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(amount);
@@ -624,16 +654,17 @@ class _TransactionTileState extends State<_TransactionTile>
     HapticFeedback.selectionClick();
     showModalBottomSheet(
       context: ctx,
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.canvas.withValues(alpha: 0),
       builder: (_) => _TransactionDetailSheet(tx: widget.tx),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
     final tx = widget.tx;
     final amountColor =
-        tx.isIncome ? AppColors.primary : AppColors.negative;
+        tx.isIncome ? context.colors.primaryText : context.colors.negative;
     final amountPrefix = tx.isIncome ? '+' : '−';
 
     return GestureDetector(
@@ -667,14 +698,20 @@ class _TransactionTileState extends State<_TransactionTile>
                   children: [
                     Text(
                       tx.title,
-                      style: AppTextStyles.billName.copyWith(fontSize: 14),
+                      style: AppTextStyles.billName.copyWith(
+                        color: context.colors.textPrimary,
+                        fontSize: 14,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       tx.subtitle,
-                      style: AppTextStyles.footnote.copyWith(fontSize: 11),
+                      style: AppTextStyles.footnote.copyWith(
+                        color: context.colors.mutedText,
+                        fontSize: 11,
+                      ),
                       maxLines: 1,
                     ),
                   ],
@@ -686,7 +723,7 @@ class _TransactionTileState extends State<_TransactionTile>
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '$amountPrefix${_formatAmount(tx.amount)}',
+                    '$amountPrefix${_formatAmount(tx.amount, locale)}',
                     style: AppTextStyles.billAmount.copyWith(
                       color: amountColor,
                       fontSize: 13,
@@ -695,7 +732,10 @@ class _TransactionTileState extends State<_TransactionTile>
                   const SizedBox(height: 2),
                   Text(
                     _formatTime(tx.date),
-                    style: AppTextStyles.footnote.copyWith(fontSize: 11),
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -714,20 +754,23 @@ class _TransactionDetailSheet extends StatelessWidget {
   final TransactionModel tx;
   const _TransactionDetailSheet({required this.tx});
 
-  String _formatAmount(double amount) => NumberFormat.currency(
-        locale: 'id_ID',
+  String _formatAmount(double amount, String locale) => NumberFormat.currency(
+        locale: locale,
         symbol: 'Rp ',
         decimalDigits: 0,
       ).format(amount);
 
   @override
   Widget build(BuildContext context) {
-    final amountColor = tx.isIncome ? AppColors.primary : AppColors.negative;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final amountColor =
+        tx.isIncome ? context.colors.primaryText : context.colors.negative;
     final amountPrefix = tx.isIncome ? '+' : '−';
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSheet),
       ),
       padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -736,10 +779,11 @@ class _TransactionDetailSheet extends StatelessWidget {
         children: [
           // Handle
           Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             margin: const EdgeInsets.only(bottom: AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.border,
+              color: context.colors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -753,10 +797,15 @@ class _TransactionDetailSheet extends StatelessWidget {
             borderRadius: AppSpacing.radiusCard,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(tx.title, style: AppTextStyles.sheetTitle),
+          Text(
+            tx.title,
+            style: AppTextStyles.sheetTitle.copyWith(
+              color: context.colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '$amountPrefix${_formatAmount(tx.amount)}',
+            '$amountPrefix${_formatAmount(tx.amount, locale)}',
             style: AppTextStyles.pageTitle.copyWith(
               color: amountColor,
               fontSize: 26,
@@ -764,27 +813,36 @@ class _TransactionDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _DetailRow(
-              label: 'Tanggal',
-              value: DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(tx.date)),
-          _DetailRow(label: 'Kategori', value: tx.category.label),
+            label: l10n.date,
+            value: DateFormat('d MMMM yyyy, HH:mm', locale).format(tx.date),
+          ),
           _DetailRow(
-              label: 'Tipe',
-              value: tx.isIncome ? 'Pemasukan' : 'Pengeluaran'),
+            label: l10n.transactionCategory,
+            value: localizedCategoryLabel(l10n, tx.category),
+          ),
+          _DetailRow(
+            label: l10n.type,
+            value: localizedTransactionType(l10n, tx.type),
+          ),
           if (tx.note != null && tx.note!.isNotEmpty)
-            _DetailRow(label: 'Catatan', value: tx.note!),
+            _DetailRow(label: l10n.optionalNote, value: tx.note!),
           const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: context.colors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text('Tutup', style: AppTextStyles.primaryButton),
+              child: Text(
+                l10n.close,
+                style:
+                    AppTextStyles.primaryButton.copyWith(color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -807,11 +865,19 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 90,
-            child: Text(label, style: AppTextStyles.footnote),
+            child: Text(
+              label,
+              style: AppTextStyles.footnote.copyWith(
+                color: context.colors.mutedText,
+              ),
+            ),
           ),
           Expanded(
             child: Text(value,
-                style: AppTextStyles.inputText.copyWith(fontSize: 13)),
+                style: AppTextStyles.inputText.copyWith(
+                  color: context.colors.textPrimary,
+                  fontSize: 13,
+                )),
           ),
         ],
       ),
@@ -825,24 +891,30 @@ class _DetailRow extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const IconContainer(
+          IconContainer(
             icon: Icons.receipt_long_outlined,
-            backgroundColor: AppColors.softSurface,
-            iconColor: AppColors.primary,
+            backgroundColor: context.colors.softSurface,
+            iconColor: context.colors.primaryText,
             size: 72,
             iconSize: 36,
             isCircular: true,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('Tidak ada transaksi',
-              style: AppTextStyles.sectionTitle.copyWith(fontSize: 15)),
+          Text(l10n.noTransactions,
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: context.colors.textPrimary,
+                fontSize: 15,
+              )),
           const SizedBox(height: AppSpacing.xs),
-          Text('Belum ada transaksi pada periode ini.',
-              style: AppTextStyles.footnote),
+          Text(l10n.noTransactionsInPeriod,
+              style: AppTextStyles.footnote.copyWith(
+                color: context.colors.mutedText,
+              )),
         ],
       ),
     );

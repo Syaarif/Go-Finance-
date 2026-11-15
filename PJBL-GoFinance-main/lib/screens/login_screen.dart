@@ -11,6 +11,7 @@ import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/glow_input_field.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Login Screen - "Masuk" dari Figma (node 187-1904)
 /// Tata letak responsif mobile untuk Android & iOS (mendukung scroll saat keyboard aktif)
@@ -37,7 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _checkForUpdate({bool force = false}) async {
     setState(() => _isCheckingUpdate = true);
-    final info = await AppUpdateService.instance.checkForUpdate(forceRefresh: force);
+    final info =
+        await AppUpdateService.instance.checkForUpdate(forceRefresh: force);
     if (!mounted) return;
     setState(() {
       _updateInfo = info;
@@ -62,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGreen,
       body: Stack(
@@ -105,8 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Center(
                                         child: FloatingWidget(
                                           distance: 5.0,
-                                          duration:
-                                              const Duration(milliseconds: 2400),
+                                          duration: const Duration(
+                                              milliseconds: 2400),
                                           child: Image.asset(
                                             'assets/images/piggy_coin.png',
                                             width: 58,
@@ -125,34 +128,48 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Positioned(
                                         right: 0,
                                         child: Tooltip(
-                                          message: 'Periksa Pembaruan GitHub',
+                                          message: l10n.checkGithubUpdates,
                                           child: InkWell(
                                             onTap: () {
-                                              if (_updateInfo != null && _updateInfo!.hasUpdate) {
-                                                UpdateNotificationSheet.show(context, _updateInfo!);
+                                              if (_updateInfo != null &&
+                                                  _updateInfo!.hasUpdate) {
+                                                UpdateNotificationSheet.show(
+                                                    context, _updateInfo!);
                                               } else {
                                                 _checkForUpdate(force: true);
-                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
                                                   SnackBar(
                                                     content: Text(
-                                                      'Memeriksa pembaruan di GitHub...',
-                                                      style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
+                                                      l10n.checkingGithubUpdates,
+                                                      style: GoogleFonts
+                                                          .instrumentSans(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500),
                                                     ),
-                                                    backgroundColor: AppTheme.primaryGreen,
-                                                    duration: const Duration(seconds: 2),
-                                                    behavior: SnackBarBehavior.floating,
+                                                    backgroundColor:
+                                                        AppTheme.primaryGreen,
+                                                    duration: const Duration(
+                                                        seconds: 2),
+                                                    behavior: SnackBarBehavior
+                                                        .floating,
                                                   ),
                                                 );
                                               }
                                             },
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             child: Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
                                                 color: Colors.white,
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                                 border: Border.all(
-                                                  color: _updateInfo?.hasUpdate == true
+                                                  color: _updateInfo
+                                                              ?.hasUpdate ==
+                                                          true
                                                       ? const Color(0xFF81C784)
                                                       : const Color(0xFFE0E0E0),
                                                   width: 1.2,
@@ -173,18 +190,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                                     size: 20,
                                                     color: _isCheckingUpdate
                                                         ? Colors.grey
-                                                        : AppTheme.primaryDarkGreen,
+                                                        : AppTheme
+                                                            .primaryDarkGreen,
                                                   ),
-                                                  if (_updateInfo?.hasUpdate == true)
+                                                  if (_updateInfo?.hasUpdate ==
+                                                      true)
                                                     Positioned(
                                                       top: -2,
                                                       right: -2,
                                                       child: Container(
                                                         width: 8,
                                                         height: 8,
-                                                        decoration: const BoxDecoration(
-                                                          color: Colors.redAccent,
-                                                          shape: BoxShape.circle,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                          color:
+                                                              Colors.redAccent,
+                                                          shape:
+                                                              BoxShape.circle,
                                                         ),
                                                       ),
                                                     ),
@@ -207,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Selamat datang\nkembali!',
+                                        l10n.welcomeBack,
                                         style: GoogleFonts.instrumentSans(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 32,
@@ -218,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Masuk untuk melanjutkan perjalanan\nkamu bersama Go Finance!',
+                                        l10n.loginSubtitle,
                                         style: GoogleFonts.instrumentSans(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,
@@ -234,7 +256,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // Banner Notifikasi Pembaruan GitHub
                                 if (!_isUpdateBannerDismissed &&
-                                    (_updateInfo?.hasUpdate == true || _isCheckingUpdate))
+                                    (_updateInfo?.hasUpdate == true ||
+                                        _isCheckingUpdate))
                                   StaggeredFadeSlide(
                                     delay: const Duration(milliseconds: 250),
                                     child: LoginUpdateBanner(
@@ -255,8 +278,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   delay: const Duration(milliseconds: 320),
                                   child: GlowInputField(
                                     controller: _emailController,
-                                    label: 'Email:',
-                                    hint: 'nama@email.com',
+                                    label: l10n.emailFieldLabel,
+                                    hint: l10n.emailHint,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
                                 ),
@@ -267,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   delay: const Duration(milliseconds: 400),
                                   child: GlowInputField(
                                     controller: _passwordController,
-                                    label: 'Password:',
+                                    label: l10n.passwordFieldLabel,
                                     hint: '••••••••',
                                     isPassword: true,
                                   ),
@@ -322,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              'Ingat saya',
+                                              l10n.rememberMe,
                                               style: GoogleFonts.instrumentSans(
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 14,
@@ -337,7 +360,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         onTap: _handleForgotPassword,
                                         behavior: HitTestBehavior.opaque,
                                         child: Text(
-                                          'Lupa password?',
+                                          l10n.forgotPassword,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
@@ -393,7 +416,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         backgroundColor: AppTheme.primaryGreen,
                                         onPressed: _handleLogin,
                                         child: Text(
-                                          'Masuk',
+                                          l10n.login,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -432,7 +455,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                           child: RichText(
                                             text: TextSpan(
-                                              text: 'Belum punya akun? ',
+                                              text: l10n.noAccountPrompt,
                                               style: GoogleFonts.instrumentSans(
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 14,
@@ -441,7 +464,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                               children: [
                                                 TextSpan(
-                                                  text: 'Daftar',
+                                                  text: l10n.register,
                                                   style: GoogleFonts
                                                       .instrumentSans(
                                                     fontWeight: FontWeight.w700,
@@ -476,10 +499,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleForgotPassword() {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Tautan pemulihan password akan dikirim ke email Anda.',
+          l10n.passwordRecoveryMessage,
           style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
         ),
         backgroundColor: AppTheme.primaryGreen,
@@ -490,13 +514,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
+    final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Email dan password harus diisi!',
+            l10n.emailPasswordRequired,
             style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
           ),
           backgroundColor: Colors.red.shade700,
@@ -510,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Masuk berhasil! Selamat datang di Go Finance.',
+          l10n.loginSuccess,
           style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
         ),
         backgroundColor: AppTheme.primaryGreen,

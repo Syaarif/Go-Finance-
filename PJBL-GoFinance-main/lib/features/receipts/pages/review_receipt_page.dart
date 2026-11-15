@@ -7,6 +7,8 @@ import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
+import 'package:go_finance/features/transactions/utils/transaction_localization.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class ReviewReceiptPage extends StatefulWidget {
   final String initialMerchant;
@@ -34,14 +36,6 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   late TransactionCategory _category;
   late DateTime _date;
 
-  String get _formattedAmount => NumberFormat.currency(
-        locale: 'id_ID',
-        symbol: 'Rp ',
-        decimalDigits: 0,
-      ).format(_amount);
-
-  String get _formattedDate => DateFormat('d MMM yyyy', 'id_ID').format(_date);
-
   @override
   void initState() {
     super.initState();
@@ -57,6 +51,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: initialValue);
     final value = await showDialog<String>(
       context: context,
@@ -82,12 +77,12 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Batal'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text),
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Simpan'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -97,8 +92,9 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }
 
   Future<void> _editMerchant() async {
+    final l10n = AppLocalizations.of(context)!;
     final value = await _showTextEditor(
-      title: 'Nama Merchant',
+      title: l10n.merchantName,
       initialValue: _merchant,
     );
     if (value != null && value.trim().isNotEmpty) {
@@ -107,8 +103,9 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }
 
   Future<void> _editAmount() async {
+    final l10n = AppLocalizations.of(context)!;
     final value = await _showTextEditor(
-      title: 'Nominal Total',
+      title: l10n.totalAmount,
       initialValue: _amount.toStringAsFixed(0),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -118,6 +115,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }
 
   Future<void> _editCategory() async {
+    final l10n = AppLocalizations.of(context)!;
     const categories = [
       TransactionCategory.belanja,
       TransactionCategory.makananMinuman,
@@ -138,7 +136,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pilih Kategori', style: AppTextStyles.sheetTitle),
+            Text(l10n.chooseCategory, style: AppTextStyles.sheetTitle),
             const SizedBox(height: 12),
             ...categories.map(
               (category) => ListTile(
@@ -148,7 +146,10 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                   child:
                       Icon(category.icon, color: category.iconColor, size: 20),
                 ),
-                title: Text(category.label, style: AppTextStyles.fieldLabel),
+                title: Text(
+                  localizedCategoryLabel(l10n, category),
+                  style: AppTextStyles.fieldLabel,
+                ),
                 trailing: category == _category
                     ? const Icon(Icons.check_rounded, color: AppColors.primary)
                     : null,
@@ -163,12 +164,13 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }
 
   Future<void> _editDate() async {
+    final locale = Localizations.localeOf(context);
     final selected = await showDatePicker(
       context: context,
       initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      locale: const Locale('id', 'ID'),
+      locale: locale,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
@@ -184,6 +186,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }
 
   void _saveTransaction() {
+    final l10n = AppLocalizations.of(context)!;
     if (_merchant.trim().isEmpty || _amount <= 0) return;
 
     context.read<TransactionProvider>().addTransaction(
@@ -203,7 +206,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     Navigator.of(context).popUntil((route) => route.isFirst);
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Transaksi $_merchant berhasil disimpan.'),
+        content: Text(l10n.receiptTransactionSaved(_merchant)),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
       ),
@@ -212,6 +215,14 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final formattedAmount = NumberFormat.currency(
+      locale: locale,
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(_amount);
+    final formattedDate = DateFormat('d MMM yyyy', locale).format(_date);
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -224,7 +235,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                   IconButton(
                     key: const Key('btn_back_review_receipt'),
                     onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: 'Kembali',
+                    tooltip: l10n.back,
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
@@ -232,7 +243,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                     ),
                   ),
                   Text(
-                    'Periksa Hasil AI',
+                    l10n.checkAiResults,
                     style: AppTextStyles.pageTitle.copyWith(fontSize: 17),
                   ),
                 ],
@@ -265,20 +276,20 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Ekstraksi berhasil',
+                                  l10n.extractionSuccessful,
                                   style: AppTextStyles.fieldLabel.copyWith(
                                     fontSize: 12,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Periksa kembali data sebelum disimpan.',
+                                  l10n.checkBeforeSave,
                                   style: AppTextStyles.footnote.copyWith(
                                     fontSize: 9,
                                   ),
                                 ),
                                 Text(
-                                  'Data contoh; OCR/AI belum terhubung.',
+                                  l10n.ocrNotIntegrated,
                                   style: AppTextStyles.footnote.copyWith(
                                     fontSize: 9,
                                   ),
@@ -291,41 +302,41 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                     ),
                     const SizedBox(height: 13),
                     Text(
-                      'Draft transaksi',
+                      l10n.transactionDraft,
                       style: AppTextStyles.sectionTitle.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Hasil AI bisa kamu edit jika ada yang kurang tepat.',
+                      l10n.editAiResults,
                       style: AppTextStyles.footnote.copyWith(fontSize: 10),
                     ),
                     const SizedBox(height: 15),
                     _ReviewField(
                       key: const Key('review_merchant_field'),
-                      label: 'Nama Merchant',
+                      label: l10n.merchantName,
                       value: _merchant,
                       onEdit: _editMerchant,
                     ),
                     const SizedBox(height: 7),
                     _ReviewField(
                       key: const Key('review_amount_field'),
-                      label: 'Nominal Total',
-                      value: _formattedAmount,
+                      label: l10n.totalAmount,
+                      value: formattedAmount,
                       onEdit: _editAmount,
                     ),
                     const SizedBox(height: 14),
                     _ReviewField(
                       key: const Key('review_category_field'),
-                      label: 'Kategori',
-                      value: _category.label,
+                      label: l10n.transactionCategory,
+                      value: localizedCategoryLabel(l10n, _category),
                       leadingIcon: _category.icon,
                       onEdit: _editCategory,
                     ),
                     const SizedBox(height: 14),
                     _ReviewField(
                       key: const Key('review_date_field'),
-                      label: 'Tanggal Transaksi',
-                      value: _formattedDate,
+                      label: l10n.transactionDateLabel,
+                      value: formattedDate,
                       leadingIcon: Icons.calendar_today_outlined,
                       onEdit: _editDate,
                     ),
@@ -336,7 +347,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                             size: 14, color: AppColors.primary),
                         const SizedBox(width: 6),
                         Text(
-                          'Ketuk ikon pensil untuk mengubah data.',
+                          l10n.tapPencilToEdit,
                           style: AppTextStyles.footnote.copyWith(fontSize: 9),
                         ),
                       ],
@@ -357,7 +368,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Sumber: ${widget.sourceFileName}',
+                              l10n.receiptSource(widget.sourceFileName),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.footnote.copyWith(
@@ -391,7 +402,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                   ),
-                  child: const Text('Konfirmasi & Simpan'),
+                  child: Text(l10n.confirmAndSave),
                 ),
               ),
             ),
@@ -407,20 +418,21 @@ class _ReviewProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
       children: [
         Expanded(
           child: _ReviewStep(
             number: '1',
-            label: 'Upload',
+            label: l10n.upload,
             isActive: false,
           ),
         ),
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         Expanded(
           child: _ReviewStep(
             number: '2',
-            label: 'Review',
+            label: l10n.review,
             isActive: true,
           ),
         ),
@@ -503,6 +515,7 @@ class _ReviewField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -554,7 +567,7 @@ class _ReviewField extends StatelessWidget {
                   HapticFeedback.selectionClick();
                   onEdit();
                 },
-                tooltip: 'Ubah $label',
+                tooltip: l10n.editFieldTooltip(label),
                 constraints:
                     const BoxConstraints.tightFor(width: 36, height: 36),
                 padding: EdgeInsets.zero,

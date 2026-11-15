@@ -1,9 +1,12 @@
 import 'dart:io' show Platform;
+import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:go_finance/features/bills/models/bill.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Layanan notifikasi lokal terjadwal (H-7 dan H-1 pukul 09:00 waktu lokal).
 class NotificationService {
@@ -19,9 +22,7 @@ class NotificationService {
       Platform.environment.containsKey('FLUTTER_TEST');
 
   static const String _channelId = 'go_finance_bills_channel';
-  static const String _channelName = 'Pengingat Tagihan';
-  static const String _channelDesc =
-      'Notifikasi pengingat tagihan H-7 dan H-1 sebelum jatuh tempo';
+  static const String _languagePreferenceKey = 'gf_language_v1';
 
   /// ID deterministik berbasis `bill.id` (31-bit positif) untuk H-7.
   static int idForH7(String billId) => (billId.hashCode & 0x3FFFFFFF) * 2;
@@ -101,18 +102,32 @@ class NotificationService {
     final h7Date = dueNineAm.subtract(const Duration(days: 7));
     final h1Date = dueNineAm.subtract(const Duration(days: 1));
 
-    final currencyFmt = NumberFormat.decimalPattern('id_ID');
-    final dateFmt = DateFormat('d MMM yyyy', 'id_ID');
+    final locale = await _notificationLocale();
+    final l10n = await AppLocalizations.delegate.load(locale);
+    final currencyFmt = NumberFormat.decimalPattern(locale.toString());
+    final dateFmt = DateFormat('d MMM yyyy', locale.toString());
     final formattedNominal = currencyFmt.format(bill.amount);
     final formattedDate = dateFmt.format(bill.dueDate);
-    final title = 'Tagihan ${bill.name} segera jatuh tempo';
+    final billName = switch (bill.id) {
+      'bill_internet_rumah' => l10n.homeInternetBill,
+      'bill_listrik' => l10n.electricityBill,
+      'bill_streaming' => l10n.streamingBill,
+      _ => bill.name,
+    };
+    final title = l10n.billReminderTitle(billName);
 
     if (h7Date.isAfter(now)) {
       await _scheduleSingle(
         id: idForH7(bill.id),
         title: title,
-        body: 'Rp $formattedNominal jatuh tempo $formattedDate (7 hari lagi)',
+        body: l10n.billReminderBody(
+          formattedNominal,
+          formattedDate,
+          l10n.daysRemaining(7),
+        ),
         scheduledLocal: h7Date,
+        channelName: l10n.billReminderChannel,
+        channelDescription: l10n.billReminderChannelDescription,
       );
     }
 
@@ -120,10 +135,27 @@ class NotificationService {
       await _scheduleSingle(
         id: idForH1(bill.id),
         title: title,
-        body: 'Rp $formattedNominal jatuh tempo $formattedDate (besok)',
+        body: l10n.billReminderBody(
+          formattedNominal,
+          formattedDate,
+          l10n.tomorrow,
+        ),
         scheduledLocal: h1Date,
+        channelName: l10n.billReminderChannel,
+        channelDescription: l10n.billReminderChannelDescription,
       );
     }
+  }
+
+  Future<Locale> _notificationLocale() async {
+    final preferences = await SharedPreferences.getInstance();
+    return switch (preferences.getString(_languagePreferenceKey)) {
+      'indonesian' => const Locale('id', 'ID'),
+      'english' => const Locale('en', 'US'),
+      _ => PlatformDispatcher.instance.locale.languageCode == 'en'
+          ? const Locale('en', 'US')
+          : const Locale('id', 'ID'),
+    };
   }
 
   Future<void> _scheduleSingle({
@@ -131,19 +163,21 @@ class NotificationService {
     required String title,
     required String body,
     required DateTime scheduledLocal,
+    required String channelName,
+    required String channelDescription,
   }) async {
     if (_isTestEnv) return;
     try {
       final tzDate = tz.TZDateTime.from(scheduledLocal, tz.local);
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
-          _channelName,
-          channelDescription: _channelDesc,
+          channelName,
+          channelDescription: channelDescription,
           importance: Importance.high,
           priority: Priority.high,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       );
 
       await _plugin.zonedSchedule(
@@ -172,4 +206,3 @@ class NotificationService {
     }
   }
 }
-

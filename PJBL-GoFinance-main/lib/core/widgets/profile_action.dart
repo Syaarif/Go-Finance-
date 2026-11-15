@@ -9,8 +9,8 @@ import 'package:go_finance/screens/profile_screen.dart';
 class ProfileAction extends StatelessWidget {
   final IconData icon;
   final String? svgAsset;
-  final Color backgroundColor;
-  final Color iconColor;
+  final Color? backgroundColor;
+  final Color? iconColor;
   final double size;
   final double iconSize;
   final double borderRadius;
@@ -21,8 +21,8 @@ class ProfileAction extends StatelessWidget {
     super.key,
     this.icon = Icons.person_outline_rounded,
     this.svgAsset,
-    this.backgroundColor = AppColors.surface,
-    this.iconColor = AppColors.deepGreen,
+    this.backgroundColor,
+    this.iconColor,
     this.size = 40.0,
     this.iconSize = 20.0,
     this.borderRadius = AppSpacing.radiusSm,
@@ -40,6 +40,8 @@ class ProfileAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = this.backgroundColor ?? context.colors.surface;
+    final iconColor = this.iconColor ?? context.colors.textPrimary;
     return RoundedSquareIcon(
       actionKey: const Key('btn_open_profile'),
       icon: icon,
@@ -50,14 +52,14 @@ class ProfileAction extends StatelessWidget {
       iconSize: iconSize,
       borderRadius: borderRadius,
       border: Border.all(
-        color: AppColors.border,
+        color: context.colors.border,
         width: AppSpacing.borderThin,
       ),
-      boxShadow: const [
+      boxShadow: [
         BoxShadow(
-          color: AppColors.cardShadow,
+          color: context.colors.cardShadow,
           blurRadius: 6,
-          offset: Offset(0, 2),
+          offset: const Offset(0, 2),
         ),
       ],
       tooltip: tooltip,
@@ -65,4 +67,3 @@ class ProfileAction extends StatelessWidget {
     );
   }
 }
-

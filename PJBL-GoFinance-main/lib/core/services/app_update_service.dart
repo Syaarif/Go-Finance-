@@ -37,14 +37,24 @@ class AppUpdateInfo {
       hasUpdate: false,
       currentSha: currentSha,
       latestSha: currentSha,
-      commitMessage: 'Aplikasi sudah versi terbaru.',
+      commitMessage: '',
       authorName: '',
       releaseTagName: releaseTagName,
       downloadUrl: 'https://github.com/Syaarif/Go-Finance-/releases/latest',
-      releasePageUrl: 'https://github.com/Syaarif/Go-Finance-/releases/tag/latest',
+      releasePageUrl:
+          'https://github.com/Syaarif/Go-Finance-/releases/tag/latest',
     );
   }
 }
+
+enum AppUpdateProgressStatus { connecting, downloading, installing }
+
+typedef AppUpdateProgressCallback = void Function(
+  double progress,
+  AppUpdateProgressStatus status, {
+  double? receivedMegabytes,
+  double? totalMegabytes,
+});
 
 /// Service untuk memeriksa, mengunduh secara langsung, dan menginstal pembaruan APK dari GitHub.
 class AppUpdateService {
@@ -100,16 +110,19 @@ class AppUpdateService {
             : latestFullSha;
 
         final commitObj = json['commit'] as Map<String, dynamic>?;
-        final commitMessage = (commitObj?['message'] as String?) ?? 'Pembaruan terbaru';
+        final commitMessage = (commitObj?['message'] as String?) ?? '';
         final authorObj = commitObj?['author'] as Map<String, dynamic>?;
-        final authorName = (authorObj?['name'] as String?) ?? 'Kontributor';
+        final authorName = (authorObj?['name'] as String?) ?? '';
         final dateStr = authorObj?['date'] as String?;
         final commitDate = dateStr != null ? DateTime.tryParse(dateStr) : null;
 
-        final bool isDifferentCommit =
-            latestShortSha.isNotEmpty &&
-            !currentInstalledSha.toLowerCase().startsWith(latestShortSha.toLowerCase()) &&
-            !latestShortSha.toLowerCase().startsWith(currentInstalledSha.toLowerCase());
+        final bool isDifferentCommit = latestShortSha.isNotEmpty &&
+            !currentInstalledSha
+                .toLowerCase()
+                .startsWith(latestShortSha.toLowerCase()) &&
+            !latestShortSha
+                .toLowerCase()
+                .startsWith(currentInstalledSha.toLowerCase());
 
         _cachedInfo = AppUpdateInfo(
           hasUpdate: isDifferentCommit,
@@ -136,10 +149,10 @@ class AppUpdateService {
   /// lalu otomatis membuka dialog instalasi sistem Android.
   Future<bool> downloadAndInstall({
     required String downloadUrl,
-    required void Function(double progress, String statusText) onProgress,
+    required AppUpdateProgressCallback onProgress,
   }) async {
     try {
-      onProgress(0.05, 'Menghubungkan ke GitHub...');
+      onProgress(0.05, AppUpdateProgressStatus.connecting);
 
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 20);
@@ -151,7 +164,9 @@ class AppUpdateService {
       HttpClientResponse resp = await req.close();
 
       int redirectCount = 0;
-      while ((resp.isRedirect || resp.statusCode == 302 || resp.statusCode == 301) &&
+      while ((resp.isRedirect ||
+              resp.statusCode == 302 ||
+              resp.statusCode == 301) &&
           redirectCount < 5) {
         redirectCount++;
         final location = resp.headers.value(HttpHeaders.locationHeader);
@@ -185,15 +200,18 @@ class AppUpdateService {
         fileSink.add(chunk);
         receivedBytes += chunk.length;
         final double p = (receivedBytes / totalBytes).clamp(0.0, 0.98);
-        final mbRec = (receivedBytes / (1024 * 1024)).toStringAsFixed(1);
-        final mbTot = (totalBytes / (1024 * 1024)).toStringAsFixed(1);
-        onProgress(p, 'Mengunduh APK: $mbRec MB / $mbTot MB (${(p * 100).toInt()}%)');
+        onProgress(
+          p,
+          AppUpdateProgressStatus.downloading,
+          receivedMegabytes: receivedBytes / (1024 * 1024),
+          totalMegabytes: totalBytes / (1024 * 1024),
+        );
       }
 
       await fileSink.flush();
       await fileSink.close();
 
-      onProgress(1.0, 'Membuka pemasang paket Android...');
+      onProgress(1.0, AppUpdateProgressStatus.installing);
 
       // Panggil Native MethodChannel untuk meluncurkan Action View installer
       final bool? success = await _installerChannel.invokeMethod<bool>(

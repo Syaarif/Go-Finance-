@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
+import 'package:go_finance/core/providers/theme_provider.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 import 'package:go_finance/screens/edit_profile_screen.dart';
 import 'package:go_finance/screens/security_screen.dart';
 import 'package:go_finance/screens/login_screen.dart';
@@ -33,11 +36,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _username = 'Wowowi';
   final String _email = 'Wowodanwiwi@email.com';
   String _timezone = 'WIB (UTC+7)';
-  String _theme = 'Terang';
-  String _textSize = 'Standar';
-  String _language = 'Indonesia';
   bool _notifTransaksi = true;
   bool _notifTabungan = true;
+
+  String _themeLabel(AppLocalizations l10n, ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return l10n.themeLight;
+      case ThemeMode.dark:
+        return l10n.themeDark;
+      case ThemeMode.system:
+        return l10n.themeSystem;
+    }
+  }
+
+  String _textSizeLabel(AppLocalizations l10n, TextSizeOption size) {
+    switch (size) {
+      case TextSizeOption.small:
+        return l10n.smallTextSize;
+      case TextSizeOption.medium:
+        return l10n.mediumTextSize;
+      case TextSizeOption.large:
+        return l10n.largeTextSize;
+    }
+  }
+
+  String _languageLabel(AppLocalizations l10n, LanguageOption language) {
+    switch (language) {
+      case LanguageOption.system:
+        return l10n.languageSystem;
+      case LanguageOption.indonesian:
+        return l10n.languageIndonesian;
+      case LanguageOption.english:
+        return l10n.languageEnglish;
+    }
+  }
 
   String get _initial =>
       _username.isNotEmpty ? _username[0].toUpperCase() : '?';
@@ -51,6 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Zona Waktu ──
   void _showTimezonePicker() {
+    final l10n = AppLocalizations.of(context)!;
     final timezones = [
       'WIB (UTC+7)',
       'WITA (UTC+8)',
@@ -88,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Pilih Zona Waktu',
+                      l10n.timezonePickerTitle,
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
@@ -120,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Zona waktu diubah ke $tz'),
+                            content: Text(l10n.timezoneChanged(tz)),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -138,7 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Tema ──
   void _showThemePicker() {
-    final themes = ['Terang', 'Gelap', 'Mengikuti Sistem'];
+    const themes = [ThemeMode.light, ThemeMode.dark, ThemeMode.system];
+    final themeProvider = context.read<ThemeProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
@@ -168,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Pilih Tema',
+                      l10n.themePickerTitle,
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
@@ -178,28 +214,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                ...themes.map((t) => ListTile(
+                ...themes.map((mode) => ListTile(
                       contentPadding:
                           const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
-                        t,
+                        _themeLabel(l10n, mode),
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight:
-                              _theme == t ? FontWeight.w700 : FontWeight.w400,
+                          fontWeight: themeProvider.themeMode == mode
+                              ? FontWeight.w700
+                              : FontWeight.w400,
                           color: context.colors.deepGreen,
                         ),
                       ),
-                      trailing: _theme == t
+                      trailing: themeProvider.themeMode == mode
                           ? Icon(Icons.check_circle,
                               color: context.colors.primaryText, size: 22)
                           : null,
-                      onTap: () {
-                        setState(() => _theme = t);
+                      onTap: () async {
+                        final saved = await themeProvider.setThemeMode(mode);
+                        if (!ctx.mounted) return;
                         Navigator.pop(ctx);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Tema diubah ke $t'),
+                            content: Text(saved
+                                ? l10n.themeChanged(_themeLabel(l10n, mode))
+                                : l10n.themeSaveFailed),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -217,7 +258,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Ukuran Teks ──
   void _showTextSizePicker() {
-    final sizes = ['Kecil', 'Standar', 'Besar'];
+    final themeProvider = context.read<ThemeProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
@@ -247,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Pilih Ukuran Teks',
+                      l10n.textSizePickerTitle,
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
@@ -257,34 +299,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                ...sizes.map((s) => ListTile(
+                ...TextSizeOption.values.map((size) => ListTile(
                       contentPadding:
                           const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
-                        s,
+                        _textSizeLabel(l10n, size),
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _textSize == s
+                          fontWeight: themeProvider.textSize == size
                               ? FontWeight.w700
                               : FontWeight.w400,
                           color: context.colors.deepGreen,
                         ),
                       ),
-                      trailing: _textSize == s
+                      trailing: themeProvider.textSize == size
                           ? Icon(Icons.check_circle,
                               color: context.colors.primaryText, size: 22)
                           : null,
-                      onTap: () {
-                        setState(() => _textSize = s);
+                      onTap: () async {
+                        final saved = await themeProvider.setTextSize(size);
+                        if (!ctx.mounted) return;
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Ukuran teks diubah ke $s'),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
+                        if (!saved && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.textSizeSaveFailed),
+                            ),
+                          );
+                        }
                       },
                     )),
               ],
@@ -297,7 +339,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Bahasa ──
   void _showLanguagePicker() {
-    final languages = ['Indonesia', 'English'];
+    final themeProvider = context.read<ThemeProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
@@ -327,7 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Pilih Bahasa',
+                      l10n.languagePickerTitle,
                       style: GoogleFonts.instrumentSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
@@ -337,34 +380,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                ...languages.map((l) => ListTile(
+                ...LanguageOption.values.map((language) => ListTile(
                       contentPadding:
                           const EdgeInsets.symmetric(horizontal: 24),
                       title: Text(
-                        l,
+                        _languageLabel(l10n, language),
                         style: GoogleFonts.instrumentSans(
                           fontSize: 15,
-                          fontWeight: _language == l
+                          fontWeight: themeProvider.language == language
                               ? FontWeight.w700
                               : FontWeight.w400,
                           color: context.colors.deepGreen,
                         ),
                       ),
-                      trailing: _language == l
+                      trailing: themeProvider.language == language
                           ? Icon(Icons.check_circle,
                               color: context.colors.primaryText, size: 22)
                           : null,
-                      onTap: () {
-                        setState(() => _language = l);
+                      onTap: () async {
+                        final saved = await themeProvider.setLanguage(language);
+                        if (!ctx.mounted) return;
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Bahasa diubah ke $l'),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
+                        if (!saved && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.languageSaveFailed)),
+                          );
+                        }
                       },
                     )),
               ],
@@ -377,13 +418,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Email detail dialog ──
   void _showEmailDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Detail Email',
+          l10n.emailDetailsTitle,
           style: GoogleFonts.instrumentSans(
             fontWeight: FontWeight.w700,
             color: context.colors.deepGreen,
@@ -394,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Email terdaftar:',
+              l10n.registeredEmail,
               style: GoogleFonts.instrumentSans(
                 fontSize: 13,
                 color: context.colors.mutedText,
@@ -411,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Status verifikasi:',
+              l10n.verificationStatus,
               style: GoogleFonts.instrumentSans(
                 fontSize: 13,
                 color: context.colors.mutedText,
@@ -424,7 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: context.colors.primaryText, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  'Terverifikasi',
+                  l10n.verified,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -439,7 +481,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Tutup',
+              l10n.close,
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w600,
                 color: context.colors.deepGreen,
@@ -453,20 +495,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── Logout confirmation ──
   void _showLogoutDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Keluar Akun',
+          l10n.logoutTitle,
           style: GoogleFonts.instrumentSans(
             fontWeight: FontWeight.w700,
             color: context.colors.deepGreen,
           ),
         ),
         content: Text(
-          'Apakah Anda yakin ingin keluar dari aplikasi Go Finance?',
+          l10n.logoutConfirmation,
           style: GoogleFonts.instrumentSans(
             fontSize: 14,
             color: context.colors.textPrimary,
@@ -476,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Batal',
+              l10n.cancel,
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w600,
                 color: context.colors.mutedText,
@@ -493,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
             child: Text(
-              'Ya, Keluar',
+              l10n.logoutAction,
               style: GoogleFonts.instrumentSans(
                 fontWeight: FontWeight.w700,
                 color: context.colors.negative,
@@ -519,7 +562,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          'Profil & Pengaturan',
+          AppLocalizations.of(context)!.profileSettingsTitle,
           style: GoogleFonts.instrumentSans(
             color: context.colors.deepGreen,
             fontWeight: FontWeight.bold,
@@ -538,20 +581,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
 
             // ── Akun ──
-            _sectionHeader('Akun'),
+            _sectionHeader(AppLocalizations.of(context)!.accountSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 CustomSettingsTile(
                   iconPath: 'assets/icons/email.png',
-                  label: 'Email',
+                  label: AppLocalizations.of(context)!.email,
                   showChevron: true,
                   onTap: _showEmailDialog,
                 ),
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/timezone_globe.png',
-                  label: 'Zona waktu',
+                  label: AppLocalizations.of(context)!.timezone,
                   showChevron: true,
                   trailingText: _timezone,
                   onTap: _showTimezonePicker,
@@ -559,7 +602,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/security.png',
-                  label: 'Keamanan',
+                  label: AppLocalizations.of(context)!.security,
                   showChevron: true,
                   onTap: () {
                     Navigator.push(
@@ -573,28 +616,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
 
             // ── Preferensi ──
-            _sectionHeader('Preferensi'),
+            _sectionHeader(AppLocalizations.of(context)!.preferencesSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 CustomSettingsTile(
                   iconPath: 'assets/icons/light.png',
-                  label: 'Tema',
-                  trailingText: _theme,
+                  label: AppLocalizations.of(context)!.theme,
+                  trailingText: _themeLabel(
+                    AppLocalizations.of(context)!,
+                    context.watch<ThemeProvider>().themeMode,
+                  ),
                   onTap: _showThemePicker,
                 ),
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/font_size.png',
-                  label: 'Ukuran teks',
-                  trailingText: _textSize,
+                  label: AppLocalizations.of(context)!.textSize,
+                  trailingText: _textSizeLabel(
+                    AppLocalizations.of(context)!,
+                    context.watch<ThemeProvider>().textSize,
+                  ),
                   onTap: _showTextSizePicker,
                 ),
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/language.png',
-                  label: 'Bahasa / Language',
-                  trailingText: _language,
+                  label: AppLocalizations.of(context)!.language,
+                  trailingText: _languageLabel(
+                    AppLocalizations.of(context)!,
+                    context.watch<ThemeProvider>().language,
+                  ),
                   showChevron: true,
                   onTap: _showLanguagePicker,
                 ),
@@ -603,13 +655,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
 
             // ── Notifikasi ──
-            _sectionHeader('Notifikasi'),
+            _sectionHeader(AppLocalizations.of(context)!.notificationsSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 _NotifSwitchTile(
                   iconPath: 'assets/icons/notification.png',
-                  label: 'Notifikasi transaksi',
+                  label: AppLocalizations.of(context)!.transactionNotifications,
                   value: _notifTransaksi,
                   onChanged: (val) {
                     setState(() => _notifTransaksi = val);
@@ -617,8 +669,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SnackBar(
                         content: Text(
                           val
-                              ? 'Notifikasi transaksi diaktifkan'
-                              : 'Notifikasi transaksi dinonaktifkan',
+                              ? AppLocalizations.of(context)!
+                                  .transactionNotificationsEnabled
+                              : AppLocalizations.of(context)!
+                                  .transactionNotificationsDisabled,
                         ),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -631,7 +685,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 _NotifSwitchTile(
                   iconPath: 'assets/icons/notification.png',
-                  label: 'Notifikasi tabungan',
+                  label: AppLocalizations.of(context)!.savingsNotifications,
                   value: _notifTabungan,
                   onChanged: (val) {
                     setState(() => _notifTabungan = val);
@@ -639,8 +693,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SnackBar(
                         content: Text(
                           val
-                              ? 'Notifikasi tabungan diaktifkan'
-                              : 'Notifikasi tabungan dinonaktifkan',
+                              ? AppLocalizations.of(context)!
+                                  .savingsNotificationsEnabled
+                              : AppLocalizations.of(context)!
+                                  .savingsNotificationsDisabled,
                         ),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -669,7 +725,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 onPressed: _showLogoutDialog,
                 child: Text(
-                  'Keluar dari akun',
+                  AppLocalizations.of(context)!.logoutFromAccount,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -832,18 +888,24 @@ class CustomSettingsTile extends StatelessWidget {
                   fontSize: 14,
                   color: context.colors.textPrimary,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
 
             // Trailing text (opsional)
             if (trailingText != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Text(
-                  trailingText!,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 13,
-                    color: context.colors.mutedText,
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Text(
+                    trailingText!,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 13,
+                      color: context.colors.mutedText,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),

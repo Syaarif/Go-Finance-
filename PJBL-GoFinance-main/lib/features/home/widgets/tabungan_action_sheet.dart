@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-
+import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
-import 'package:go_finance/theme/app_theme.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Modal interaktif untuk Menabung (Setor) atau Mencairkan (Tarik) Tabungan.
 /// Tersimpan permanen ke SharedPreferences.
@@ -17,7 +16,7 @@ class TabunganActionSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.canvas.withValues(alpha: 0),
       builder: (_) => const TabunganActionSheet(),
     );
   }
@@ -47,6 +46,10 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
   }
 
   void _submit() {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final errorColor = isDark ? context.colors.negative : Colors.red.shade700;
     final provider = context.read<TransactionProvider>();
     final rawText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final double? nominal = double.tryParse(rawText);
@@ -55,45 +58,49 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Masukkan nominal yang valid!',
+            l10n.validAmount,
             style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w600),
           ),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: errorColor,
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    final currencyFormat =
-        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(
+      locale: locale,
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     if (_isSetor) {
       if (provider.saldoAktif < nominal) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Saldo aktif tidak mencukupi untuk menabung ${currencyFormat.format(nominal)}!',
+              l10n.insufficientActiveBalance(currencyFormat.format(nominal)),
               style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w600),
             ),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: errorColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
         return;
       }
 
-      final ok = provider.setorTabungan(nominal, catatan: _noteController.text.trim());
+      final ok =
+          provider.setorTabungan(nominal, catatan: _noteController.text.trim());
       if (ok) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '🎉 Berhasil menabung ${currencyFormat.format(nominal)}! Saldo tersimpan permanen.',
+              l10n.depositSuccess(currencyFormat.format(nominal)),
               style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w600),
             ),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.colors.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -103,27 +110,28 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Saldo tabungan tidak mencukupi untuk ditarik!',
+              l10n.insufficientSavingsBalance,
               style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w600),
             ),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: errorColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
         return;
       }
 
-      final ok = provider.tarikTabungan(nominal, catatan: _noteController.text.trim());
+      final ok =
+          provider.tarikTabungan(nominal, catatan: _noteController.text.trim());
       if (ok) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Berhasil mencairkan ${currencyFormat.format(nominal)} ke saldo aktif!',
+              l10n.withdrawSuccess(currencyFormat.format(nominal)),
               style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w600),
             ),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.colors.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -133,26 +141,33 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<TransactionProvider>();
-    final currencyFormat =
-        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(
+      locale: locale,
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0x26000000),
+              color:
+                  isDark ? context.colors.cardShadow : const Color(0x26000000),
               blurRadius: 30,
-              offset: Offset(0, -10),
+              offset: const Offset(0, -10),
             ),
           ],
         ),
@@ -169,7 +184,8 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                   width: 44,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color:
+                        isDark ? context.colors.border : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -184,19 +200,21 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isSetor ? 'Setor Tabungan' : 'Tarik Tabungan',
+                        _isSetor ? l10n.depositTitle : l10n.withdrawTitle,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primaryDarkGreen,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Kelola uang tabunganmu secara nyata & persisten',
+                        l10n.savingManageDescription,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: isDark
+                              ? context.colors.mutedText
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ],
@@ -204,7 +222,9 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close_rounded),
-                    color: Colors.grey.shade500,
+                    color: isDark
+                        ? context.colors.mutedText
+                        : Colors.grey.shade500,
                   ),
                 ],
               ),
@@ -214,7 +234,9 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F5ED),
+                  color: isDark
+                      ? context.colors.softSurface
+                      : const Color(0xFFF0F5ED),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -229,16 +251,20 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _isSetor ? AppTheme.primaryGreen : Colors.transparent,
+                            color: _isSetor
+                                ? context.colors.primary
+                                : context.colors.canvas.withValues(alpha: 0),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
                             child: Text(
-                              '+ Setor (Nabung)',
+                              l10n.depositTab,
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: _isSetor ? Colors.white : AppTheme.primaryDarkGreen,
+                                color: _isSetor
+                                    ? Colors.white
+                                    : context.colors.textPrimary,
                               ),
                             ),
                           ),
@@ -255,16 +281,22 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: !_isSetor ? AppTheme.primaryDarkGreen : Colors.transparent,
+                            color: !_isSetor
+                                ? (isDark
+                                    ? context.colors.primary
+                                    : context.colors.deepGreen)
+                                : context.colors.canvas.withValues(alpha: 0),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
                             child: Text(
-                              '- Tarik Tabungan',
+                              l10n.withdrawTab,
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: !_isSetor ? Colors.white : AppTheme.primaryDarkGreen,
+                                color: !_isSetor
+                                    ? Colors.white
+                                    : context.colors.textPrimary,
                               ),
                             ),
                           ),
@@ -279,11 +311,17 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
 
               // Info Saldo saat ini
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FBF8),
+                  color:
+                      isDark ? context.colors.surface : const Color(0xFFF9FBF8),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2EFE3)),
+                  border: Border.all(
+                    color: isDark
+                        ? context.colors.border
+                        : const Color(0xFFE2EFE3),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -292,10 +330,12 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Saldo Aktif',
+                          l10n.activeBalance,
                           style: GoogleFonts.instrumentSans(
                             fontSize: 11,
-                            color: Colors.grey.shade600,
+                            color: isDark
+                                ? context.colors.mutedText
+                                : Colors.grey.shade600,
                           ),
                         ),
                         Text(
@@ -303,7 +343,7 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                           style: GoogleFonts.instrumentSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.primaryDarkGreen,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ],
@@ -311,16 +351,20 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                     Container(
                       width: 1,
                       height: 28,
-                      color: const Color(0xFFD0E5D3),
+                      color: isDark
+                          ? context.colors.border
+                          : const Color(0xFFD0E5D3),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Saldo Tabungan',
+                          l10n.savingsBalance,
                           style: GoogleFonts.instrumentSans(
                             fontSize: 11,
-                            color: Colors.grey.shade600,
+                            color: isDark
+                                ? context.colors.mutedText
+                                : Colors.grey.shade600,
                           ),
                         ),
                         Text(
@@ -328,7 +372,9 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                           style: GoogleFonts.instrumentSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2E7D32),
+                            color: isDark
+                                ? context.colors.primaryText
+                                : const Color(0xFF2E7D32),
                           ),
                         ),
                       ],
@@ -341,11 +387,11 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
 
               // Input Nominal
               Text(
-                'Nominal (Rp)',
+                l10n.amountCurrency,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryDarkGreen,
+                  color: context.colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -356,30 +402,44 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                 style: GoogleFonts.instrumentSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.primaryDarkGreen,
+                  color: context.colors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   prefixText: 'Rp ',
                   prefixStyle: GoogleFonts.instrumentSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.primaryGreen,
+                    color: context.colors.primaryText,
                   ),
                   hintText: '0',
                   filled: true,
-                  fillColor: const Color(0xFFF7FBF8),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  fillColor: isDark
+                      ? context.colors.softSurface
+                      : const Color(0xFFF7FBF8),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFD6EADA)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.border
+                          : const Color(0xFFD6EADA),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFD6EADA)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.border
+                          : const Color(0xFFD6EADA),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppTheme.primaryGreen, width: 1.5),
+                    borderSide: BorderSide(
+                      color: context.colors.primary,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -391,7 +451,8 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _presetNominals.map((val) {
-                    final label = currencyFormat.format(val).replaceAll(',00', '');
+                    final label =
+                        currencyFormat.format(val).replaceAll(',00', '');
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
@@ -399,10 +460,16 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                         labelStyle: GoogleFonts.instrumentSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryDarkGreen,
+                          color: context.colors.textPrimary,
                         ),
-                        backgroundColor: const Color(0xFFEFF7EE),
-                        side: const BorderSide(color: Color(0xFFCBE5CB)),
+                        backgroundColor: isDark
+                            ? context.colors.softSurface
+                            : const Color(0xFFEFF7EE),
+                        side: BorderSide(
+                          color: isDark
+                              ? context.colors.border
+                              : const Color(0xFFCBE5CB),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -417,29 +484,46 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
 
               // Catatan / Tujuan
               Text(
-                'Tujuan / Catatan (Opsional)',
+                l10n.optionalPurpose,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryDarkGreen,
+                  color: context.colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _noteController,
                 decoration: InputDecoration(
-                  hintText: _isSetor ? 'Contoh: Beli laptop, Dana darurat' : 'Contoh: Keperluan mendesak',
-                  hintStyle: GoogleFonts.instrumentSans(fontSize: 13, color: Colors.grey.shade500),
+                  hintText:
+                      _isSetor ? l10n.depositExample : l10n.withdrawExample,
+                  hintStyle: GoogleFonts.instrumentSans(
+                    fontSize: 13,
+                    color: isDark
+                        ? context.colors.mutedText
+                        : Colors.grey.shade500,
+                  ),
                   filled: true,
-                  fillColor: const Color(0xFFF7FBF8),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  fillColor: isDark
+                      ? context.colors.softSurface
+                      : const Color(0xFFF7FBF8),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0EFE4)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.border
+                          : const Color(0xFFE0EFE4),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0EFE4)),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? context.colors.border
+                          : const Color(0xFFE0EFE4),
+                    ),
                   ),
                 ),
               ),
@@ -450,12 +534,14 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
               ElevatedButton.icon(
                 onPressed: _submit,
                 icon: Icon(
-                  _isSetor ? Icons.savings_rounded : Icons.account_balance_wallet_rounded,
+                  _isSetor
+                      ? Icons.savings_rounded
+                      : Icons.account_balance_wallet_rounded,
                   color: Colors.white,
                   size: 20,
                 ),
                 label: Text(
-                  _isSetor ? 'Simpan ke Tabungan (Tersimpan Permanen)' : 'Cairkan ke Saldo Aktif',
+                  _isSetor ? l10n.savePermanently : l10n.withdrawToActive,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -463,7 +549,9 @@ class _TabunganActionSheetState extends State<TabunganActionSheet> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isSetor ? AppTheme.primaryGreen : AppTheme.primaryDarkGreen,
+                  backgroundColor: _isSetor || isDark
+                      ? context.colors.primary
+                      : context.colors.deepGreen,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),

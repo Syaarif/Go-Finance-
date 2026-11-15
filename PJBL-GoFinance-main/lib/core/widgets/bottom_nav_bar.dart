@@ -6,6 +6,7 @@ import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/profile_action.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/pages/bills_page.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/features/receipts/pages/upload_receipt_page.dart';
 import 'package:go_finance/features/savings/pages/savings_page.dart';
@@ -85,6 +86,7 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Padding(
@@ -115,7 +117,7 @@ class AppBottomNav extends StatelessWidget {
             children: [
               Expanded(
                 child: _NavBarItem(
-                  label: 'Beranda',
+                  label: l10n.home,
                   assetPath: 'assets/svg/nav_home.svg',
                   isActive: currentIndex == NavTab.home,
                   onTap: () => _handleTabTap(context, NavTab.home),
@@ -123,7 +125,7 @@ class AppBottomNav extends StatelessWidget {
               ),
               Expanded(
                 child: _NavBarItem(
-                  label: 'Transaksi',
+                  label: l10n.transactions,
                   assetPath: 'assets/svg/nav_transactions.svg',
                   isActive: currentIndex == NavTab.transactions,
                   onTap: () => _handleTabTap(context, NavTab.transactions),
@@ -138,7 +140,7 @@ class AppBottomNav extends StatelessWidget {
               ),
               Expanded(
                 child: _NavBarItem(
-                  label: 'Tabungan',
+                  label: l10n.savings,
                   assetPath: 'assets/svg/nav_savings.svg',
                   isActive: currentIndex == NavTab.savings,
                   onTap: () => _handleTabTap(context, NavTab.savings),
@@ -146,7 +148,7 @@ class AppBottomNav extends StatelessWidget {
               ),
               Expanded(
                 child: _NavBarItem(
-                  label: 'Tagihan',
+                  label: l10n.bills,
                   assetPath: 'assets/svg/nav_bills.svg',
                   isActive: currentIndex == NavTab.bills,
                   onTap: () => _handleTabTap(context, NavTab.bills),
@@ -218,6 +220,7 @@ class _ScanCenterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final label = AppLocalizations.of(context)!.scan;
     return Material(
       color: context.colors.primary,
       shape: const CircleBorder(),
@@ -241,7 +244,7 @@ class _ScanCenterButton extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
-                'Scan',
+                label,
                 style: AppTextStyles.scanLabel.copyWith(
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),

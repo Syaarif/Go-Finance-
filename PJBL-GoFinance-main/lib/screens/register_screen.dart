@@ -7,6 +7,7 @@ import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/glow_input_field.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Register Screen - "Daftar" dari Figma (node 187-1925)
 /// Tata letak responsif mobile untuk Android & iOS (mendukung scroll saat keyboard aktif)
@@ -31,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGreen,
       body: Stack(
@@ -98,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Selamat datang!',
+                                        l10n.welcomeNew,
                                         style: GoogleFonts.instrumentSans(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 32,
@@ -109,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Daftar untuk memulai perjalanan\nkamu bersama Go Finance!',
+                                        l10n.registerSubtitle,
                                         style: GoogleFonts.instrumentSans(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,
@@ -128,8 +130,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   delay: const Duration(milliseconds: 320),
                                   child: GlowInputField(
                                     controller: _emailController,
-                                    label: 'Email:',
-                                    hint: 'nama@email.com',
+                                    label: l10n.emailFieldLabel,
+                                    hint: l10n.emailHint,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
                                 ),
@@ -140,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   delay: const Duration(milliseconds: 400),
                                   child: GlowInputField(
                                     controller: _passwordController,
-                                    label: 'Password:',
+                                    label: l10n.passwordFieldLabel,
                                     hint: '••••••••',
                                     isPassword: true,
                                   ),
@@ -191,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          'Ingat saya',
+                                          l10n.rememberMe,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 14,
@@ -247,7 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         backgroundColor: AppTheme.primaryGreen,
                                         onPressed: _handleRegister,
                                         child: Text(
-                                          'Daftar',
+                                          l10n.register,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -286,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           ),
                                           child: RichText(
                                             text: TextSpan(
-                                              text: 'Sudah punya akun? ',
+                                              text: l10n.existingAccountPrompt,
                                               style: GoogleFonts.instrumentSans(
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 14,
@@ -295,7 +297,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                               ),
                                               children: [
                                                 TextSpan(
-                                                  text: 'Masuk',
+                                                  text: l10n.login,
                                                   style: GoogleFonts
                                                       .instrumentSans(
                                                     fontWeight: FontWeight.w700,
@@ -330,13 +332,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _handleRegister() {
+    final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Email dan password harus diisi!',
+            l10n.emailPasswordRequired,
             style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
           ),
           backgroundColor: Colors.red.shade700,
@@ -350,7 +353,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Akun berhasil dibuat! Silakan masuk.',
+          l10n.registerSuccess,
           style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
         ),
         backgroundColor: AppTheme.primaryGreen,

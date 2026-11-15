@@ -5,6 +5,7 @@ import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Kalender kustom (Min–Sab) dengan indikator hari ini, tagihan aktif, dan seleksi tanggal.
 class BillCalendar extends StatelessWidget {
@@ -27,21 +28,13 @@ class BillCalendar extends StatelessWidget {
     required this.onNextMonth,
   });
 
-  static const List<String> _weekdays = [
-    'Min',
-    'Sen',
-    'Sel',
-    'Rab',
-    'Kam',
-    'Jum',
-    'Sab',
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final monthTitle = _formatMonthYear(focusedMonth);
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final monthTitle = _formatMonthYear(focusedMonth, locale);
     final activeHeaderDate = selectedDate ?? today;
-    final shortSelectedText = _formatShortDate(activeHeaderDate);
+    final shortSelectedText = _formatShortDate(activeHeaderDate, locale);
 
     final firstDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final daysInMonth =
@@ -57,17 +50,17 @@ class BillCalendar extends StatelessWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         border: Border.all(
-          color: AppColors.border,
+          color: context.colors.border,
           width: AppSpacing.borderThin,
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: context.colors.cardShadow,
             blurRadius: AppSpacing.md,
-            offset: Offset(0, AppSpacing.xs),
+            offset: const Offset(0, AppSpacing.xs),
           ),
         ],
       ),
@@ -84,11 +77,16 @@ class BillCalendar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(
                       text: monthTitle,
-                      style: AppTextStyles.calendarHeader,
+                      style: AppTextStyles.calendarHeader.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
                       children: [
                         TextSpan(
                           text: ' · $shortSelectedText',
-                          style: AppTextStyles.calendarSelectedSubtitle,
+                          style:
+                              AppTextStyles.calendarSelectedSubtitle.copyWith(
+                            color: context.colors.textPrimary,
+                          ),
                         ),
                       ],
                     ),
@@ -96,13 +94,13 @@ class BillCalendar extends StatelessWidget {
                 ),
                 _MonthNavButton(
                   icon: Icons.chevron_left_rounded,
-                  tooltip: 'Bulan sebelumnya',
+                  tooltip: l10n.previousMonth,
                   onTap: onPreviousMonth,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 _MonthNavButton(
                   icon: Icons.chevron_right_rounded,
-                  tooltip: 'Bulan berikutnya',
+                  tooltip: l10n.nextMonth,
                   onTap: onNextMonth,
                 ),
               ],
@@ -112,15 +110,20 @@ class BillCalendar extends StatelessWidget {
 
           // Baris nama hari: Min..Sab
           Row(
-            children: _weekdays
-                .map(
-                  (day) => Expanded(
-                    child: Center(
-                      child: Text(day, style: AppTextStyles.weekdayLabel),
+            children: List.generate(7, (index) {
+              final weekday =
+                  DateFormat('E', locale).format(DateTime(2023, 1, index + 1));
+              return Expanded(
+                child: Center(
+                  child: Text(
+                    weekday,
+                    style: AppTextStyles.weekdayLabel.copyWith(
+                      color: context.colors.textPrimary,
                     ),
                   ),
-                )
-                .toList(growable: false),
+                ),
+              );
+            }),
           ),
           const SizedBox(height: AppSpacing.sm),
 
@@ -169,21 +172,11 @@ class BillCalendar extends StatelessWidget {
     );
   }
 
-  static String _formatMonthYear(DateTime date) {
-    try {
-      return DateFormat('MMMM yyyy', 'id_ID').format(date);
-    } catch (_) {
-      return DateFormat('MMMM yyyy').format(date);
-    }
-  }
+  static String _formatMonthYear(DateTime date, String locale) =>
+      DateFormat('MMMM yyyy', locale).format(date);
 
-  static String _formatShortDate(DateTime date) {
-    try {
-      return DateFormat('d MMM', 'id_ID').format(date);
-    } catch (_) {
-      return DateFormat('d MMM').format(date);
-    }
-  }
+  static String _formatShortDate(DateTime date, String locale) =>
+      DateFormat('d MMM', locale).format(date);
 }
 
 class _MonthNavButton extends StatelessWidget {
@@ -201,8 +194,8 @@ class _MonthNavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return RoundedSquareIcon(
       icon: icon,
-      backgroundColor: AppColors.softSurface,
-      iconColor: AppColors.deepGreen,
+      backgroundColor: context.colors.softSurface,
+      iconColor: context.colors.primaryText,
       size: 32,
       iconSize: 18,
       borderRadius: AppSpacing.radiusXs,
@@ -229,39 +222,39 @@ class _CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color circleColor = AppColors.transparent;
+    Color circleColor = context.colors.canvas.withValues(alpha: 0);
     Border? border;
     TextStyle textStyle = AppTextStyles.calendarDay;
     Color? dotColor;
 
     if (isSelected) {
-      circleColor = AppColors.primary;
+      circleColor = context.colors.primary;
       textStyle = AppTextStyles.calendarDaySelected;
       if (hasBill) {
-        dotColor = AppColors.deepGreen;
+        dotColor = context.colors.textPrimary;
       } else if (isToday) {
-        dotColor = AppColors.todayRing;
+        dotColor = context.colors.todayRing;
       }
     } else if (isToday && hasBill) {
-      circleColor = AppColors.billHighlight;
+      circleColor = context.colors.billHighlight;
       border = Border.all(
-        color: AppColors.todayRing,
+        color: context.colors.todayRing,
         width: AppSpacing.borderRing,
       );
       textStyle = AppTextStyles.calendarDayBold;
-      dotColor = AppColors.primary;
+      dotColor = context.colors.primaryText;
     } else if (isToday) {
-      circleColor = AppColors.todayFill;
+      circleColor = context.colors.todayFill;
       border = Border.all(
-        color: AppColors.todayRing,
+        color: context.colors.todayRing,
         width: AppSpacing.borderRing,
       );
       textStyle = AppTextStyles.calendarDayBold;
-      dotColor = AppColors.todayRing;
+      dotColor = context.colors.todayRing;
     } else if (hasBill) {
-      circleColor = AppColors.billHighlight;
+      circleColor = context.colors.billHighlight;
       textStyle = AppTextStyles.calendarDayBold;
-      dotColor = AppColors.primary;
+      dotColor = context.colors.primaryText;
     }
 
     return SizedBox(
@@ -285,7 +278,14 @@ class _CalendarDayCell extends StatelessWidget {
                     border: border,
                   ),
                   alignment: Alignment.center,
-                  child: Text('$dayNumber', style: textStyle),
+                  child: Text(
+                    '$dayNumber',
+                    style: textStyle.copyWith(
+                      color: isSelected
+                          ? Colors.white
+                          : context.colors.textPrimary,
+                    ),
+                  ),
                 ),
                 if (dotColor != null)
                   Positioned(
@@ -307,4 +307,3 @@ class _CalendarDayCell extends StatelessWidget {
     );
   }
 }
-

@@ -7,6 +7,7 @@ import 'package:go_finance/screens/register_screen.dart';
 import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Onboarding Screen - "Beranda awal 4" dari Figma (node 187-1890)
 /// Disesuaikan secara responsif untuk layar perangkat mobile Android & iOS
@@ -15,6 +16,7 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGreen,
       body: Stack(
@@ -83,7 +85,7 @@ class OnboardingScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Tumbuh lebih\ncerdas, Menjadi\nlebih kaya',
+                                l10n.onboardingHeadline,
                                 style: GoogleFonts.instrumentSans(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 34,
@@ -94,7 +96,7 @@ class OnboardingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Perjalanan kamu mengelola keuangan\nlebih baik dimulai dari sini!',
+                                l10n.onboardingSubtitle,
                                 style: GoogleFonts.instrumentSans(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
@@ -174,16 +176,16 @@ class OnboardingScreen extends StatelessWidget {
                                         const RegisterScreen(),
                                     transitionsBuilder: (_, anim, __, child) =>
                                         FadeTransition(
-                                          opacity: anim,
-                                          child: child,
-                                        ),
+                                      opacity: anim,
+                                      child: child,
+                                    ),
                                     transitionDuration:
                                         const Duration(milliseconds: 300),
                                   ),
                                 );
                               },
                               child: Text(
-                                'Daftar',
+                                l10n.register,
                                 style: GoogleFonts.instrumentSans(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
@@ -204,9 +206,9 @@ class OnboardingScreen extends StatelessWidget {
                                         const LoginScreen(),
                                     transitionsBuilder: (_, anim, __, child) =>
                                         FadeTransition(
-                                          opacity: anim,
-                                          child: child,
-                                        ),
+                                      opacity: anim,
+                                      child: child,
+                                    ),
                                     transitionDuration:
                                         const Duration(milliseconds: 300),
                                   ),
@@ -218,7 +220,7 @@ class OnboardingScreen extends StatelessWidget {
                                     const EdgeInsets.symmetric(vertical: 4),
                                 child: RichText(
                                   text: TextSpan(
-                                    text: 'Sudah punya akun? ',
+                                    text: l10n.existingAccountPrompt,
                                     style: GoogleFonts.instrumentSans(
                                       fontWeight: FontWeight.w500,
                                       fontSize: 14,
@@ -227,7 +229,7 @@ class OnboardingScreen extends StatelessWidget {
                                     ),
                                     children: [
                                       TextSpan(
-                                        text: 'Masuk',
+                                        text: l10n.login,
                                         style: GoogleFonts.instrumentSans(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14,

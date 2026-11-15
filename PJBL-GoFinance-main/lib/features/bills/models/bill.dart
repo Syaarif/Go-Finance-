@@ -37,21 +37,6 @@ class Bill {
         : BillStatus.pending;
   }
 
-  /// Label sisa hari untuk ditampilkan di kartu tagihan.
-  String remainingLabelFrom(DateTime referenceDate) {
-    final diff = daysRemainingFrom(referenceDate);
-    if (diff < 0) {
-      return 'Terlambat ${diff.abs()} hari';
-    }
-    if (diff == 0) {
-      return 'Hari ini';
-    }
-    if (diff == 1) {
-      return 'Besok';
-    }
-    return '$diff hari lagi';
-  }
-
   Bill copyWith({
     String? id,
     String? name,
@@ -68,4 +53,3 @@ class Bill {
     );
   }
 }
-

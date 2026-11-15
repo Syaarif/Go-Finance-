@@ -12,6 +12,7 @@ import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/pages/add_transaction_page.dart';
 import 'package:go_finance/features/home/widgets/tabungan_action_sheet.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Halaman Beranda / Home (01_Beranda).
 class HomePage extends StatefulWidget {
@@ -21,7 +22,8 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _anim;
   bool _isBalanceVisible = true;
   int? _selectedChartDayIndex; // untuk tooltip interaktif pada chart
@@ -41,8 +43,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-
-
   void _openAddTransaction() async {
     final provider = context.read<TransactionProvider>();
     final tx = await Navigator.of(context).push<TransactionModel>(
@@ -53,7 +53,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             position: Tween<Offset>(
               begin: const Offset(0, 0.08),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+            ).animate(
+                CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
             child: const AddTransactionPage(),
           ),
         ),
@@ -77,7 +78,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.canvas.withValues(alpha: 0),
       isScrollControlled: true,
       builder: (ctx) => _AiInsightModal(onAction: () {
         Navigator.pop(ctx);
@@ -90,13 +91,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colors.canvas.withValues(alpha: 0),
       builder: (_) => const _NotificationModal(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final txProvider = context.watch<TransactionProvider>();
     final recentTransactions = txProvider.filtered.take(3).toList();
 
@@ -105,7 +107,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final double savingsBalance = txProvider.saldoTabungan;
 
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -129,9 +131,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       'assets/images/piggy_coin.png',
                       width: 32,
                       height: 32,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, __, ___) => Icon(
                         Icons.savings_rounded,
-                        color: AppColors.primary,
+                        color: context.colors.primaryText,
                         size: 28,
                       ),
                     ),
@@ -140,6 +142,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       child: Text(
                         'Go Finance',
                         style: AppTextStyles.pageTitle.copyWith(
+                          color: context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -154,23 +157,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       children: [
                         RoundedSquareIcon(
                           icon: Icons.notifications_none_rounded,
-                          backgroundColor: AppColors.surface,
-                          iconColor: AppColors.deepGreen,
+                          backgroundColor: context.colors.surface,
+                          iconColor: context.colors.textPrimary,
                           size: 40,
                           iconSize: 20,
                           borderRadius: AppSpacing.radiusSm,
                           border: Border.all(
-                            color: AppColors.border,
+                            color: context.colors.border,
                             width: AppSpacing.borderThin,
                           ),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: AppColors.cardShadow,
+                              color: context.colors.cardShadow,
                               blurRadius: 6,
-                              offset: Offset(0, 2),
+                              offset: const Offset(0, 2),
                             ),
                           ],
-                          tooltip: 'Notifikasi',
+                          tooltip: l10n.notifications,
                           onTap: _showNotificationSheet,
                         ),
                         Positioned(
@@ -180,8 +183,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             child: Container(
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.negative,
+                              decoration: BoxDecoration(
+                                color: context.colors.negative,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -210,8 +213,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     Row(
                       children: [
                         Text(
-                          'Halo, Wowowi',
+                          l10n.greeting('Wowowi'),
                           style: AppTextStyles.pageTitle.copyWith(
+                            color: context.colors.textPrimary,
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                           ),
@@ -222,10 +226,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Yuk, kelola keuanganmu dengan bijak.',
+                      l10n.homeGreetingSubtitle,
                       style: AppTextStyles.footnote.copyWith(
                         fontSize: 13,
-                        color: AppColors.mutedText,
+                        color: context.colors.mutedText,
                       ),
                     ),
                   ],
@@ -303,7 +307,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     Expanded(
                       child: _QuickActionButton(
                         icon: Icons.edit_note_rounded,
-                        label: 'Catat Manual',
+                        label: l10n.manualEntry,
                         onTap: _openAddTransaction,
                       ),
                     ),
@@ -311,7 +315,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     Expanded(
                       child: _QuickActionButton(
                         icon: Icons.receipt_long_rounded,
-                        label: 'Bayar Tagihan',
+                        label: l10n.payBill,
                         onTap: _openBillsPage,
                       ),
                     ),
@@ -330,8 +334,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Transaksi Terbaru',
+                      l10n.recentTransactions,
                       style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -339,8 +344,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     GestureDetector(
                       onTap: _goToTransactionsTab,
                       child: Text(
-                        'Lihat semua',
+                        l10n.seeAll,
                         style: AppTextStyles.sectionAction.copyWith(
+                          color: context.colors.primaryText,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -359,14 +365,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                    border: Border.all(color: AppColors.border),
-                    boxShadow: const [
+                    border: Border.all(color: context.colors.border),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x06234D1C),
+                        color:
+                            context.colors.deepGreen.withValues(alpha: 0.024),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -383,7 +390,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               thickness: 1,
                               indent: 56,
                               endIndent: AppSpacing.md,
-                              color: AppColors.border.withValues(alpha: 0.6),
+                              color:
+                                  context.colors.border.withValues(alpha: 0.6),
                             ),
                         ],
                       );
@@ -416,8 +424,11 @@ class _SaldoAktifCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final formatted = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(balance);
@@ -425,11 +436,11 @@ class _SaldoAktifCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: context.colors.primary,
         borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.28),
+            color: context.colors.primary.withValues(alpha: 0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -446,9 +457,9 @@ class _SaldoAktifCard extends StatelessWidget {
               opacity: 0.12,
               child: Container(
                 width: 140,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: isDark ? context.colors.primaryText : Colors.white,
                 ),
               ),
             ),
@@ -471,7 +482,7 @@ class _SaldoAktifCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'SALDO AKTIF',
+                            l10n.activeBalance.toUpperCase(),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.85),
                               fontSize: 11,
@@ -507,7 +518,7 @@ class _SaldoAktifCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       // Subtitle
                       Text(
-                        'Pemasukan − pengeluaran − setoran tabungan',
+                        l10n.balanceCalculation,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 11,
@@ -527,9 +538,9 @@ class _SaldoAktifCard extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.all(7),
                   child: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.surface,
+                      color: context.colors.surface,
                     ),
                     padding: const EdgeInsets.all(8),
                     child: Stack(
@@ -541,9 +552,9 @@ class _SaldoAktifCard extends StatelessWidget {
                           width: 44,
                           height: 44,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (_, __, ___) => Icon(
                             Icons.savings_rounded,
-                            color: AppColors.primary,
+                            color: context.colors.primaryText,
                             size: 32,
                           ),
                         ),
@@ -573,13 +584,15 @@ class _SaldoTabunganCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final formattedBalance = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(balance);
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       child: InkWell(
         onTap: onTap,
@@ -591,23 +604,23 @@ class _SaldoTabunganCard extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: context.colors.border),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x06234D1C),
+                color: context.colors.deepGreen.withValues(alpha: 0.024),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Row(
             children: [
               // Piggy icon dengan rounded square container
-              const RoundedSquareIcon(
+              RoundedSquareIcon(
                 imageAsset: 'assets/images/piggy_coin.png',
                 icon: Icons.savings_outlined,
-                backgroundColor: AppColors.softSurface,
-                iconColor: AppColors.primary,
+                backgroundColor: context.colors.softSurface,
+                iconColor: context.colors.primaryText,
                 size: AppSpacing.billIconCircleSize,
                 iconSize: 26,
                 borderRadius: AppSpacing.radiusSm,
@@ -618,16 +631,17 @@ class _SaldoTabunganCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Saldo tabungan',
+                      l10n.savingsBalance,
                       style: AppTextStyles.footnote.copyWith(
                         fontSize: 12,
-                        color: AppColors.mutedText,
+                        color: context.colors.mutedText,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       formattedBalance,
                       style: AppTextStyles.billAmount.copyWith(
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -635,9 +649,9 @@ class _SaldoTabunganCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
+                color: context.colors.mutedText,
                 size: 20,
               ),
             ],
@@ -657,8 +671,10 @@ class _AiEvaluationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
       child: InkWell(
         onTap: onTap,
@@ -670,12 +686,12 @@ class _AiEvaluationCard extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: context.colors.border),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x06234D1C),
+                color: context.colors.deepGreen.withValues(alpha: 0.024),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -683,10 +699,12 @@ class _AiEvaluationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // AI Bronze/Gold Star Icon dengan rounded square container
-              const RoundedSquareIcon(
+              RoundedSquareIcon(
                 icon: Icons.auto_awesome,
-                backgroundColor: Color(0xFFFBF4E8),
-                iconColor: Color(0xFFC28B38),
+                backgroundColor:
+                    isDark ? context.colors.todayFill : const Color(0xFFFBF4E8),
+                iconColor:
+                    isDark ? context.colors.todayRing : const Color(0xFFC28B38),
                 size: AppSpacing.billIconCircleSize,
                 iconSize: AppSpacing.billIconSize,
                 borderRadius: AppSpacing.radiusSm,
@@ -697,26 +715,27 @@ class _AiEvaluationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Evaluasi Keuangan Bulan Ini',
+                      l10n.monthlyAiEvaluation,
                       style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Pengeluaran makan naik 8% dari bulan lalu.',
+                      l10n.foodSpendingIncrease(8),
                       style: AppTextStyles.footnote.copyWith(
                         fontSize: 12,
-                        color: AppColors.mutedText,
+                        color: context.colors.mutedText,
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
-                      'Lihat ringkasan dan saran AI',
+                    Text(
+                      l10n.aiSummaryHint,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.primary,
+                        color: context.colors.primaryText,
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.underline,
                       ),
@@ -724,9 +743,9 @@ class _AiEvaluationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
+                color: context.colors.mutedText,
                 size: 20,
               ),
             ],
@@ -751,32 +770,37 @@ class _ChartCard extends StatelessWidget {
     required this.onDetailTap,
   });
 
-  static const List<Map<String, dynamic>> _chartData = [
-    {'day': 'Sen', 'in': 180000, 'out': 120000},
-    {'day': 'Sel', 'in': 140000, 'out': 220000},
-    {'day': 'Rab', 'in': 320000, 'out': 110000},
-    {'day': 'Kam', 'in': 190000, 'out': 195000},
-    {'day': 'Jum', 'in': 280000, 'out': 130000},
-    {'day': 'Sab', 'in': 450000, 'out': 180000},
-    {'day': 'Min', 'in': 290000, 'out': 150000},
+  static const List<Map<String, int>> _chartData = [
+    {'in': 180000, 'out': 120000},
+    {'in': 140000, 'out': 220000},
+    {'in': 320000, 'out': 110000},
+    {'in': 190000, 'out': 195000},
+    {'in': 280000, 'out': 130000},
+    {'in': 450000, 'out': 180000},
+    {'in': 290000, 'out': 150000},
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final outflowColor =
+        isDark ? context.colors.mutedText : const Color(0xFF7B8F77);
     const double maxVal = 500000;
     const double chartHeight = 90.0;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06234D1C),
+            color: context.colors.deepGreen.withValues(alpha: 0.024),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -788,8 +812,9 @@ class _ChartCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Ringkasan 7 Hari Terakhir',
+                l10n.lastSevenDays,
                 style: AppTextStyles.sectionTitle.copyWith(
+                  color: context.colors.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -797,8 +822,11 @@ class _ChartCard extends StatelessWidget {
               GestureDetector(
                 onTap: onDetailTap,
                 child: Text(
-                  'Detail',
-                  style: AppTextStyles.sectionAction.copyWith(fontSize: 13),
+                  l10n.detail,
+                  style: AppTextStyles.sectionAction.copyWith(
+                    color: context.colors.primaryText,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
@@ -816,27 +844,42 @@ class _ChartCard extends StatelessWidget {
                 vertical: AppSpacing.xs + 2,
               ),
               decoration: BoxDecoration(
-                color: AppColors.softSurface,
+                color: context.colors.softSurface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: context.colors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${_chartData[selectedDayIndex!]['day']}: Masuk Rp ${_formatShort(_chartData[selectedDayIndex!]['in'])}',
-                    style: const TextStyle(
+                    l10n.chartIncome(
+                      DateFormat('EEE', locale).format(
+                        DateTime(2023, 1, selectedDayIndex! + 2),
+                      ),
+                      _formatShort(
+                        _chartData[selectedDayIndex!]['in']!,
+                        locale,
+                      ),
+                    ),
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: context.colors.primaryText,
                     ),
                   ),
                   Text(
-                    'Keluar Rp ${_formatShort(_chartData[selectedDayIndex!]['out'])}',
-                    style: const TextStyle(
+                    l10n.chartExpense(
+                      _formatShort(
+                        _chartData[selectedDayIndex!]['out']!,
+                        locale,
+                      ),
+                    ),
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.secondary,
+                      color: context.colors.secondary,
                     ),
                   ),
                 ],
@@ -851,8 +894,8 @@ class _ChartCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(_chartData.length, (i) {
                 final d = _chartData[i];
-                final double inH = (d['in'] / maxVal) * chartHeight;
-                final double outH = (d['out'] / maxVal) * chartHeight;
+                final double inH = (d['in']! / maxVal) * chartHeight;
+                final double outH = (d['out']! / maxVal) * chartHeight;
                 final bool isSelected = selectedDayIndex == i;
 
                 return GestureDetector(
@@ -874,8 +917,9 @@ class _ChartCard extends StatelessWidget {
                             height: inH.clamp(8, chartHeight),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.primary.withValues(alpha: 0.9),
+                                  ? context.colors.primary
+                                  : context.colors.primary
+                                      .withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(4),
                               border: isSelected
                                   ? Border.all(color: Colors.white, width: 1.5)
@@ -890,8 +934,10 @@ class _ChartCard extends StatelessWidget {
                             height: outH.clamp(8, chartHeight),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF5A7555)
-                                  : const Color(0xFF7B8F77),
+                                  ? (isDark
+                                      ? context.colors.mutedText
+                                      : const Color(0xFF5A7555))
+                                  : outflowColor,
                               borderRadius: BorderRadius.circular(4),
                               border: isSelected
                                   ? Border.all(color: Colors.white, width: 1.5)
@@ -903,14 +949,15 @@ class _ChartCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       // Day label
                       Text(
-                        d['day'],
+                        DateFormat('EEE', locale)
+                            .format(DateTime(2023, 1, i + 2)),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           color: isSelected
-                              ? AppColors.deepGreen
-                              : AppColors.mutedText,
+                              ? context.colors.textPrimary
+                              : context.colors.mutedText,
                         ),
                       ),
                     ],
@@ -928,26 +975,32 @@ class _ChartCard extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                 ),
               ),
               const SizedBox(width: 6),
-              Text('Pemasukan',
-                  style: AppTextStyles.footnote.copyWith(fontSize: 11)),
+              Text(l10n.income,
+                  style: AppTextStyles.footnote.copyWith(
+                    color: context.colors.mutedText,
+                    fontSize: 11,
+                  )),
               const SizedBox(width: AppSpacing.lg),
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFF7B8F77),
+                  color: outflowColor,
                 ),
               ),
               const SizedBox(width: 6),
-              Text('Pengeluaran',
-                  style: AppTextStyles.footnote.copyWith(fontSize: 11)),
+              Text(l10n.expense,
+                  style: AppTextStyles.footnote.copyWith(
+                    color: context.colors.mutedText,
+                    fontSize: 11,
+                  )),
             ],
           ),
         ],
@@ -955,13 +1008,8 @@ class _ChartCard extends StatelessWidget {
     );
   }
 
-  String _formatShort(dynamic val) {
-    final n = (val as num).toInt();
-    if (n >= 1000) {
-      return '${(n / 1000).toStringAsFixed(0)}rb';
-    }
-    return n.toString();
-  }
+  String _formatShort(int value, String locale) =>
+      NumberFormat.compact(locale: locale).format(value);
 }
 
 // ───────────────────────────────────────────────────────────────
@@ -1019,10 +1067,10 @@ class _QuickActionButtonState extends State<_QuickActionButton>
         child: Container(
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.softSurface,
+            color: context.colors.softSurface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.18),
+              color: context.colors.primary.withValues(alpha: 0.18),
               width: 1,
             ),
           ),
@@ -1031,8 +1079,8 @@ class _QuickActionButtonState extends State<_QuickActionButton>
             children: [
               RoundedSquareIcon(
                 icon: widget.icon,
-                backgroundColor: AppColors.surface,
-                iconColor: AppColors.primary,
+                backgroundColor: context.colors.surface,
+                iconColor: context.colors.primaryText,
                 size: 32,
                 iconSize: 18,
                 borderRadius: AppSpacing.radiusXs,
@@ -1040,10 +1088,10 @@ class _QuickActionButtonState extends State<_QuickActionButton>
               const SizedBox(width: AppSpacing.sm),
               Text(
                 widget.label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.deepGreen,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
@@ -1063,11 +1111,13 @@ class _HomeTransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final amountColor =
-        tx.isIncome ? AppColors.primary : AppColors.deepGreen;
+        tx.isIncome ? context.colors.primaryText : context.colors.textPrimary;
     final amountPrefix = tx.isIncome ? '+' : '−';
     final formatted = NumberFormat.currency(
-      locale: 'id_ID',
+      locale: locale,
       symbol: 'Rp ',
       decimalDigits: 0,
     ).format(tx.amount);
@@ -1098,14 +1148,20 @@ class _HomeTransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     tx.title,
-                    style: AppTextStyles.billName.copyWith(fontSize: 14),
+                    style: AppTextStyles.billName.copyWith(
+                      color: context.colors.textPrimary,
+                      fontSize: 14,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Hari ini · ${DateFormat('HH:mm').format(tx.date)}',
-                    style: AppTextStyles.footnote.copyWith(fontSize: 11),
+                    l10n.todayAt(DateFormat.jm(locale).format(tx.date)),
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -1134,10 +1190,12 @@ class _AiInsightModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSheet),
       ),
       padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -1151,17 +1209,21 @@ class _AiInsightModal extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           Row(
             children: [
-              const RoundedSquareIcon(
+              RoundedSquareIcon(
                 icon: Icons.auto_awesome,
-                backgroundColor: Color(0xFFFBF4E8),
-                iconColor: Color(0xFFC28B38),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? context.colors.todayFill
+                    : const Color(0xFFFBF4E8),
+                iconColor: Theme.of(context).brightness == Brightness.dark
+                    ? context.colors.todayRing
+                    : const Color(0xFFC28B38),
                 size: 40,
                 iconSize: 22,
                 borderRadius: AppSpacing.radiusSm,
@@ -1171,9 +1233,16 @@ class _AiInsightModal extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Analisis AI Go Finance', style: AppTextStyles.sheetTitle),
-                    Text('Berdasarkan pengeluaran bulan ini',
-                        style: AppTextStyles.footnote),
+                    Text(
+                      l10n.aiAnalysisTitle,
+                      style: AppTextStyles.sheetTitle.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    Text(l10n.aiBasedOnMonth,
+                        style: AppTextStyles.footnote.copyWith(
+                          color: context.colors.mutedText,
+                        )),
                   ],
                 ),
               ),
@@ -1183,26 +1252,30 @@ class _AiInsightModal extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.softSurface,
+              color: context.colors.softSurface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '💡 Rekomendasi Pintar',
+                Text(
+                  l10n.smartRecommendation,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.deepGreen,
+                    color: context.colors.textPrimary,
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Pengeluaran makanan & minuman kamu mencapai 42% dari total pengeluaran bulan ini. Coba batasi pesanan pesan-antar maksimal 2 kali seminggu untuk menghemat sekitar Rp 400.000.',
+                  l10n.aiRecommendationBody(
+                    42,
+                    2,
+                    NumberFormat.decimalPattern(locale).format(400000),
+                  ),
                   style: AppTextStyles.footnote.copyWith(
                     fontSize: 12,
-                    color: AppColors.deepGreen,
+                    color: context.colors.textPrimary,
                     height: 1.4,
                   ),
                 ),
@@ -1215,15 +1288,17 @@ class _AiInsightModal extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onAction,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: context.colors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                'Lihat Rincian Transaksi',
-                style: AppTextStyles.primaryButton,
+                l10n.viewTransactionDetails,
+                style: AppTextStyles.primaryButton.copyWith(
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -1241,10 +1316,15 @@ class _NotificationModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final amountFormat = NumberFormat.decimalPattern(locale);
+    final billDate =
+        DateFormat('d MMMM yyyy', locale).format(DateTime(2026, 10, 29));
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSheet),
       ),
       padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -1258,22 +1338,31 @@ class _NotificationModal extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          Text('Notifikasi', style: AppTextStyles.sheetTitle),
-          const SizedBox(height: AppSpacing.md),
-          const _NotifTile(
-            title: 'Tagihan Internet Jatuh Tempo',
-            subtitle: 'Jatuh tempo pada 29 Oktober 2026 sebesar Rp 300.000',
-            time: '2 jam lalu',
+          Text(
+            l10n.notifications,
+            style: AppTextStyles.sheetTitle.copyWith(
+              color: context.colors.textPrimary,
+            ),
           ),
-          const _NotifTile(
-            title: 'Gaji Masuk!',
-            subtitle: 'Pemasukan Rp 3.500.000 berhasil dicatat.',
-            time: 'Kemarin',
+          const SizedBox(height: AppSpacing.md),
+          _NotifTile(
+            title: l10n.billNotificationTitle,
+            subtitle: l10n.billNotificationDetails(
+              billDate,
+              amountFormat.format(300000),
+            ),
+            time: l10n.hoursAgo(2),
+          ),
+          _NotifTile(
+            title: l10n.salaryNotificationTitle,
+            subtitle:
+                l10n.salaryNotificationDetails(amountFormat.format(3500000)),
+            time: l10n.yesterday,
           ),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
@@ -1281,13 +1370,18 @@ class _NotificationModal extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: context.colors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text('Tutup', style: AppTextStyles.primaryButton),
+              child: Text(
+                l10n.close,
+                style: AppTextStyles.primaryButton.copyWith(
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],
@@ -1314,10 +1408,10 @@ class _NotifTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const RoundedSquareIcon(
+          RoundedSquareIcon(
             icon: Icons.notifications_none_rounded,
-            backgroundColor: AppColors.softSurface,
-            iconColor: AppColors.primary,
+            backgroundColor: context.colors.softSurface,
+            iconColor: context.colors.primaryText,
             size: 36,
             iconSize: 18,
             borderRadius: AppSpacing.radiusSm,
@@ -1329,18 +1423,29 @@ class _NotifTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: AppColors.deepGreen,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTextStyles.footnote),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.footnote.copyWith(
+                    color: context.colors.mutedText,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(time, style: AppTextStyles.footnote.copyWith(fontSize: 10)),
+          Text(
+            time,
+            style: AppTextStyles.footnote.copyWith(
+              color: context.colors.mutedText,
+              fontSize: 10,
+            ),
+          ),
         ],
       ),
     );

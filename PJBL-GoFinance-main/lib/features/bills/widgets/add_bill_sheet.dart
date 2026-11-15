@@ -7,6 +7,7 @@ import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
 import 'package:go_finance/features/bills/providers/bill_provider.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// State tombol Simpan pada sheet Tambah Tagihan.
 enum SubmitButtonState { normal, disabled, error }
@@ -20,8 +21,8 @@ class AddBillSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      barrierColor: AppColors.scrim,
+      backgroundColor: context.colors.surface,
+      barrierColor: context.colors.scrim,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppSpacing.radiusSheet),
@@ -94,10 +95,10 @@ class _AddBillSheetState extends State<AddBillSheet> {
     final amount = _parsedAmount;
 
     setState(() {
-      _nameError = name.isEmpty ? 'Nama tagihan wajib diisi' : null;
-      _amountError = amount <= 0 ? 'Nominal harus lebih dari Rp 0' : null;
-      _dateError =
-          _selectedDueDate == null ? 'Tanggal jatuh tempo wajib dipilih' : null;
+      final l10n = AppLocalizations.of(context)!;
+      _nameError = name.isEmpty ? l10n.billNameRequired : null;
+      _amountError = amount <= 0 ? l10n.billAmountMustBePositive : null;
+      _dateError = _selectedDueDate == null ? l10n.billDateRequired : null;
     });
 
     return _nameError == null && _amountError == null && _dateError == null;
@@ -114,13 +115,32 @@ class _AddBillSheetState extends State<AddBillSheet> {
       firstDate: DateTime(provider.today.year - 1, 1, 1),
       lastDate: DateTime(provider.today.year + 5, 12, 31),
       builder: (ctx, child) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return Theme(
           data: Theme.of(ctx).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: AppColors.surface,
-              onSurface: AppColors.deepGreen,
+            colorScheme: ColorScheme.light(
+              primary: ctx.colors.primary,
+              onPrimary: Colors.white,
+              surface: isDark ? ctx.colors.canvas : ctx.colors.surface,
+              onSurface: isDark ? ctx.colors.textPrimary : ctx.colors.deepGreen,
+              onSurfaceVariant: isDark
+                  ? ctx.colors.textPrimary
+                  : const ColorScheme.light().onSurfaceVariant,
             ),
+            datePickerTheme: isDark
+                ? Theme.of(ctx).datePickerTheme.copyWith(
+                      headerForegroundColor: ctx.colors.textPrimary,
+                      weekdayStyle: Theme.of(ctx)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(color: ctx.colors.textPrimary),
+                      todayForegroundColor:
+                          WidgetStatePropertyAll(ctx.colors.textPrimary),
+                      todayBackgroundColor:
+                          WidgetStatePropertyAll(ctx.colors.todayFill),
+                      todayBorder: BorderSide(color: ctx.colors.todayRing),
+                    )
+                : Theme.of(ctx).datePickerTheme,
           ),
           child: child ?? const SizedBox.shrink(),
         );
@@ -154,6 +174,8 @@ class _AddBillSheetState extends State<AddBillSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final buttonState = _buttonState;
 
@@ -176,7 +198,7 @@ class _AddBillSheetState extends State<AddBillSheet> {
                 width: AppSpacing.calendarDaySize,
                 height: AppSpacing.xs,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: context.colors.border,
                   borderRadius: BorderRadius.circular(AppSpacing.xxs),
                 ),
               ),
@@ -187,12 +209,17 @@ class _AddBillSheetState extends State<AddBillSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Tambah Tagihan', style: AppTextStyles.sheetTitle),
+                Text(
+                  l10n.addBillTitle,
+                  style: AppTextStyles.sheetTitle.copyWith(
+                    color: context.colors.textPrimary,
+                  ),
+                ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close_rounded,
-                    color: AppColors.mutedText,
+                    color: context.colors.mutedText,
                     size: AppSpacing.billIconSize,
                   ),
                   padding: EdgeInsets.zero,
@@ -203,25 +230,35 @@ class _AddBillSheetState extends State<AddBillSheet> {
             const SizedBox(height: AppSpacing.lg),
 
             // 1. Nominal (Tinggi 56, paling menonjol, otomatis format titik ribuan)
-            Text('Nominal Tagihan', style: AppTextStyles.fieldLabel),
+            Text(
+              l10n.billAmount,
+              style: AppTextStyles.fieldLabel.copyWith(
+                color: context.colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             Container(
               height: AppSpacing.nominalInputHeight,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.softSurface,
+                color: context.colors.softSurface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(
                   color: _amountError != null
-                      ? AppColors.negative
-                      : AppColors.primary,
+                      ? context.colors.negative
+                      : context.colors.primary,
                   width: AppSpacing.borderRing,
                 ),
               ),
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
-                  Text('Rp ', style: AppTextStyles.nominalInputText),
+                  Text(
+                    'Rp ',
+                    style: AppTextStyles.nominalInputText.copyWith(
+                      color: context.colors.textPrimary,
+                    ),
+                  ),
                   Expanded(
                     child: TextField(
                       key: const Key('input_bill_amount'),
@@ -229,13 +266,16 @@ class _AddBillSheetState extends State<AddBillSheet> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        _ThousandsSeparatorInputFormatter(),
+                        _ThousandsSeparatorInputFormatter(locale),
                       ],
-                      style: AppTextStyles.nominalInputText,
+                      style: AppTextStyles.nominalInputText.copyWith(
+                        color: context.colors.textPrimary,
+                      ),
                       decoration: InputDecoration(
-                        hintText: '300.000',
+                        hintText:
+                            NumberFormat.decimalPattern(locale).format(300000),
                         hintStyle: AppTextStyles.nominalInputText.copyWith(
-                          color: AppColors.mutedText,
+                          color: context.colors.mutedText,
                         ),
                         border: InputBorder.none,
                         isDense: true,
@@ -248,23 +288,33 @@ class _AddBillSheetState extends State<AddBillSheet> {
             ),
             if (_amountError != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              Text(_amountError!, style: AppTextStyles.errorText),
+              Text(
+                _amountError!,
+                style: AppTextStyles.errorText.copyWith(
+                  color: context.colors.negative,
+                ),
+              ),
             ],
             const SizedBox(height: AppSpacing.lg),
 
             // 2. Nama Tagihan (Tinggi 52)
-            Text('Nama Tagihan', style: AppTextStyles.fieldLabel),
+            Text(
+              l10n.billName,
+              style: AppTextStyles.fieldLabel.copyWith(
+                color: context.colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             Container(
               height: AppSpacing.inputHeight,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(
                   color: _nameError != null
-                      ? AppColors.negative
-                      : AppColors.border,
+                      ? context.colors.negative
+                      : context.colors.border,
                   width: AppSpacing.borderThin,
                 ),
               ),
@@ -273,10 +323,14 @@ class _AddBillSheetState extends State<AddBillSheet> {
                 key: const Key('input_bill_name'),
                 controller: _nameController,
                 textCapitalization: TextCapitalization.sentences,
-                style: AppTextStyles.inputText,
+                style: AppTextStyles.inputText.copyWith(
+                  color: context.colors.textPrimary,
+                ),
                 decoration: InputDecoration(
-                  hintText: 'Mis. Internet rumah, Listrik, Streaming',
-                  hintStyle: AppTextStyles.inputHint,
+                  hintText: l10n.billNameExample,
+                  hintStyle: AppTextStyles.inputHint.copyWith(
+                    color: context.colors.mutedText,
+                  ),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
@@ -285,15 +339,25 @@ class _AddBillSheetState extends State<AddBillSheet> {
             ),
             if (_nameError != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              Text(_nameError!, style: AppTextStyles.errorText),
+              Text(
+                _nameError!,
+                style: AppTextStyles.errorText.copyWith(
+                  color: context.colors.negative,
+                ),
+              ),
             ],
             const SizedBox(height: AppSpacing.lg),
 
             // 3. Tanggal Jatuh Tempo (showDatePicker, Tinggi 52)
-            Text('Tanggal Jatuh Tempo', style: AppTextStyles.fieldLabel),
+            Text(
+              l10n.billDueDate,
+              style: AppTextStyles.fieldLabel.copyWith(
+                color: context.colors.textPrimary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             Material(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               child: InkWell(
                 key: const Key('input_bill_due_date'),
@@ -308,61 +372,72 @@ class _AddBillSheetState extends State<AddBillSheet> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border: Border.all(
                       color: _dateError != null
-                          ? AppColors.negative
-                          : AppColors.border,
+                          ? context.colors.negative
+                          : context.colors.border,
                       width: AppSpacing.borderThin,
                     ),
                   ),
                   child: Row(
                     children: [
-                    const RoundedSquareIcon(
-                      icon: Icons.calendar_today_outlined,
-                      backgroundColor: AppColors.softSurface,
-                      iconColor: AppColors.primary,
-                      size: 32,
-                      iconSize: 16,
-                      borderRadius: AppSpacing.radiusXs,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        _selectedDueDate != null
-                            ? _formatFullDate(_selectedDueDate!)
-                            : 'Pilih tanggal jatuh tempo',
-                        style: _selectedDueDate != null
-                            ? AppTextStyles.inputText
-                            : AppTextStyles.inputHint,
+                      RoundedSquareIcon(
+                        icon: Icons.calendar_today_outlined,
+                        backgroundColor: context.colors.softSurface,
+                        iconColor: context.colors.primaryText,
+                        size: 32,
+                        iconSize: 16,
+                        borderRadius: AppSpacing.radiusXs,
                       ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: AppColors.mutedText,
-                    ),
-                  ],
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          _selectedDueDate != null
+                              ? _formatFullDate(_selectedDueDate!, locale)
+                              : l10n.chooseDueDate,
+                          style: _selectedDueDate != null
+                              ? AppTextStyles.inputText.copyWith(
+                                  color: context.colors.textPrimary,
+                                )
+                              : AppTextStyles.inputHint.copyWith(
+                                  color: context.colors.mutedText,
+                                ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: context.colors.mutedText,
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
             if (_dateError != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              Text(_dateError!, style: AppTextStyles.errorText),
+              Text(
+                _dateError!,
+                style: AppTextStyles.errorText.copyWith(
+                  color: context.colors.negative,
+                ),
+              ),
             ],
             const SizedBox(height: AppSpacing.md),
 
             // Info kecil pengingat otomatis
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.notifications_none_rounded,
                   size: AppSpacing.lg,
-                  color: AppColors.mutedText,
+                  color: context.colors.mutedText,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
-                    'Pengingat otomatis 7 hari & 1 hari sebelum jatuh tempo.',
-                    style: AppTextStyles.footnote,
+                    l10n.billReminderInfo,
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                    ),
                   ),
                 ),
               ],
@@ -377,8 +452,11 @@ class _AddBillSheetState extends State<AddBillSheet> {
                 key: const Key('btn_save_bill'),
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _buttonBackgroundColor(buttonState),
-                  foregroundColor: AppColors.surface,
+                  backgroundColor: _buttonBackgroundColor(
+                    buttonState,
+                    context,
+                  ),
+                  foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -386,12 +464,12 @@ class _AddBillSheetState extends State<AddBillSheet> {
                 ),
                 child: Text(
                   buttonState == SubmitButtonState.error
-                      ? 'Periksa Input & Simpan'
-                      : 'Simpan',
+                      ? l10n.checkInputAndSave
+                      : l10n.save,
                   style: AppTextStyles.primaryButton.copyWith(
                     color: buttonState == SubmitButtonState.disabled
-                        ? AppColors.mutedText
-                        : AppColors.surface,
+                        ? context.colors.mutedText
+                        : Colors.white,
                   ),
                 ),
               ),
@@ -402,29 +480,30 @@ class _AddBillSheetState extends State<AddBillSheet> {
     );
   }
 
-  static Color _buttonBackgroundColor(SubmitButtonState state) {
+  static Color _buttonBackgroundColor(
+    SubmitButtonState state,
+    BuildContext context,
+  ) {
     switch (state) {
       case SubmitButtonState.normal:
-        return AppColors.primary;
+        return context.colors.primary;
       case SubmitButtonState.disabled:
-        return AppColors.disabledSurface;
+        return context.colors.disabledSurface;
       case SubmitButtonState.error:
-        return AppColors.negative;
+        return context.colors.negative;
     }
   }
 
-  static String _formatFullDate(DateTime date) {
-    try {
-      return DateFormat('d MMMM yyyy', 'id_ID').format(date);
-    } catch (_) {
-      return DateFormat('d MMMM yyyy').format(date);
-    }
-  }
+  static String _formatFullDate(DateTime date, String locale) =>
+      DateFormat('d MMMM yyyy', locale).format(date);
 }
 
 /// Formatter otomatis pemisah ribuan titik (`300.000`).
 class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
-  static final NumberFormat _formatter = NumberFormat.decimalPattern('id_ID');
+  final NumberFormat _formatter;
+
+  _ThousandsSeparatorInputFormatter(String locale)
+      : _formatter = NumberFormat.decimalPattern(locale);
 
   @override
   TextEditingValue formatEditUpdate(
@@ -446,4 +525,3 @@ class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
     );
   }
 }
-

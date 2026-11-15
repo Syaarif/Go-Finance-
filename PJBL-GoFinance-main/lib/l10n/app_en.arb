@@ -1,0 +1,563 @@
+{
+  "@@locale": "en",
+  "smallTextSize": "Small",
+  "mediumTextSize": "Medium",
+  "largeTextSize": "Large",
+  "languageSystem": "Follow system",
+  "languageIndonesian": "Indonesian",
+  "languageEnglish": "English",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "Follow system",
+  "timezonePickerTitle": "Choose time zone",
+  "timezoneChanged": "Time zone changed to {timezone}",
+  "@timezoneChanged": {
+    "placeholders": {
+      "timezone": {}
+    }
+  },
+  "themePickerTitle": "Choose theme",
+  "themeChanged": "Theme changed to {theme}",
+  "@themeChanged": {
+    "placeholders": {
+      "theme": {}
+    }
+  },
+  "themeSaveFailed": "Could not save theme. Please try again.",
+  "textSizePickerTitle": "Choose text size",
+  "textSizeSaveFailed": "Could not save text size. Please try again.",
+  "languagePickerTitle": "Choose language",
+  "languageSaveFailed": "Could not save language. Please try again.",
+  "emailDetailsTitle": "Email details",
+  "registeredEmail": "Registered email:",
+  "verificationStatus": "Verification status:",
+  "verified": "Verified",
+  "close": "Close",
+  "back": "Back",
+  "logoutTitle": "Log out",
+  "logoutConfirmation": "Are you sure you want to log out of Go Finance?",
+  "cancel": "Cancel",
+  "logoutAction": "Yes, log out",
+  "profileSettingsTitle": "Profile & Settings",
+  "accountSection": "Account",
+  "email": "Email",
+  "timezone": "Time zone",
+  "security": "Security",
+  "preferencesSection": "Preferences",
+  "theme": "Theme",
+  "textSize": "Text size",
+  "language": "Language",
+  "notificationsSection": "Notifications",
+  "transactionNotifications": "Transaction notifications",
+  "transactionNotificationsEnabled": "Transaction notifications enabled",
+  "transactionNotificationsDisabled": "Transaction notifications disabled",
+  "savingsNotifications": "Savings notifications",
+  "savingsNotificationsEnabled": "Savings notifications enabled",
+  "savingsNotificationsDisabled": "Savings notifications disabled",
+  "logoutFromAccount": "Log out of account",
+  "home": "Home",
+  "transactions": "Transactions",
+  "savings": "Savings",
+  "bills": "Bills",
+  "scan": "Scan",
+  "editProfile": "Edit Profile",
+  "profilePhoto": "Profile photo",
+  "takePhoto": "Take a photo",
+  "chooseFromGallery": "Choose from gallery",
+  "removePhoto": "Remove photo",
+  "photoUploadSimulation": "{label} (simulation) — photo upload is not available yet",
+  "@photoUploadSimulation": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "profileUpdated": "Profile updated successfully",
+  "changeProfilePhoto": "Change profile photo",
+  "username": "Username",
+  "enterUsername": "Enter username",
+  "usernameRequired": "Username cannot be empty",
+  "usernameMinLength": "Username must be at least {minimum} characters",
+  "@usernameMinLength": {
+    "placeholders": {
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "emailNotEditable": "Email cannot be changed on this page",
+  "saveChanges": "Save changes",
+  "passwordChangedSimulation": "Password changed (simulation)",
+  "changePassword": "Change password",
+  "passwordGuidance": "Use at least 8 characters with a combination of letters and numbers.",
+  "oldPassword": "Old password",
+  "enterOldPassword": "Enter old password",
+  "oldPasswordRequired": "Old password is required",
+  "oldPasswordIncorrect": "Old password is incorrect",
+  "newPassword": "New password",
+  "enterNewPassword": "Enter new password",
+  "newPasswordRequired": "New password is required",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "passwordMustContainLettersAndNumbers": "Password must contain letters and numbers",
+  "newPasswordMustDiffer": "New password cannot match the old password",
+  "confirmNewPassword": "Confirm new password",
+  "repeatNewPassword": "Repeat new password",
+  "passwordConfirmationRequired": "Password confirmation is required",
+  "passwordConfirmationMismatch": "Password confirmation does not match",
+  "demoPasswordNotice": "Demo mode: the dummy old password is \"{password}\".",
+  "@demoPasswordNotice": {
+    "placeholders": {
+      "password": {}
+    }
+  },
+  "savePassword": "Save password",
+  "targetSavings": "Savings Goals",
+  "createSavingsTargetTooltip": "Create savings goal",
+  "activeTargets": "Active Goals",
+  "startSavingTitle": "Let's Start Saving!",
+  "savingEmptyMessage": "Set a goal and save a little at a time — small steps toward a big dream.",
+  "createFirstSavings": "Create Your First Savings Goal",
+  "totalSavings": "Total Savings",
+  "collectedFromTargets": "Collected across {count} goals",
+  "@collectedFromTargets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "targetReached": "{percent}% reached",
+  "@targetReached": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "targetDate": "Target: {date}",
+  "@targetDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "savedAmountSummary": "{saved} of {target}",
+  "@savedAmountSummary": {
+    "placeholders": {
+      "saved": {},
+      "target": {}
+    }
+  },
+  "everyDay": "Every day",
+  "everyWeek": "Every week",
+  "everyDays": "Every {days} days",
+  "@everyDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "savingHabitTitle": "Build a saving habit",
+  "checkInNotDone": "No check-in yet",
+  "targetPrefix": "Goal: {interval}",
+  "@targetPrefix": {
+    "placeholders": {
+      "interval": {}
+    }
+  },
+  "monthlyActivity": "This Month's Activity",
+  "noMonthlyCheckIn": "No check-ins this month yet",
+  "targetCreationIncomplete": "Complete the name, amount, and target date.",
+  "customIntervalInvalid": "The custom interval must be between 1 and 365 days.",
+  "createSavingsTarget": "Create Savings Goal",
+  "createNewGoal": "Create a new goal",
+  "setGoalSchedule": "Set your goal and saving schedule.",
+  "targetName": "Goal Name",
+  "sampleLaptop": "Example: Buy a Laptop",
+  "targetAmount": "Target Amount",
+  "targetDateLabel": "Target Date",
+  "chooseTargetDate": "Choose target date",
+  "savingInterval": "Saving Interval",
+  "chooseSavingFrequency": "Choose how often you want to save.",
+  "oneDay": "1 Day",
+  "oneWeek": "1 Week",
+  "custom": "Custom",
+  "every": "Every",
+  "days": "Days",
+  "customIntervalHint": "Enter a number of days, such as 14 or 30.",
+  "savingSchedule": "Saving schedule: {interval}",
+  "@savingSchedule": {
+    "placeholders": {
+      "interval": {}
+    }
+  },
+  "saveAnytime": "You can still save at any time.",
+  "goalSummary": "Goal Summary",
+  "target": "Goal",
+  "schedule": "Schedule",
+  "saveTargetButton": "Save Goal",
+  "validAmount": "Enter a valid amount!",
+  "insufficientActiveBalance": "Insufficient active balance to save {amount}!",
+  "@insufficientActiveBalance": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "depositSuccess": "🎉 Saved {amount} successfully! The balance is stored permanently.",
+  "@depositSuccess": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "insufficientSavingsBalance": "Insufficient savings balance to withdraw!",
+  "withdrawSuccess": "Successfully withdrew {amount} to your active balance!",
+  "@withdrawSuccess": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "depositTitle": "Deposit to Savings",
+  "withdrawTitle": "Withdraw Savings",
+  "savingManageDescription": "Manage your savings with permanent storage",
+  "depositTab": "+ Deposit",
+  "withdrawTab": "- Withdraw",
+  "activeBalance": "Active Balance",
+  "savingsBalance": "Savings Balance",
+  "amountCurrency": "Amount (Rp)",
+  "optionalPurpose": "Purpose / Note (Optional)",
+  "depositExample": "Example: Buy a laptop, emergency fund",
+  "withdrawExample": "Example: Urgent expense",
+  "savePermanently": "Save Permanently",
+  "withdrawToActive": "Withdraw to Active Balance",
+  "billCalendarTitle": "Bills Calendar",
+  "addBillTooltip": "Add bill",
+  "upcomingBills": "Upcoming Bills",
+  "seeAll": "See all",
+  "completedBillsFootnote": "Bills marked as completed will be\nremoved from the list.",
+  "noBillsForDate": "No bills on {date}",
+  "@noBillsForDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "noUpcomingBills": "No upcoming bills",
+  "filteredBillsHint": "Tap the same date or the button below to see all bills.",
+  "addBillHint": "Add a new bill using the + button in the top-right corner.",
+  "previousMonth": "Previous month",
+  "nextMonth": "Next month",
+  "overdue": "OVERDUE",
+  "pending": "PENDING",
+  "dueDatePrefix": "Due {date}",
+  "@dueDatePrefix": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "payNow": "Pay now",
+  "markBillDoneTitle": "Mark as completed?",
+  "markBillDoneConfirmation": "Mark \"{billName}\" bill (Rp {amount}) as completed? It will be removed from the list and its reminders will be canceled.",
+  "@markBillDoneConfirmation": {
+    "placeholders": {
+      "billName": {},
+      "amount": {}
+    }
+  },
+  "markDone": "Mark as completed",
+  "overdueDays": "{days} days overdue",
+  "@overdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "daysRemaining": "{days} days left",
+  "@daysRemaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "addBillTitle": "Add Bill",
+  "billAmount": "Bill Amount",
+  "billName": "Bill Name",
+  "billNameExample": "E.g. Home internet, Electricity, Streaming",
+  "billDueDate": "Due Date",
+  "chooseDueDate": "Choose due date",
+  "billReminderInfo": "Automatic reminders 7 days and 1 day before the due date.",
+  "checkInputAndSave": "Check Input & Save",
+  "save": "Save",
+  "billNameRequired": "Bill name is required",
+  "billAmountMustBePositive": "Amount must be greater than Rp 0",
+  "billDateRequired": "Due date is required",
+  "billReminderChannel": "Bill Reminders",
+  "billReminderChannelDescription": "Bill reminders 7 days and 1 day before the due date",
+  "billReminderTitle": "Bill {billName} is due soon",
+  "@billReminderTitle": {
+    "placeholders": {
+      "billName": {}
+    }
+  },
+  "billReminderBody": "Rp {amount} is due {date} ({remaining})",
+  "@billReminderBody": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "remaining": {}
+    }
+  },
+  "homeInternetBill": "Home internet",
+  "electricityBill": "Electricity",
+  "streamingBill": "Streaming",
+  "addTransaction": "Add Transaction",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "searchTransactions": "Search transactions...",
+  "yesterday": "Yesterday",
+  "allCategories": "All",
+  "foodAndDrinks": "Food & Drinks",
+  "food": "Food",
+  "shopping": "Shopping",
+  "transportation": "Transportation",
+  "transport": "Transport",
+  "transfer": "Transfer",
+  "income": "Income",
+  "expense": "Expense",
+  "other": "Other",
+  "transactionFormIncomplete": "Complete the category and amount first.",
+  "transactionCategory": "Category",
+  "amount": "Amount",
+  "transactionDate": "Transaction date",
+  "optionalNote": "Note (optional)",
+  "transactionEditableNote": "You can edit this data later in the transaction history.",
+  "selectCategory": "Choose a category",
+  "transactionNoteExample": "Example: lunch money",
+  "saveTransaction": "Save Transaction",
+  "chooseCategory": "Choose Category",
+  "date": "Date",
+  "type": "Type",
+  "noTransactions": "No transactions",
+  "noTransactionsInPeriod": "There are no transactions in this period yet.",
+  "continueButton": "Continue",
+  "notifications": "Notifications",
+  "greeting": "Hello, {name}",
+  "@greeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "homeGreetingSubtitle": "Let's manage your finances wisely.",
+  "manualEntry": "Add Manually",
+  "payBill": "Pay Bill",
+  "recentTransactions": "Recent Transactions",
+  "balanceCalculation": "Income − expenses − savings deposits",
+  "monthlyAiEvaluation": "This Month's Financial Review",
+  "foodSpendingIncrease": "Food spending increased {percent}% from last month.",
+  "@foodSpendingIncrease": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSummaryHint": "View AI summary and suggestions",
+  "lastSevenDays": "Last 7 Days Summary",
+  "detail": "Details",
+  "chartIncome": "{day}: In Rp {amount}",
+  "@chartIncome": {
+    "placeholders": {
+      "day": {},
+      "amount": {}
+    }
+  },
+  "chartExpense": "Out Rp {amount}",
+  "@chartExpense": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "todayAt": "Today · {time}",
+  "@todayAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "aiAnalysisTitle": "Go Finance AI Analysis",
+  "aiBasedOnMonth": "Based on this month's expenses",
+  "smartRecommendation": "💡 Smart Recommendation",
+  "aiRecommendationBody": "Food and drink spending is {percent}% of this month's total expenses. Try limiting delivery orders to {times} times a week to save around Rp {amount}.",
+  "@aiRecommendationBody": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "times": {
+        "type": "int"
+      },
+      "amount": {}
+    }
+  },
+  "viewTransactionDetails": "View Transaction Details",
+  "billNotificationTitle": "Internet Bill Due",
+  "billNotificationDetails": "Due on {date} for Rp {amount}",
+  "@billNotificationDetails": {
+    "placeholders": {
+      "date": {},
+      "amount": {}
+    }
+  },
+  "hoursAgo": "{hours} hours ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryNotificationTitle": "Salary Received!",
+  "salaryNotificationDetails": "Income of Rp {amount} was recorded successfully.",
+  "@salaryNotificationDetails": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "splashTagline": "Manage today for a better tomorrow.",
+  "onboardingHeadline": "Grow smarter,\nbecome wealthier",
+  "onboardingSubtitle": "Your journey to better financial\nmanagement starts here!",
+  "welcomeBack": "Welcome\nback!",
+  "loginSubtitle": "Sign in to continue your journey\nwith Go Finance!",
+  "welcomeNew": "Welcome!",
+  "registerSubtitle": "Sign up to start your journey\nwith Go Finance!",
+  "emailFieldLabel": "Email:",
+  "passwordFieldLabel": "Password:",
+  "emailHint": "name@email.com",
+  "rememberMe": "Remember me",
+  "forgotPassword": "Forgot password?",
+  "login": "Sign in",
+  "register": "Sign up",
+  "existingAccountPrompt": "Already have an account? ",
+  "noAccountPrompt": "Don't have an account? ",
+  "passwordRecoveryMessage": "A password recovery link will be sent to your email.",
+  "emailPasswordRequired": "Email and password are required!",
+  "loginSuccess": "Signed in successfully! Welcome to Go Finance.",
+  "registerSuccess": "Account created successfully! Please sign in.",
+  "checkGithubUpdates": "Check GitHub Updates",
+  "checkingGithubUpdates": "Checking for GitHub updates...",
+  "checkingGithubUpdatesBanner": "Checking for updates from GitHub...",
+  "updateAvailable": "Update Available",
+  "newUpdateAvailable": "New Update Available!",
+  "updateTag": "UPDATE",
+  "updateAction": "Update",
+  "justNow": "Just now",
+  "latestCommitFallback": "Latest update",
+  "updateCommitByAuthor": "{message} ({author})",
+  "@updateCommitByAuthor": {
+    "placeholders": {
+      "message": {},
+      "author": {}
+    }
+  },
+  "newLabel": "NEW",
+  "latestGithubVersion": "Latest version from GitHub repo",
+  "changeMessage": "Change Message:",
+  "developer": "Developer",
+  "githubTeam": "GitHub Team",
+  "commit": "Commit",
+  "time": "Time",
+  "installerInstructions": "When complete, the APK installer will open automatically.",
+  "apkSizeInfo": "APK size: ~9.4 MB (Direct update without a browser)",
+  "downloadingProgress": "Downloading ({percent}%)...",
+  "@downloadingProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "directApkUpdate": "Update directly in the APK (~9.4 MB)",
+  "browserDownload": "Open in Browser",
+  "laterLogin": "Not Now (Sign In)",
+  "updateFailed": "Could not open the installer automatically. You can download it in a browser.",
+  "downloadPreparing": "Preparing download...",
+  "downloadConnecting": "Connecting to GitHub server...",
+  "downloadFailedStatus": "Download failed: status {status}",
+  "@downloadFailedStatus": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "downloadProgress": "Downloading APK: {received} MB / {total} MB ({percent}%)",
+  "@downloadProgress": {
+    "placeholders": {
+      "received": {},
+      "total": {},
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "openingInstaller": "Opening Android package installer...",
+  "receiptAnalysisTitle": "AI Receipt Analysis",
+  "uploadReceiptFile": "Upload receipt file",
+  "receiptUploadInstructions": "Choose a photo or PDF of your transaction receipt.",
+  "filePickerUnavailable": "File picker will be available after integration.",
+  "selectedFile": "Selected file",
+  "noFileSelected": "No file selected",
+  "startAiAnalysis": "Start AI Analysis",
+  "fileProcessingNotice": "The file will be processed after you press the button.",
+  "upload": "Upload",
+  "review": "Review",
+  "tapToUploadReceipt": "Tap to Upload Receipt",
+  "supportedReceiptFormats": "Supports JPG, PNG, and PDF",
+  "maxFileSize": "Maximum size 10 MB",
+  "removeFile": "Remove file",
+  "receiptPhotoTipTitle": "Make sure the receipt is clearly visible",
+  "receiptPhotoTipBody": "and all information is readable for more accurate AI analysis.",
+  "receiptFileSize": "JPG · {size} MB",
+  "@receiptFileSize": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "analysisComplete": "Analysis complete",
+  "processingReceipt": "Processing receipt",
+  "analysisSimulationComplete": "Simulation complete. OCR results are not available yet.",
+  "transactionExtractionSimulation": "Simulating transaction data extraction...",
+  "uploadingPhoto": "Uploading photo",
+  "readingMerchantDate": "Reading merchant and date",
+  "calculatingItems": "Calculating total and items",
+  "backToUpload": "Back to upload page",
+  "doNotCloseApp": "Don't close the app yet",
+  "checkAiResults": "Review AI Results",
+  "extractionSuccessful": "Extraction successful",
+  "checkBeforeSave": "Review the data before saving.",
+  "ocrNotIntegrated": "Sample data; OCR/AI is not connected yet.",
+  "transactionDraft": "Transaction Draft",
+  "editAiResults": "You can edit AI results if anything needs correction.",
+  "merchantName": "Merchant Name",
+  "totalAmount": "Total Amount",
+  "transactionDateLabel": "Transaction Date",
+  "tapPencilToEdit": "Tap the pencil icon to edit the data.",
+  "receiptSource": "Source: {fileName}",
+  "@receiptSource": {
+    "placeholders": {
+      "fileName": {}
+    }
+  },
+  "confirmAndSave": "Confirm & Save",
+  "editFieldTooltip": "Edit {label}",
+  "@editFieldTooltip": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "receiptTransactionSaved": "Transaction {merchant} saved successfully.",
+  "@receiptTransactionSaved": {
+    "placeholders": {
+      "merchant": {}
+    }
+  }
+}

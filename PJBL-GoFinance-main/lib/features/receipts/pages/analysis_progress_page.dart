@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/features/receipts/pages/review_receipt_page.dart';
+import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class AnalysisProgressPage extends StatefulWidget {
   const AnalysisProgressPage({super.key});
@@ -41,6 +42,7 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -61,14 +63,14 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    isComplete ? 'Analisis selesai' : 'Memproses struk',
+                    isComplete ? l10n.analysisComplete : l10n.processingReceipt,
                     style: AppTextStyles.sectionTitle.copyWith(fontSize: 17),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     isComplete
-                        ? 'Simulasi selesai. Hasil OCR belum tersedia.'
-                      : 'Simulasi ekstraksi data transaksi...',
+                        ? l10n.analysisSimulationComplete
+                        : l10n.transactionExtractionSimulation,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.footnote.copyWith(fontSize: 9),
                   ),
@@ -112,19 +114,19 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                   ),
                   const SizedBox(height: 14),
                   _AnalysisStep(
-                    label: 'Mengunggah foto',
+                    label: l10n.uploadingPhoto,
                     isComplete: progress >= 30,
                     isActive: progress < 30,
                   ),
                   const SizedBox(height: 10),
                   _AnalysisStep(
-                    label: 'Membaca merchant dan tanggal',
+                    label: l10n.readingMerchantDate,
                     isComplete: progress >= 65,
                     isActive: progress >= 30 && progress < 65,
                   ),
                   const SizedBox(height: 10),
                   _AnalysisStep(
-                    label: 'Menghitung total dan item',
+                    label: l10n.calculatingItems,
                     isComplete: isComplete,
                     isActive: progress >= 65 && !isComplete,
                   ),
@@ -134,9 +136,8 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                     height: 38,
                     child: OutlinedButton(
                       key: const Key('btn_analysis_progress_bottom'),
-                      onPressed: isComplete
-                          ? () => Navigator.of(context).pop()
-                          : null,
+                      onPressed:
+                          isComplete ? () => Navigator.of(context).pop() : null,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: AppColors.surface,
                         disabledForegroundColor: AppColors.mutedText,
@@ -150,9 +151,7 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                         ),
                       ),
                       child: Text(
-                        isComplete
-                            ? 'Kembali ke halaman upload'
-                            : 'Jangan tutup aplikasi dulu',
+                        isComplete ? l10n.backToUpload : l10n.doNotCloseApp,
                       ),
                     ),
                   ),
