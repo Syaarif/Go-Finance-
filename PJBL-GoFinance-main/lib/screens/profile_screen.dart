@@ -991,7 +991,7 @@ class _NotifSwitchTile extends StatelessWidget {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: context.colors.primaryText,
+                activeColor: context.colors.primaryText,
                 activeTrackColor: context.colors.softSurface,
                 inactiveThumbColor: context.colors.mutedText,
                 inactiveTrackColor: context.colors.border,
