@@ -31,17 +31,37 @@ jobs:
           flutter-version: '3.27.1'
           cache: true
 
+      - name: Decode Release Keystore
+        working-directory: PJBL-GoFinance-main/android/app
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > gofinance.keystore
+
       - name: Install Dependencies
         working-directory: PJBL-GoFinance-main
         run: flutter pub get
 
-      - name: Build Release APK (Split Per ABI - Ringan & Cepat)
+      - name: Build Universal Release APK (Kompatibel Semua HP Android)
+        working-directory: PJBL-GoFinance-main
+        run: flutter build apk --release
+        env:
+          KEYSTORE_PATH: android/app/gofinance.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build Split Release APK (Ringan Khusus 64-bit / 32-bit)
         working-directory: PJBL-GoFinance-main
         run: flutter build apk --release --split-per-abi
+        env:
+          KEYSTORE_PATH: android/app/gofinance.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Prepare APKs with Friendly Names
         run: |
           mkdir -p release-apks
+          cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-release.apk release-apks/GoFinance-Universal-Semua-HP.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-apks/GoFinance-arm64-v8a-ringan.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release-apks/GoFinance-armeabi-v7a-32bit.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-x86_64-release.apk release-apks/GoFinance-x86_64.apk
@@ -61,11 +81,12 @@ jobs:
           name: Go Finance v1.2.0 (Terbaru - 17 Nov 2026)
           body: |
             ## 🚀 Go Finance v1.2.0 (Update Terbaru)
-            APK ini otomatis di-build dan di-update sesuai commit terbaru di GitHub!
+            APK ini otomatis di-build dan di-rilis setiap ada update baru di GitHub menggunakan Keystore rilis permanen!
 
-            ### 📱 Download File APK:
-            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-arm64-v8a-ringan.apk)** *(Disarankan - Ukuran super ringan ~9 MB untuk hampir semua HP Android modern seperti Xiaomi, Samsung, Oppo, Vivo, Poco, Realme)*
-            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-armeabi-v7a-32bit.apk)** *(Untuk HP Android tipe lama)*
+            ### 📱 Pilihan File APK:
+            - **[GoFinance-Universal-Semua-HP.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-Universal-Semua-HP.apk)** 🌟 *(PALING DISARANKAN — Kompatibel 100% di SEMUA merk dan tipe HP Android, baik 32-bit maupun 64-bit)*
+            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-arm64-v8a-ringan.apk)** *(Super ringan ~9 MB, khusus HP Android modern 64-bit seperti Xiaomi, Samsung, Oppo, Vivo, Poco, Realme)*
+            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-armeabi-v7a-32bit.apk)** *(Khusus HP Android lama 32-bit)*
 
             ---
             *Commit:* `${{ github.sha }}`

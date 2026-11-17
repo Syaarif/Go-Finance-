@@ -72,9 +72,9 @@ class AppUpdateService {
   static const String repoName = 'Go-Finance-';
 
   static const String fallbackDownloadUrl =
-      'https://github.com/$repoOwner/$repoName/releases/download/latest/GoFinance-arm64-v8a-ringan.apk';
+      'https://github.com/$repoOwner/$repoName/releases/download/v1.2.0/GoFinance-Universal-Semua-HP.apk';
   static const String releasePageUrl =
-      'https://github.com/$repoOwner/$repoName/releases/tag/latest';
+      'https://github.com/$repoOwner/$repoName/releases/tag/v1.2.0';
 
   AppUpdateInfo? _cachedInfo;
   DateTime? _lastChecked;

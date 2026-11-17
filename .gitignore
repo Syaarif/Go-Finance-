@@ -17,3 +17,6 @@ APK_RELEASE/
 **/ios/Flutter/Generated.xcconfig
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/Runner/GeneratedPluginRegistrant.*
+
+PJBL-GoFinance-main/android/app/gofinance.keystore
+gofinance_keystore_base64.txt

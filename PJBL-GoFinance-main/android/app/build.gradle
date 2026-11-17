@@ -29,9 +29,18 @@ android {
         resConfigs "id", "en"
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'gofinance'
+            keyPassword 'gofinance123'
+            storeFile file('gofinance.keystore')
+            storePassword 'gofinance123'
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.release
             minifyEnabled = true
             shrinkResources = true
             proguardFiles(
