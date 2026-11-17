@@ -7,6 +7,7 @@ import 'package:go_finance/core/widgets/update_notification_sheet.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/register_screen.dart';
+import 'package:go_finance/screens/admin/admin_login_screen.dart';
 import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/glow_input_field.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
@@ -427,6 +428,61 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
 
                                       const SizedBox(height: 22),
+
+                                      // ── Tombol Admin Portal ──
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            PageRouteBuilder(
+                                              pageBuilder: (_, __, ___) =>
+                                                  const AdminLoginScreen(),
+                                              transitionsBuilder:
+                                                  (_, anim, __, child) =>
+                                                      FadeTransition(
+                                                opacity: anim,
+                                                child: child,
+                                              ),
+                                              transitionDuration:
+                                                  const Duration(milliseconds: 350),
+                                            ),
+                                          );
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Container(
+                                          margin: const EdgeInsets.only(bottom: 16),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.6),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: AppTheme.primaryGreen
+                                                  .withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.admin_panel_settings_rounded,
+                                                size: 16,
+                                                color: AppTheme.primaryDarkGreen,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Masuk sebagai Admin',
+                                                style: GoogleFonts.instrumentSans(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppTheme.primaryDarkGreen,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
 
                                       // "Belum punya akun? Daftar"
                                       GestureDetector(
