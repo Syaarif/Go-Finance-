@@ -3,6 +3,7 @@ name: Build & Release APK
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
@@ -54,17 +55,17 @@ jobs:
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: latest
-          name: Go Finance Latest APK (Auto-Updated)
+          tag_name: v1.2.0
+          name: Go Finance v1.2.0 (Terbaru - 17 Nov 2026)
           body: |
-            ## 🚀 Go Finance - Automatic Build
-            APK ini otomatis di-build dan di-update setiap kali ada commit/perubahan baru di repository GitHub!
+            ## 🚀 Go Finance v1.2.0 (Update Terbaru)
+            APK ini otomatis di-build dan di-update sesuai commit terbaru di GitHub!
 
             ### 📱 Download File APK:
-            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/latest/GoFinance-arm64-v8a-ringan.apk)** *(Disarankan - Ukuran super ringan ~15-20MB untuk hampir semua HP Android modern seperti Xiaomi, Samsung, Oppo, Vivo)*
-            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/latest/GoFinance-armeabi-v7a-32bit.apk)** *(Untuk HP Android tipe lama)*
+            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-arm64-v8a-ringan.apk)** *(Disarankan - Ukuran super ringan ~9 MB untuk hampir semua HP Android modern seperti Xiaomi, Samsung, Oppo, Vivo, Poco, Realme)*
+            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-armeabi-v7a-32bit.apk)** *(Untuk HP Android tipe lama)*
 
             ---
             *Commit:* `${{ github.sha }}`
