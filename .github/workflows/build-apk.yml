@@ -65,6 +65,7 @@ jobs:
       - name: Prepare Release APKs
         run: |
           mkdir -p release-apks
+          cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-release.apk        release-apks/GoFinance.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-release.apk        release-apks/GoFinance-Universal-Semua-HP.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk    release-apks/GoFinance-arm64-v8a-ringan.apk
           cp PJBL-GoFinance-main/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk  release-apks/GoFinance-armeabi-v7a-32bit.apk
@@ -77,25 +78,37 @@ jobs:
           path: release-apks/*.apk
           retention-days: 30
 
-      - name: Publish GitHub Release
+      - name: Publish GitHub Release (v1.2.0)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.2.0
           name: "Go Finance v1.2.0 — Siap Pakai di Semua HP Android"
           body: |
-            ## 🚀 Go Finance v1.2.0
+            ## 🚀 Go Finance v1.2.0 (Update Terbaru)
 
-            ### 📱 Pilih APK sesuai HP kamu:
-            | File | Untuk |
-            |---|---|
-            | **[GoFinance-Universal-Semua-HP.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-Universal-Semua-HP.apk)** 🌟 | **SEMUA HP Android** (paling disarankan, 100% kompatibel) |
-            | [GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-arm64-v8a-ringan.apk) | HP modern 64-bit (Xiaomi, Samsung, Oppo, Vivo, dll) — ukuran paling ringan |
-            | [GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-armeabi-v7a-32bit.apk) | HP Android lama 32-bit |
+            ### 📱 Download APK:
+            - **[GoFinance.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance.apk)** 🌟 **(Bisa untuk SEMUA jenis HP Android)**
+            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-arm64-v8a-ringan.apk)** *(Ukuran ringan ~9 MB untuk HP modern 64-bit)*
+            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.0/GoFinance-armeabi-v7a-32bit.apk)** *(Khusus HP lama 32-bit)*
 
-            > ⚠️ Jika sudah pernah install versi lama, harap **hapus dulu** aplikasi lama sebelum install yang baru.
-
-            ---
-            Commit: `${{ github.sha }}`
+            > ⚠️ **PENTING:** Jika sebelumnya sudah terpasang aplikasi Go Finance di HP kamu, wajib **Copot Pemasangan / Uninstall** aplikasi lama terlebih dahulu sebelum memasang file baru ini agar tanda tangan APK tidak bentrok.
           files: release-apks/*.apk
           prerelease: false
           make_latest: true
+
+      - name: Update GitHub Release (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Go Finance v1.2.0 (Terbaru - Siap Pakai)"
+          body: |
+            ## 🚀 Go Finance v1.2.0 (Update Terbaru)
+
+            ### 📱 Download APK:
+            - **[GoFinance.apk](https://github.com/${{ github.repository }}/releases/download/latest/GoFinance.apk)** 🌟 **(Bisa untuk SEMUA jenis HP Android)**
+            - **[GoFinance-arm64-v8a-ringan.apk](https://github.com/${{ github.repository }}/releases/download/latest/GoFinance-arm64-v8a-ringan.apk)** *(Ukuran ringan ~9 MB untuk HP modern 64-bit)*
+            - **[GoFinance-armeabi-v7a-32bit.apk](https://github.com/${{ github.repository }}/releases/download/latest/GoFinance-armeabi-v7a-32bit.apk)** *(Khusus HP lama 32-bit)*
+
+            > ⚠️ **PENTING:** Jika sebelumnya sudah terpasang aplikasi Go Finance di HP kamu, wajib **Copot Pemasangan / Uninstall** aplikasi lama terlebih dahulu sebelum memasang file baru ini agar tanda tangan APK tidak bentrok.
+          files: release-apks/*.apk
+          prerelease: false
