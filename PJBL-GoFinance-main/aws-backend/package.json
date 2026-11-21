@@ -1,0 +1,16 @@
+{
+  "name": "go-finance-receipt-api",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "deploy": "serverless deploy"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.900.0",
+    "@aws-sdk/client-textract": "^3.900.0",
+    "busboy": "^1.6.0"
+  },
+  "devDependencies": {
+    "serverless": "^4.22.0"
+  }
+}

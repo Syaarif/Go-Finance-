@@ -77,7 +77,7 @@ class AppBottomNav extends StatelessWidget {
       PageRouteBuilder<void>(
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
-          child: const UploadReceiptPage(),
+          child: UploadReceiptPage(currentIndex: currentIndex),
         ),
         transitionDuration: const Duration(milliseconds: 220),
       ),

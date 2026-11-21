@@ -1,27 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
 import 'package:go_finance/features/receipts/pages/analysis_progress_page.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class UploadReceiptPage extends StatefulWidget {
-  const UploadReceiptPage({super.key});
+  final NavTab currentIndex;
+
+  const UploadReceiptPage({
+    super.key,
+    this.currentIndex = NavTab.home,
+  });
 
   @override
   State<UploadReceiptPage> createState() => _UploadReceiptPageState();
 }
 
 class _UploadReceiptPageState extends State<UploadReceiptPage> {
-  bool _hasSelectedFile = true;
+  PlatformFile? _selectedFile;
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: AppTextStyles.primaryButton),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.colors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -30,11 +37,30 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
     );
   }
 
+  Future<void> _pickReceipt() async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+
+    if (file == null) return;
+    final size = file.lengthSync();
+    if (size == null) {
+      _showMessage('Ukuran file tidak dapat dibaca.');
+      return;
+    }
+    if (size > 10 * 1024 * 1024) {
+      _showMessage('Ukuran file maksimal 10 MB.');
+      return;
+    }
+    setState(() => _selectedFile = file);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -49,12 +75,14 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
-                      color: AppColors.deepGreen,
                     ),
                   ),
                   Text(
                     l10n.receiptAnalysisTitle,
-                    style: AppTextStyles.pageTitle.copyWith(fontSize: 17),
+                    style: AppTextStyles.pageTitle.copyWith(
+                      color: context.colors.deepGreen,
+                      fontSize: 17,
+                    ),
                   ),
                 ],
               ),
@@ -74,32 +102,39 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   children: [
                     Text(
                       l10n.uploadReceiptFile,
-                      style: AppTextStyles.sectionTitle.copyWith(fontSize: 20),
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.deepGreen,
+                        fontSize: 20,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       l10n.receiptUploadInstructions,
-                      style: AppTextStyles.footnote.copyWith(fontSize: 11),
+                      style: AppTextStyles.footnote.copyWith(
+                        color: context.colors.mutedText,
+                        fontSize: 11,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     _UploadDropZone(
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        _showMessage(
-                          l10n.filePickerUnavailable,
-                        );
+                        _pickReceipt();
                       },
                     ),
                     const SizedBox(height: 17),
                     Text(
                       l10n.selectedFile,
-                      style: AppTextStyles.fieldLabel.copyWith(fontSize: 11),
+                      style: AppTextStyles.fieldLabel.copyWith(
+                        color: context.colors.deepGreen,
+                        fontSize: 11,
+                      ),
                     ),
-                    if (_hasSelectedFile) ...[
+                    if (_selectedFile != null) ...[
                       const SizedBox(height: 8),
                       _SelectedFileTile(
-                        onRemove: () =>
-                            setState(() => _hasSelectedFile = false),
+                        file: _selectedFile!,
+                        onRemove: () => setState(() => _selectedFile = null),
                       ),
                     ] else ...[
                       const SizedBox(height: 8),
@@ -108,14 +143,16 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                         height: 60,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          border: Border.all(color: AppColors.border),
+                          color: context.colors.surface,
+                          border: Border.all(color: context.colors.border),
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusMd),
                         ),
                         child: Text(
                           l10n.noFileSelected,
-                          style: AppTextStyles.footnote,
+                          style: AppTextStyles.footnote.copyWith(
+                            color: context.colors.mutedText,
+                          ),
                         ),
                       ),
                     ],
@@ -134,20 +171,24 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                     height: 44,
                     child: ElevatedButton(
                       key: const Key('btn_start_receipt_analysis'),
-                      onPressed: _hasSelectedFile
+                      onPressed: _selectedFile != null
                           ? () {
                               HapticFeedback.mediumImpact();
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => const AnalysisProgressPage(),
+                                  builder: (_) => AnalysisProgressPage(
+                                    file: _selectedFile!,
+                                    currentIndex: widget.currentIndex,
+                                  ),
                                 ),
                               );
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        disabledBackgroundColor: AppColors.disabledSurface,
-                        foregroundColor: AppColors.surface,
+                        backgroundColor: context.colors.primary,
+                        disabledBackgroundColor: context.colors.disabledSurface,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
                         textStyle: AppTextStyles.primaryButton.copyWith(
                           fontSize: 13,
                         ),
@@ -171,7 +212,10 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   Text(
                     l10n.fileProcessingNotice,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                      fontSize: 9,
+                    ),
                   ),
                 ],
               ),
@@ -179,6 +223,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
           ],
         ),
       ),
+      bottomNavigationBar: AppBottomNav(currentIndex: widget.currentIndex),
     );
   }
 }
@@ -229,14 +274,16 @@ class _ProgressStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isActive ? AppColors.surface : AppColors.secondary;
+    final colors = context.colors;
+    final foreground =
+        isActive ? Theme.of(context).colorScheme.onPrimary : colors.secondary;
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.softSurface,
+        color: isActive ? colors.primary : colors.softSurface,
         border: Border.all(
-          color: isActive ? AppColors.primary : AppColors.border,
+          color: isActive ? colors.primary : colors.border,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -247,13 +294,13 @@ class _ProgressStep extends StatelessWidget {
             height: 15,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isActive ? AppColors.surface : AppColors.primary,
+              color: isActive ? colors.surface : colors.primary,
               shape: BoxShape.circle,
             ),
             child: Text(
               number,
               style: AppTextStyles.billMeta.copyWith(
-                color: isActive ? AppColors.primary : AppColors.surface,
+                color: isActive ? colors.primary : colors.surface,
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
               ),
@@ -283,9 +330,9 @@ class _UploadDropZone extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return CustomPaint(
-      painter: _DashedBorderPainter(),
+      painter: _DashedBorderPainter(color: context.colors.brandBg),
       child: Material(
-        color: AppColors.softSurface,
+        color: context.colors.softSurface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         child: InkWell(
           onTap: onTap,
@@ -299,31 +346,40 @@ class _UploadDropZone extends StatelessWidget {
                 Container(
                   width: 54,
                   height: 54,
-                  decoration: const BoxDecoration(
-                    color: AppColors.billHighlight,
+                  decoration: BoxDecoration(
+                    color: context.colors.billHighlight,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.cloud_upload_outlined,
                     size: 32,
-                    color: AppColors.primary,
+                    color: context.colors.primaryText,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.tapToUploadReceipt,
-                  style: AppTextStyles.fieldLabel.copyWith(fontSize: 12),
+                  style: AppTextStyles.fieldLabel.copyWith(
+                    color: context.colors.deepGreen,
+                    fontSize: 12,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.supportedReceiptFormats,
-                  style: AppTextStyles.footnote.copyWith(fontSize: 10),
+                  style: AppTextStyles.footnote.copyWith(
+                    color: context.colors.mutedText,
+                    fontSize: 10,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 Text(
                   l10n.maxFileSize,
-                  style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                  style: AppTextStyles.footnote.copyWith(
+                    color: context.colors.mutedText,
+                    fontSize: 9,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -336,20 +392,26 @@ class _UploadDropZone extends StatelessWidget {
 }
 
 class _SelectedFileTile extends StatelessWidget {
+  final PlatformFile file;
   final VoidCallback onRemove;
 
-  const _SelectedFileTile({required this.onRemove});
+  const _SelectedFileTile({
+    required this.file,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
+    final size = file.lengthSync();
+    final colors = context.colors;
     return Container(
       height: 61,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        color: colors.surface,
+        border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: Row(
@@ -358,12 +420,12 @@ class _SelectedFileTile extends StatelessWidget {
             width: 37,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.softSurface,
+              color: colors.softSurface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.description_outlined,
-              color: AppColors.primary,
+              color: colors.primaryText,
               size: 25,
             ),
           ),
@@ -374,17 +436,24 @@ class _SelectedFileTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'struk_indomaret.jpg',
+                  file.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.fieldLabel.copyWith(fontSize: 11),
+                  style: AppTextStyles.fieldLabel.copyWith(
+                    color: colors.deepGreen,
+                    fontSize: 11,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   l10n.receiptFileSize(
-                    NumberFormat.decimalPattern(locale).format(2.4),
+                    NumberFormat.decimalPattern(locale)
+                        .format((size ?? 0) / (1024 * 1024)),
                   ),
-                  style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                  style: AppTextStyles.footnote.copyWith(
+                    color: colors.mutedText,
+                    fontSize: 9,
+                  ),
                 ),
               ],
             ),
@@ -396,8 +465,8 @@ class _SelectedFileTile extends StatelessWidget {
             constraints: const BoxConstraints.tightFor(width: 30, height: 30),
             padding: EdgeInsets.zero,
             style: IconButton.styleFrom(
-              foregroundColor: AppColors.mutedText,
-              side: const BorderSide(color: AppColors.border),
+              foregroundColor: colors.mutedText,
+              side: BorderSide(color: colors.border),
               shape: const CircleBorder(),
             ),
             icon: const Icon(Icons.close_rounded, size: 16),
@@ -414,11 +483,12 @@ class _PhotoTip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
-        color: AppColors.softSurface,
+        color: colors.softSurface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: Row(
@@ -428,14 +498,14 @@ class _PhotoTip extends StatelessWidget {
             width: 19,
             height: 19,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppColors.billHighlight,
+            decoration: BoxDecoration(
+              color: colors.billHighlight,
               shape: BoxShape.circle,
             ),
-            child: const Text(
+            child: Text(
               '!',
               style: TextStyle(
-                color: AppColors.primary,
+                color: colors.primaryText,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -448,12 +518,18 @@ class _PhotoTip extends StatelessWidget {
               children: [
                 Text(
                   l10n.receiptPhotoTipTitle,
-                  style: AppTextStyles.fieldLabel.copyWith(fontSize: 10),
+                  style: AppTextStyles.fieldLabel.copyWith(
+                    color: colors.deepGreen,
+                    fontSize: 10,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   l10n.receiptPhotoTipBody,
-                  style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                  style: AppTextStyles.footnote.copyWith(
+                    color: colors.mutedText,
+                    fontSize: 9,
+                  ),
                 ),
               ],
             ),
@@ -465,6 +541,10 @@ class _PhotoTip extends StatelessWidget {
 }
 
 class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+
+  const _DashedBorderPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path()
@@ -475,7 +555,7 @@ class _DashedBorderPainter extends CustomPainter {
         ),
       );
     final paint = Paint()
-      ..color = AppColors.brandBg
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -490,5 +570,6 @@ class _DashedBorderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
+      color != oldDelegate.color;
 }

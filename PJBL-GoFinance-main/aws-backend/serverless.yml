@@ -1,0 +1,49 @@
+service: go-finance-receipt-api
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'ap-southeast-1'}
+  timeout: 60
+  memorySize: 1024
+  environment:
+    RECEIPT_BUCKET: ${sls:stage}-${self:service}-receipts
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.RECEIPT_BUCKET}/*
+        - Effect: Allow
+          Action:
+            - textract:StartExpenseAnalysis
+            - textract:GetExpenseAnalysis
+          Resource: "*"
+  apiGateway:
+    binaryMediaTypes:
+      - multipart/form-data
+
+functions:
+  analyzeReceipt:
+    handler: src/index.handler
+    events:
+      - http:
+          path: analyze
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    ReceiptBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.RECEIPT_BUCKET}
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteTemporaryReceipts
+              Status: Enabled
+              ExpirationInDays: 1

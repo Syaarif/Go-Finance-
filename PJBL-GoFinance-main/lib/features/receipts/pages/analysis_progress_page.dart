@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
 import 'package:go_finance/features/receipts/pages/review_receipt_page.dart';
+import 'package:go_finance/features/receipts/services/receipt_analysis_service.dart';
+import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class AnalysisProgressPage extends StatefulWidget {
-  const AnalysisProgressPage({super.key});
+  final PlatformFile file;
+  final NavTab currentIndex;
+
+  const AnalysisProgressPage({
+    super.key,
+    required this.file,
+    this.currentIndex = NavTab.home,
+  });
 
   @override
   State<AnalysisProgressPage> createState() => _AnalysisProgressPageState();
@@ -14,6 +25,8 @@ class AnalysisProgressPage extends StatefulWidget {
 class _AnalysisProgressPageState extends State<AnalysisProgressPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _progressController;
+  final _service = ReceiptAnalysisService();
+  String? _error;
 
   @override
   void initState() {
@@ -22,16 +35,55 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
       vsync: this,
       duration: const Duration(seconds: 8),
     );
-    _progressController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (_) => const ReviewReceiptPage(),
-          ),
-        );
-      }
-    });
     _progressController.forward();
+    _analyze();
+  }
+
+  Future<void> _analyze() async {
+    try {
+      final bytes = await widget.file.readAsBytes();
+      final result = await _service.analyze(
+        bytes: bytes,
+        fileName: widget.file.name,
+      );
+      if (!mounted) return;
+      await _progressController.animateTo(
+        1,
+        duration: const Duration(milliseconds: 300),
+      );
+      _openReview(
+          resultMerchant: result.merchant,
+          resultAmount: result.amount,
+          resultCategory: result.category,
+          resultDate: result.date);
+    } on ReceiptAnalysisException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Tidak dapat terhubung ke layanan analisis.');
+    }
+  }
+
+  void _openReview({
+    String? resultMerchant,
+    double? resultAmount,
+    TransactionCategory? resultCategory,
+    DateTime? resultDate,
+  }) {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ReviewReceiptPage(
+          initialMerchant: resultMerchant ?? 'Indomaret',
+          initialAmount: resultAmount ?? 45000,
+          initialCategory: resultCategory ?? TransactionCategory.belanja,
+          initialDate: resultDate,
+          sourceFileName: widget.file.name,
+          currentIndex: widget.currentIndex,
+        ),
+      ),
+    );
   }
 
   @override
@@ -44,7 +96,7 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(33, 22, 33, 20),
@@ -64,7 +116,10 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                   const SizedBox(height: 12),
                   Text(
                     isComplete ? l10n.analysisComplete : l10n.processingReceipt,
-                    style: AppTextStyles.sectionTitle.copyWith(fontSize: 17),
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: context.colors.deepGreen,
+                      fontSize: 17,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -72,7 +127,10 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                         ? l10n.analysisSimulationComplete
                         : l10n.transactionExtractionSimulation,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                    style: AppTextStyles.footnote.copyWith(
+                      color: context.colors.mutedText,
+                      fontSize: 9,
+                    ),
                   ),
                   const SizedBox(height: 52),
                   SizedBox(
@@ -86,15 +144,15 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                             key: const Key('analysis_circular_progress'),
                             value: progress / 100,
                             strokeWidth: 9,
-                            backgroundColor: AppColors.softSurface,
-                            color: AppColors.primary,
+                            backgroundColor: context.colors.softSurface,
+                            color: context.colors.primary,
                           ),
                         ),
                         Text(
                           '$progress%',
                           key: const Key('analysis_progress_value'),
                           style: AppTextStyles.pageTitle.copyWith(
-                            color: AppColors.primary,
+                            color: context.colors.primaryText,
                             fontSize: 17,
                           ),
                         ),
@@ -108,10 +166,21 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                       key: const Key('analysis_linear_progress'),
                       value: progress / 100,
                       minHeight: 8,
-                      backgroundColor: AppColors.softSurface,
-                      color: AppColors.primary,
+                      backgroundColor: context.colors.softSurface,
+                      color: context.colors.primary,
                     ),
                   ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.footnote.copyWith(
+                        color: context.colors.negative,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   _AnalysisStep(
                     label: l10n.uploadingPhoto,
@@ -136,22 +205,26 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
                     height: 38,
                     child: OutlinedButton(
                       key: const Key('btn_analysis_progress_bottom'),
-                      onPressed:
-                          isComplete ? () => Navigator.of(context).pop() : null,
+                      onPressed: isComplete || _error != null
+                          ? () => Navigator.of(context).pop()
+                          : null,
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: AppColors.surface,
-                        disabledForegroundColor: AppColors.mutedText,
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.border),
+                        backgroundColor: context.colors.surface,
+                        disabledForegroundColor: context.colors.mutedText,
+                        foregroundColor: context.colors.primaryText,
+                        side: BorderSide(color: context.colors.border),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(11),
                         ),
                         textStyle: AppTextStyles.footnote.copyWith(
+                          color: context.colors.mutedText,
                           fontSize: 9,
                         ),
                       ),
                       child: Text(
-                        isComplete ? l10n.backToUpload : l10n.doNotCloseApp,
+                        isComplete || _error != null
+                            ? l10n.backToUpload
+                            : l10n.doNotCloseApp,
                       ),
                     ),
                   ),
@@ -161,6 +234,7 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
           ),
         ),
       ),
+      bottomNavigationBar: AppBottomNav(currentIndex: widget.currentIndex),
     );
   }
 }
@@ -179,7 +253,7 @@ class _AnalysisStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = AppTextStyles.footnote.copyWith(
-      color: isActive ? AppColors.deepGreen : AppColors.secondary,
+      color: isActive ? context.colors.deepGreen : context.colors.secondary,
       fontSize: 9,
       fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
     );
@@ -188,12 +262,12 @@ class _AnalysisStep extends StatelessWidget {
       children: [
         Expanded(child: Text(label, style: style)),
         if (isComplete)
-          const Icon(Icons.check_rounded, color: AppColors.primary, size: 15)
+          Icon(Icons.check_rounded, color: context.colors.primaryText, size: 15)
         else if (isActive)
           Text(
             '...',
             style: AppTextStyles.billMeta.copyWith(
-              color: AppColors.primary,
+              color: context.colors.primaryText,
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),

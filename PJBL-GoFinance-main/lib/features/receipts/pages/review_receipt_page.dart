@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
+import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/features/transactions/utils/transaction_localization.dart';
@@ -16,6 +17,7 @@ class ReviewReceiptPage extends StatefulWidget {
   final TransactionCategory initialCategory;
   final DateTime? initialDate;
   final String sourceFileName;
+  final NavTab currentIndex;
 
   const ReviewReceiptPage({
     super.key,
@@ -24,6 +26,7 @@ class ReviewReceiptPage extends StatefulWidget {
     this.initialCategory = TransactionCategory.belanja,
     this.initialDate,
     this.sourceFileName = 'struk_indomaret.jpg',
+    this.currentIndex = NavTab.home,
   });
 
   @override
@@ -53,11 +56,15 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: initialValue);
+    final colors = context.colors;
     final value = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(title, style: AppTextStyles.sheetTitle),
+        backgroundColor: colors.surface,
+        title: Text(
+          title,
+          style: AppTextStyles.sheetTitle.copyWith(color: colors.deepGreen),
+        ),
         content: TextField(
           autofocus: true,
           controller: controller,
@@ -65,11 +72,11 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
           inputFormatters: inputFormatters,
           decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: colors.border),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: BorderSide(color: colors.primary),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
           ),
@@ -81,7 +88,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            style: FilledButton.styleFrom(backgroundColor: colors.primary),
             child: Text(l10n.save),
           ),
         ],
@@ -126,39 +133,48 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     final selected = await showModalBottomSheet<TransactionCategory>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.chooseCategory, style: AppTextStyles.sheetTitle),
-            const SizedBox(height: 12),
-            ...categories.map(
-              (category) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: category.iconBg,
-                  child:
-                      Icon(category.icon, color: category.iconColor, size: 20),
-                ),
-                title: Text(
-                  localizedCategoryLabel(l10n, category),
-                  style: AppTextStyles.fieldLabel,
-                ),
-                trailing: category == _category
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                    : null,
-                onTap: () => Navigator.pop(sheetContext, category),
+      builder: (sheetContext) {
+        final colors = sheetContext.colors;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.chooseCategory,
+                style:
+                    AppTextStyles.sheetTitle.copyWith(color: colors.deepGreen),
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 12),
+              ...categories.map(
+                (category) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: category.iconBg,
+                    child: Icon(category.icon,
+                        color: category.iconColor, size: 20),
+                  ),
+                  title: Text(
+                    localizedCategoryLabel(l10n, category),
+                    style: AppTextStyles.fieldLabel.copyWith(
+                      color: colors.deepGreen,
+                    ),
+                  ),
+                  trailing: category == _category
+                      ? Icon(Icons.check_rounded, color: colors.primaryText)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, category),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
     if (selected != null) setState(() => _category = selected);
   }
@@ -171,16 +187,19 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       locale: locale,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.primary,
-            onPrimary: AppColors.surface,
-            surface: AppColors.canvas,
+      builder: (context, child) {
+        final colors = context.colors;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: colors.primary,
+                  onPrimary: Theme.of(context).colorScheme.onPrimary,
+                  surface: colors.canvas,
+                ),
           ),
-        ),
-        child: child!,
-      ),
+          child: child!,
+        );
+      },
     );
     if (selected != null) setState(() => _date = selected);
   }
@@ -207,7 +226,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(l10n.receiptTransactionSaved(_merchant)),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.colors.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -224,7 +243,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     ).format(_amount);
     final formattedDate = DateFormat('d MMM yyyy', locale).format(_date);
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -239,12 +258,14 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
-                      color: AppColors.deepGreen,
                     ),
                   ),
                   Text(
                     l10n.checkAiResults,
-                    style: AppTextStyles.pageTitle.copyWith(fontSize: 17),
+                    style: AppTextStyles.pageTitle.copyWith(
+                      color: context.colors.deepGreen,
+                      fontSize: 17,
+                    ),
                   ),
                 ],
               ),
@@ -261,15 +282,15 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
-                        color: AppColors.softSurface,
-                        border: Border.all(color: AppColors.border),
+                        color: context.colors.softSurface,
+                        border: Border.all(color: context.colors.border),
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusMd),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded,
-                              color: AppColors.primary, size: 23),
+                          Icon(Icons.check_circle_rounded,
+                              color: context.colors.primaryText, size: 23),
                           const SizedBox(width: 9),
                           Expanded(
                             child: Column(
@@ -278,6 +299,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                                 Text(
                                   l10n.extractionSuccessful,
                                   style: AppTextStyles.fieldLabel.copyWith(
+                                    color: context.colors.deepGreen,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -285,12 +307,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                                 Text(
                                   l10n.checkBeforeSave,
                                   style: AppTextStyles.footnote.copyWith(
-                                    fontSize: 9,
-                                  ),
-                                ),
-                                Text(
-                                  l10n.ocrNotIntegrated,
-                                  style: AppTextStyles.footnote.copyWith(
+                                    color: context.colors.mutedText,
                                     fontSize: 9,
                                   ),
                                 ),
@@ -303,12 +320,18 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                     const SizedBox(height: 13),
                     Text(
                       l10n.transactionDraft,
-                      style: AppTextStyles.sectionTitle.copyWith(fontSize: 18),
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: context.colors.deepGreen,
+                        fontSize: 18,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       l10n.editAiResults,
-                      style: AppTextStyles.footnote.copyWith(fontSize: 10),
+                      style: AppTextStyles.footnote.copyWith(
+                        color: context.colors.mutedText,
+                        fontSize: 10,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     _ReviewField(
@@ -343,12 +366,15 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Icon(Icons.info_outline_rounded,
-                            size: 14, color: AppColors.primary),
+                        Icon(Icons.info_outline_rounded,
+                            size: 14, color: context.colors.primaryText),
                         const SizedBox(width: 6),
                         Text(
                           l10n.tapPencilToEdit,
-                          style: AppTextStyles.footnote.copyWith(fontSize: 9),
+                          style: AppTextStyles.footnote.copyWith(
+                            color: context.colors.mutedText,
+                            fontSize: 9,
+                          ),
                         ),
                       ],
                     ),
@@ -357,14 +383,14 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                       height: 34,
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.softSurface,
+                        color: context.colors.softSurface,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.description_outlined,
-                              color: AppColors.secondary, size: 18),
+                          Icon(Icons.description_outlined,
+                              color: context.colors.secondary, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -372,6 +398,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.footnote.copyWith(
+                                color: context.colors.mutedText,
                                 fontSize: 9,
                               ),
                             ),
@@ -392,8 +419,8 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
                   key: const Key('btn_confirm_save_receipt'),
                   onPressed: _saveTransaction,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.surface,
+                    backgroundColor: context.colors.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     textStyle: AppTextStyles.primaryButton.copyWith(
                       fontSize: 13,
                     ),
@@ -409,6 +436,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
           ],
         ),
       ),
+      bottomNavigationBar: AppBottomNav(currentIndex: widget.currentIndex),
     );
   }
 }
@@ -454,14 +482,16 @@ class _ReviewStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isActive ? AppColors.surface : AppColors.secondary;
+    final colors = context.colors;
+    final foreground =
+        isActive ? Theme.of(context).colorScheme.onPrimary : colors.secondary;
     return Container(
       height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.softSurface,
+        color: isActive ? colors.primary : colors.softSurface,
         border: Border.all(
-          color: isActive ? AppColors.primary : AppColors.border,
+          color: isActive ? colors.primary : colors.border,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -472,13 +502,13 @@ class _ReviewStep extends StatelessWidget {
             height: 16,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isActive ? AppColors.surface : AppColors.primary,
+              color: isActive ? colors.surface : colors.primary,
               shape: BoxShape.circle,
             ),
             child: Text(
               number,
               style: AppTextStyles.billMeta.copyWith(
-                color: isActive ? AppColors.primary : AppColors.surface,
+                color: isActive ? colors.primary : colors.surface,
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
               ),
@@ -516,20 +546,24 @@ class _ReviewField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: AppTextStyles.fieldLabel.copyWith(fontSize: 10),
+          style: AppTextStyles.fieldLabel.copyWith(
+            color: colors.deepGreen,
+            fontSize: 10,
+          ),
         ),
         const SizedBox(height: 5),
         Container(
           height: 53,
           padding: const EdgeInsets.only(left: 10, right: 4),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
+            color: colors.surface,
+            border: Border.all(color: colors.border),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
           child: Row(
@@ -538,13 +572,13 @@ class _ReviewField extends StatelessWidget {
                 Container(
                   width: 26,
                   height: 26,
-                  decoration: const BoxDecoration(
-                    color: AppColors.softSurface,
+                  decoration: BoxDecoration(
+                    color: colors.softSurface,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     leadingIcon,
-                    color: AppColors.secondary,
+                    color: colors.primaryText,
                     size: 16,
                   ),
                 ),
@@ -557,6 +591,7 @@ class _ReviewField extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.inputText.copyWith(
+                    color: colors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -571,8 +606,8 @@ class _ReviewField extends StatelessWidget {
                 constraints:
                     const BoxConstraints.tightFor(width: 36, height: 36),
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.edit_outlined,
-                    color: AppColors.secondary, size: 18),
+                icon: Icon(Icons.edit_outlined,
+                    color: colors.secondary, size: 18),
               ),
             ],
           ),
