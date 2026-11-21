@@ -465,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 Icons.admin_panel_settings_rounded,
                                                 size: 16,
                                                 color: AppTheme.primaryDarkGreen,

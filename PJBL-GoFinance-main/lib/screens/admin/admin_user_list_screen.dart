@@ -186,12 +186,30 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
       savings: '-Rp 1.0 jt',
       totalTx: 55,
     ),
+    AdminUser(
+      id: '008',
+      name: 'Maya Anggraini',
+      email: 'maya.a@email.com',
+      phone: '+62 812 9988 7766',
+      city: 'Palembang',
+      status: AdminUserStatus.pending,
+      joinDate: '17 Nov 2026',
+      totalIncome: 'Rp 0',
+      totalExpense: 'Rp 0',
+      savings: 'Rp 0',
+      totalTx: 0,
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl.addListener(() {
+      if (!_tabCtrl.indexIsChanging) {
+        setState(() {});
+      }
+    });
     _searchCtrl.addListener(
         () => setState(() => _searchQuery = _searchCtrl.text.trim().toLowerCase()));
   }
@@ -203,19 +221,23 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
     super.dispose();
   }
 
-  List<AdminUser> get _filtered {
-    final tab = _tabCtrl.index;
+  List<AdminUser> _getFiltered(int tabIndex) {
     var list = _dummyUsers.where((u) {
       if (_searchQuery.isNotEmpty) {
         return u.name.toLowerCase().contains(_searchQuery) ||
-            u.email.toLowerCase().contains(_searchQuery);
+            u.email.toLowerCase().contains(_searchQuery) ||
+            u.city.toLowerCase().contains(_searchQuery);
       }
       return true;
     }).toList();
 
-    if (tab == 1) list = list.where((u) => u.status == AdminUserStatus.active).toList();
-    if (tab == 2) list = list.where((u) => u.status == AdminUserStatus.pending).toList();
-    if (tab == 3) list = list.where((u) => u.status == AdminUserStatus.inactive).toList();
+    if (tabIndex == 1) {
+      list = list.where((u) => u.status == AdminUserStatus.active).toList();
+    } else if (tabIndex == 2) {
+      list = list.where((u) => u.status == AdminUserStatus.pending).toList();
+    } else if (tabIndex == 3) {
+      list = list.where((u) => u.status == AdminUserStatus.inactive).toList();
+    }
     return list;
   }
 
@@ -261,9 +283,9 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
                         controller: _searchCtrl,
                         style: GoogleFonts.instrumentSans(fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: 'Cari pengguna...',
+                          hintText: 'Cari nama, email, kota...',
                           hintStyle: GoogleFonts.instrumentSans(
-                            color: const Color(0xFFAAAAAA), fontSize: 14),
+                              color: const Color(0xFFAAAAAA), fontSize: 14),
                           prefixIcon: const Icon(Icons.search_rounded,
                               color: Color(0xFF9E9E9E), size: 20),
                           suffixIcon: _searchQuery.isNotEmpty
@@ -274,7 +296,8 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
@@ -282,20 +305,28 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
                   // Tab filter
                   TabBar(
                     controller: _tabCtrl,
-                    onTap: (_) => setState(() {}),
                     indicatorColor: Colors.white,
                     indicatorWeight: 3,
                     labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white.withValues(alpha: 0.55),
+                    unselectedLabelColor:
+                        Colors.white.withValues(alpha: 0.55),
                     labelStyle: GoogleFonts.instrumentSans(
                         fontSize: 13, fontWeight: FontWeight.w600),
                     unselectedLabelStyle:
                         GoogleFonts.instrumentSans(fontSize: 13),
-                    tabs: const [
-                      Tab(text: 'Semua'),
-                      Tab(text: 'Aktif'),
-                      Tab(text: 'Review'),
-                      Tab(text: 'Nonaktif'),
+                    tabs: [
+                      Tab(
+                          text:
+                              'Semua (${_getFiltered(0).length})'),
+                      Tab(
+                          text:
+                              'Aktif (${_getFiltered(1).length})'),
+                      Tab(
+                          text:
+                              'Review (${_getFiltered(2).length})'),
+                      Tab(
+                          text:
+                              'Nonaktif (${_getFiltered(3).length})'),
                     ],
                   ),
                 ],
@@ -305,42 +336,11 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
         ],
         body: TabBarView(
           controller: _tabCtrl,
-          children: List.generate(4, (_) => _buildUserList()),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserList() {
-    final users = _filtered;
-    if (users.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off_rounded,
-                size: 64, color: Color(0xFFCCCCCC)),
-            const SizedBox(height: 12),
-            Text('Tidak ada pengguna ditemukan',
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 15, color: const Color(0xFF9E9E9E))),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-      itemCount: users.length,
-      itemBuilder: (ctx, i) {
-        final user = users[i];
-        return StaggeredFadeSlide(
-          delay: Duration(milliseconds: 60 * i),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _UserCard(
-              user: user,
-              onTap: () {
+          children: List.generate(
+            4,
+            (tabIndex) => _UserListView(
+              users: _getFiltered(tabIndex),
+              onTap: (user) {
                 HapticFeedback.selectionClick();
                 Navigator.of(context).push(
                   PageRouteBuilder(
@@ -359,6 +359,51 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
                 );
               },
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Extracted list view (fix rebuild bug) ───
+class _UserListView extends StatelessWidget {
+  final List<AdminUser> users;
+  final void Function(AdminUser) onTap;
+
+  const _UserListView({required this.users, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    if (users.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search_off_rounded,
+                size: 64, color: Color(0xFFCCCCCC)),
+            const SizedBox(height: 12),
+            Text(
+              'Tidak ada pengguna ditemukan',
+              style: GoogleFonts.instrumentSans(
+                  fontSize: 15, color: const Color(0xFF9E9E9E)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      itemCount: users.length,
+      itemBuilder: (ctx, i) {
+        final user = users[i];
+        return StaggeredFadeSlide(
+          delay: Duration(milliseconds: 60 * i),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _UserCard(user: user, onTap: () => onTap(user)),
           ),
         );
       },
@@ -389,20 +434,24 @@ class _UserCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Avatar
-            Container(
-              width: 46, height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: user.status.bg,
-              ),
-              child: Center(
-                child: Text(
-                  user.initials,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: user.status.color,
+            // Avatar dengan Hero
+            Hero(
+              tag: 'avatar_${user.id}',
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: user.status.bg,
+                ),
+                child: Center(
+                  child: Text(
+                    user.initials,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: user.status.color,
+                    ),
                   ),
                 ),
               ),
@@ -429,6 +478,21 @@ class _UserCard extends StatelessWidget {
                       color: const Color(0xFF9E9E9E),
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 11, color: Color(0xFFBBBBBB)),
+                      const SizedBox(width: 2),
+                      Text(
+                        user.city,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 11,
+                          color: const Color(0xFFBBBBBB),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -437,8 +501,8 @@ class _UserCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: user.status.bg,
                     borderRadius: BorderRadius.circular(10),

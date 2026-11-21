@@ -164,6 +164,29 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
               ),
             ),
 
+            // ── Tombol kembali ke Login Pengguna ──
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 8),
+                  child: IconButton(
+                    icon: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 16),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ),
+            ),
+
             // ── Konten utama ──
             SafeArea(
               child: Column(

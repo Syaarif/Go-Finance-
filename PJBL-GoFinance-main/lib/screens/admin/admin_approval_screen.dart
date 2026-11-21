@@ -15,8 +15,12 @@ class AdminApprovalScreen extends StatefulWidget {
   State<AdminApprovalScreen> createState() => _AdminApprovalScreenState();
 }
 
-class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
-  final _pendingUsers = [
+class _AdminApprovalScreenState extends State<AdminApprovalScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _emptyCtrl;
+  late Animation<double> _emptyAnim;
+
+  final _pendingUsers = <AdminUser>[
     const AdminUser(
       id: '005',
       name: 'Rizky Pratama',
@@ -66,12 +70,36 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           !_approvedIds.contains(u.id) && !_rejectedIds.contains(u.id))
       .toList();
 
+  @override
+  void initState() {
+    super.initState();
+    _emptyCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _emptyAnim = CurvedAnimation(parent: _emptyCtrl, curve: Curves.elasticOut);
+  }
+
+  @override
+  void dispose() {
+    _emptyCtrl.dispose();
+    super.dispose();
+  }
+
   void _approve(AdminUser u) {
     HapticFeedback.heavyImpact();
     setState(() => _approvedIds.add(u.id));
+    _checkEmpty();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('${u.name} disetujui ✓',
-          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500)),
+      content: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded,
+              color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text('${u.name} disetujui ✓',
+              style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500)),
+        ],
+      ),
       backgroundColor: const Color(0xFF15A147),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -82,9 +110,16 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   void _reject(AdminUser u) {
     HapticFeedback.vibrate();
     setState(() => _rejectedIds.add(u.id));
+    _checkEmpty();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('${u.name} ditolak',
-          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500)),
+      content: Row(
+        children: [
+          const Icon(Icons.cancel_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text('${u.name} ditolak',
+              style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500)),
+        ],
+      ),
       backgroundColor: const Color(0xFFE63939),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -92,43 +127,58 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
     ));
   }
 
+  void _checkEmpty() {
+    // Delay sedikit biar animasi dismiss selesai dulu
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _queue.isEmpty) {
+        _emptyCtrl.forward(from: 0);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final queue = _queue;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F5),
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
             pinned: true,
             automaticallyImplyLeading: !widget.isEmbedded,
             backgroundColor: const Color(0xFF257029),
             systemOverlayStyle: SystemUiOverlayStyle.light,
-            title: Text(
-              'Persetujuan Akun',
-              style: GoogleFonts.instrumentSans(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontSize: 18),
-            ),
-            actions: [
-              if (_queue.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF9119),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${_queue.length}',
-                    style: GoogleFonts.instrumentSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
+            title: Row(
+              children: [
+                Text(
+                  'Persetujuan Akun',
+                  style: GoogleFonts.instrumentSans(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontSize: 18),
                 ),
-            ],
+                if (queue.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9119),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${queue.length}',
+                      style: GoogleFonts.instrumentSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
 
           // Summary strip
@@ -140,8 +190,8 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                 children: [
                   _SummaryChip(
                     label: 'Menunggu',
-                    count: _queue.length,
-                    color: const Color(0xFFFF9119),
+                    count: queue.length,
+                    color: const Color(0xFFFFDD88),
                   ),
                   const SizedBox(width: 10),
                   _SummaryChip(
@@ -160,30 +210,78 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
             ),
           ),
 
-          // List
-          if (_queue.isEmpty)
+          // Content
+          if (queue.isEmpty)
             SliverFillRemaining(
+              hasScrollBody: false,
               child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.check_circle_rounded,
-                        size: 72, color: Color(0xFF15A147)),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Semua Sudah Ditinjau! 🎉',
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A)),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tidak ada akun yang menunggu persetujuan.',
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 14, color: const Color(0xFF9E9E9E)),
-                    ),
-                  ],
+                child: ScaleTransition(
+                  scale: _emptyAnim,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFE8F8EE),
+                        ),
+                        child: const Icon(Icons.check_circle_rounded,
+                            size: 50, color: Color(0xFF15A147)),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Semua Sudah Ditinjau! 🎉',
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1A1A1A)),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tidak ada akun yang menunggu persetujuan.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 14, color: const Color(0xFF9E9E9E)),
+                      ),
+                      const SizedBox(height: 20),
+                      if (_approvedIds.isNotEmpty || _rejectedIds.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 32),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                  color: Color(0x08000000),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _ResultStat(
+                                count: _approvedIds.length,
+                                label: 'Disetujui',
+                                color: const Color(0xFF15A147),
+                              ),
+                              Container(
+                                  width: 1,
+                                  height: 36,
+                                  color: const Color(0xFFF0F0F0)),
+                              _ResultStat(
+                                count: _rejectedIds.length,
+                                label: 'Ditolak',
+                                color: const Color(0xFFE63939),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -191,40 +289,98 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (ctx, i) {
-                  final user = _queue[i];
+                  final user = queue[i];
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: StaggeredFadeSlide(
                       delay: Duration(milliseconds: 60 * i),
-                      child: _ApprovalCard(
-                        user: user,
-                        onApprove: () => _approve(user),
-                        onReject: () => _reject(user),
-                        onDetail: () {
-                          Navigator.of(context).push(
-                            PageRouteBuilder(
-                              pageBuilder: (_, anim, __) =>
-                                  AdminUserDetailScreen(user: user),
-                              transitionsBuilder: (_, anim, __, child) =>
-                                  SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(1, 0),
-                                  end: Offset.zero,
-                                ).animate(CurvedAnimation(
-                                    parent: anim,
-                                    curve: Curves.easeOutCubic)),
-                                child: child,
+                      child: Dismissible(
+                        key: Key(user.id),
+                        // Swipe kiri = tolak, swipe kanan = setujui
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF15A147),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_circle_rounded,
+                                  color: Colors.white, size: 28),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Setujui',
+                                style: GoogleFonts.instrumentSans(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12),
                               ),
-                              transitionDuration:
-                                  const Duration(milliseconds: 380),
-                            ),
-                          );
+                            ],
+                          ),
+                        ),
+                        secondaryBackground: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE63939),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.cancel_rounded,
+                                  color: Colors.white, size: 28),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tolak',
+                                style: GoogleFonts.instrumentSans(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            _approve(user);
+                          } else {
+                            _reject(user);
+                          }
+                          return false; // kita manage sendiri via setState
                         },
+                        child: _ApprovalCard(
+                          user: user,
+                          onApprove: () => _approve(user),
+                          onReject: () => _reject(user),
+                          onDetail: () {
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                pageBuilder: (_, anim, __) =>
+                                    AdminUserDetailScreen(user: user),
+                                transitionsBuilder: (_, anim, __, child) =>
+                                    SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(1, 0),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                      parent: anim,
+                                      curve: Curves.easeOutCubic)),
+                                  child: child,
+                                ),
+                                transitionDuration:
+                                    const Duration(milliseconds: 380),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   );
                 },
-                childCount: _queue.length,
+                childCount: queue.length,
               ),
             ),
 
@@ -235,6 +391,38 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   }
 }
 
+// ───── Result Stat ─────
+class _ResultStat extends StatelessWidget {
+  final int count;
+  final String label;
+  final Color color;
+
+  const _ResultStat(
+      {required this.count, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: GoogleFonts.instrumentSans(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.instrumentSans(
+              fontSize: 12, color: const Color(0xFF9E9E9E)),
+        ),
+      ],
+    );
+  }
+}
+
+// ───── Summary Chip ─────
 class _SummaryChip extends StatelessWidget {
   final String label;
   final int count;
@@ -254,7 +442,8 @@ class _SummaryChip extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 8, height: 8,
+            width: 8,
+            height: 8,
             decoration: BoxDecoration(shape: BoxShape.circle, color: color),
           ),
           const SizedBox(width: 6),
@@ -271,6 +460,7 @@ class _SummaryChip extends StatelessWidget {
   }
 }
 
+// ───── Approval Card ─────
 class _ApprovalCard extends StatelessWidget {
   final AdminUser user;
   final VoidCallback onApprove;
@@ -302,19 +492,24 @@ class _ApprovalCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Row(
               children: [
-                Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFFFF3E0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      user.initials,
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFFF9119)),
+                // Avatar dengan Hero
+                Hero(
+                  tag: 'avatar_${user.id}',
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFFFF3E0),
+                    ),
+                    child: Center(
+                      child: Text(
+                        user.initials,
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFFF9119)),
+                      ),
                     ),
                   ),
                 ),
@@ -370,12 +565,13 @@ class _ApprovalCard extends StatelessWidget {
                 const Icon(Icons.access_time_rounded,
                     size: 14, color: Color(0xFFAAAAAA)),
                 const SizedBox(width: 6),
-                Text(
-                  'Daftar: ${user.joinDate}',
-                  style: GoogleFonts.instrumentSans(
-                      fontSize: 12, color: const Color(0xFF9E9E9E)),
+                Expanded(
+                  child: Text(
+                    'Daftar: ${user.joinDate}',
+                    style: GoogleFonts.instrumentSans(
+                        fontSize: 12, color: const Color(0xFF9E9E9E)),
+                  ),
                 ),
-                const Spacer(),
                 const Icon(Icons.location_on_outlined,
                     size: 14, color: Color(0xFFAAAAAA)),
                 const SizedBox(width: 4),
@@ -385,6 +581,20 @@ class _ApprovalCard extends StatelessWidget {
                       fontSize: 12, color: const Color(0xFF9E9E9E)),
                 ),
               ],
+            ),
+          ),
+
+          // Swipe hint
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              '← Swipe untuk Tolak / Setujui Swipe →',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 11,
+                color: const Color(0xFFCCCCCC),
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
 

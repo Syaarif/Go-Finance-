@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/screens/admin/admin_user_list_screen.dart';
 import 'package:go_finance/screens/admin/admin_approval_screen.dart';
+import 'package:go_finance/screens/admin/admin_notification_screen.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 
 /// 01_Admin_Dashboard — Layar utama admin
@@ -21,6 +22,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   late AnimationController _counterCtrl;
   late Animation<double> _counterAnim;
 
+  // Animasi tab switch
+  late AnimationController _tabAnimCtrl;
+  late Animation<double> _tabAnim;
+
   // Data dummy
   static const _totalUsers = 5241;
   static const _pendingUsers = 42;
@@ -28,7 +33,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   static const _inactiveUsers = 382;
   static const _todayTx = 1293;
 
-  final _activities = const [
+  static const _activities = [
     _ActivityItem(
       initials: 'BS',
       name: 'Budi Santoso',
@@ -73,14 +78,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    _counterAnim = CurvedAnimation(parent: _counterCtrl, curve: Curves.easeOut);
+    _counterAnim =
+        CurvedAnimation(parent: _counterCtrl, curve: Curves.easeOut);
     _counterCtrl.forward();
+
+    _tabAnimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _tabAnim =
+        CurvedAnimation(parent: _tabAnimCtrl, curve: Curves.easeOut);
+    _tabAnimCtrl.value = 1.0;
   }
 
   @override
   void dispose() {
     _counterCtrl.dispose();
+    _tabAnimCtrl.dispose();
     super.dispose();
+  }
+
+  void _switchTab(int index) {
+    if (_currentTab == index) return;
+    HapticFeedback.selectionClick();
+    _tabAnimCtrl.reverse().then((_) {
+      if (!mounted) return;
+      setState(() => _currentTab = index);
+      _tabAnimCtrl.forward();
+    });
   }
 
   @override
@@ -89,14 +114,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F6F5),
-        body: IndexedStack(
-          index: _currentTab,
-          children: [
-            _buildDashboard(),
-            const AdminUserListScreen(isEmbedded: true),
-            const AdminApprovalScreen(isEmbedded: true),
-            _buildSettings(),
-          ],
+        body: FadeTransition(
+          opacity: _tabAnim,
+          child: IndexedStack(
+            index: _currentTab,
+            children: [
+              _buildDashboard(),
+              const AdminUserListScreen(isEmbedded: true),
+              const AdminApprovalScreen(isEmbedded: true),
+              const AdminNotificationScreen(isEmbedded: true),
+              _buildSettings(),
+            ],
+          ),
         ),
         bottomNavigationBar: _buildBottomNav(),
       ),
@@ -105,14 +134,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
   Widget _buildDashboard() {
     return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
       slivers: [
         // ── SliverAppBar gradient ──
         SliverAppBar(
-          expandedHeight: 220,
+          expandedHeight: 230,
           pinned: true,
           automaticallyImplyLeading: false,
           systemOverlayStyle: SystemUiOverlayStyle.light,
           flexibleSpace: FlexibleSpaceBar(
+            collapseMode: CollapseMode.parallax,
             background: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -129,9 +160,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 children: [
                   // Dekoratif circle
                   Positioned(
-                    top: -30, right: -30,
+                    top: -30,
+                    right: -30,
                     child: Container(
-                      width: 160, height: 160,
+                      width: 180,
+                      height: 180,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.06),
@@ -139,9 +172,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     ),
                   ),
                   Positioned(
-                    bottom: -20, left: -20,
+                    bottom: -20,
+                    left: -20,
                     child: Container(
-                      width: 100, height: 100,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.05),
@@ -155,6 +190,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header row
                           Row(
                             children: [
                               Expanded(
@@ -165,7 +201,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       'Selamat datang,',
                                       style: GoogleFonts.instrumentSans(
                                         fontSize: 12,
-                                        color: Colors.white.withValues(alpha: 0.75),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.75),
                                       ),
                                     ),
                                     Text(
@@ -179,32 +216,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                   ],
                                 ),
                               ),
-                              // Notifikasi bell
-                              Stack(
-                                children: [
-                                  Container(
-                                    width: 42, height: 42,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withValues(alpha: 0.15),
-                                    ),
-                                    child: const Icon(
-                                      Icons.notifications_outlined,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 6, right: 6,
-                                    child: Container(
-                                      width: 10, height: 10,
-                                      decoration: const BoxDecoration(
+                              // Notif bell → navigasi ke tab Notif
+                              GestureDetector(
+                                onTap: () => _switchTab(3),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFFFF4444),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.15),
+                                      ),
+                                      child: const Icon(
+                                        Icons.notifications_outlined,
+                                        color: Colors.white,
+                                        size: 22,
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFFFF4444),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -224,22 +268,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Total Pengguna Terdaftar',
                                         style: GoogleFonts.instrumentSans(
                                           fontSize: 12,
-                                          color: Colors.white.withValues(alpha: 0.8),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.8),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       AnimatedBuilder(
                                         animation: _counterAnim,
                                         builder: (_, __) => Text(
-                                          _formatNumber(
-                                              (_totalUsers * _counterAnim.value)
-                                                  .round()),
+                                          _formatNumber((_totalUsers *
+                                                  _counterAnim.value)
+                                              .round()),
                                           style: GoogleFonts.instrumentSans(
                                             fontSize: 32,
                                             fontWeight: FontWeight.w700,
@@ -251,7 +297,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         'bulan ini',
                                         style: GoogleFonts.instrumentSans(
                                           fontSize: 11,
-                                          color: Colors.white.withValues(alpha: 0.65),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.65),
                                         ),
                                       ),
                                     ],
@@ -261,8 +308,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
@@ -316,6 +362,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           iconBg: const Color(0xFFFFF3E0),
                           iconColor: const Color(0xFFFF9119),
                           valueColor: const Color(0xFFFF9119),
+                          onTap: () => _switchTab(2),
                         ),
                       ),
                     ),
@@ -331,6 +378,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           iconBg: const Color(0xFFE8F8EE),
                           iconColor: const Color(0xFF15A147),
                           valueColor: const Color(0xFF15A147),
+                          onTap: () => _switchTab(1),
                         ),
                       ),
                     ),
@@ -350,6 +398,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           iconBg: const Color(0xFFFFEBEB),
                           iconColor: const Color(0xFFE63939),
                           valueColor: const Color(0xFFE63939),
+                          onTap: () => _switchTab(1),
                         ),
                       ),
                     ),
@@ -365,10 +414,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           iconBg: const Color(0xFFE3EDFF),
                           iconColor: const Color(0xFF3A82F7),
                           valueColor: const Color(0xFF3A82F7),
+                          onTap: null,
                         ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+
+                // ── Quick Actions ──
+                StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 400),
+                  child: Text(
+                    'Aksi Cepat',
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 460),
+                  child: Row(
+                    children: [
+                      _QuickAction(
+                        label: 'Pengguna',
+                        icon: Icons.people_rounded,
+                        color: const Color(0xFF15A147),
+                        onTap: () => _switchTab(1),
+                      ),
+                      const SizedBox(width: 10),
+                      _QuickAction(
+                        label: 'Approval',
+                        icon: Icons.check_circle_rounded,
+                        color: const Color(0xFFFF9119),
+                        onTap: () => _switchTab(2),
+                      ),
+                      const SizedBox(width: 10),
+                      _QuickAction(
+                        label: 'Notifikasi',
+                        icon: Icons.notifications_rounded,
+                        color: const Color(0xFF3A82F7),
+                        onTap: () => _switchTab(3),
+                      ),
+                      const SizedBox(width: 10),
+                      _QuickAction(
+                        label: 'Pengaturan',
+                        icon: Icons.settings_rounded,
+                        color: const Color(0xFF9E9E9E),
+                        onTap: () => _switchTab(4),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -385,7 +484,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => setState(() => _currentTab = 1),
+                      onTap: () => _switchTab(1),
                       child: Text(
                         'Lihat Semua →',
                         style: GoogleFonts.instrumentSans(
@@ -411,7 +510,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: StaggeredFadeSlide(
-                  delay: Duration(milliseconds: 400 + i * 80),
+                  delay: Duration(milliseconds: 500 + i * 80),
                   child: _ActivityCard(item: act),
                 ),
               );
@@ -426,76 +525,204 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildSettings() {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F5),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xFF257029),
-            title: Text(
-              'Pengaturan Admin',
-              style: GoogleFonts.instrumentSans(
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                fontSize: 18,
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          automaticallyImplyLeading: false,
+          backgroundColor: const Color(0xFF257029),
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+          title: Text(
+            'Profil & Pengaturan',
+            style: GoogleFonts.instrumentSans(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontSize: 18,
+            ),
+          ),
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF15A147),
+                    Color(0xFF257029),
+                    Color(0xFF123D18),
+                  ],
+                ),
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  // Avatar admin
-                  Container(
-                    width: 80, height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFE8F8EE),
-                      border: Border.all(
-                          color: const Color(0xFF15A147), width: 2.5),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.admin_panel_settings_rounded,
-                          size: 40, color: Color(0xFF15A147)),
-                    ),
+          expandedHeight: 0,
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                // Avatar card admin
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x0A000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 4)),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text('Admin Super',
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A))),
-                  Text('admin@gofinance.id',
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 13, color: const Color(0xFF808080))),
-                  const SizedBox(height: 28),
-
-                  // Menu pengaturan
-                  ...[
-                    ('Notifikasi', Icons.notifications_outlined),
-                    ('Keamanan & Password', Icons.lock_outline_rounded),
-                    ('Log Aktivitas', Icons.history_rounded),
-                    ('Kelola Admin', Icons.manage_accounts_rounded),
-                    ('Bantuan', Icons.help_outline_rounded),
-                  ].map((e) => _SettingTile(label: e.$1, icon: e.$2)),
-
-                  const SizedBox(height: 12),
-                  _SettingTile(
-                    label: 'Keluar',
-                    icon: Icons.logout_rounded,
-                    isDestructive: true,
-                    onTap: () => _confirmLogout(context),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF15A147), Color(0xFF257029)],
+                          ),
+                          border: Border.all(
+                              color: const Color(0xFFE8F8EE), width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  const Color(0xFF15A147).withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.admin_panel_settings_rounded,
+                              size: 40, color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Admin Super',
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1A1A1A)),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('admin@gofinance.id',
+                          style: GoogleFonts.instrumentSans(
+                              fontSize: 13,
+                              color: const Color(0xFF808080))),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F8EE),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.verified_rounded,
+                                size: 14, color: Color(0xFF15A147)),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Super Administrator',
+                              style: GoogleFonts.instrumentSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF15A147),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+
+                // Menu section
+                const _SectionLabel(label: 'Akun'),
+                const SizedBox(height: 10),
+                ...[
+                  (
+                    'Edit Profil',
+                    Icons.edit_rounded,
+                    const Color(0xFF15A147),
+                    const Color(0xFFE8F8EE)
+                  ),
+                  (
+                    'Keamanan & Password',
+                    Icons.lock_outline_rounded,
+                    const Color(0xFF3A82F7),
+                    const Color(0xFFE3EDFF)
+                  ),
+                  (
+                    'Notifikasi',
+                    Icons.notifications_outlined,
+                    const Color(0xFFFF9119),
+                    const Color(0xFFFFF3E0)
+                  ),
+                ].map(
+                  (e) => _SettingTile(
+                    label: e.$1,
+                    icon: e.$2,
+                    iconColor: e.$3,
+                    iconBg: e.$4,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                const _SectionLabel(label: 'Administrasi'),
+                const SizedBox(height: 10),
+                ...[
+                  (
+                    'Log Aktivitas',
+                    Icons.history_rounded,
+                    const Color(0xFF9E9E9E),
+                    const Color(0xFFF0F0F0)
+                  ),
+                  (
+                    'Kelola Admin',
+                    Icons.manage_accounts_rounded,
+                    const Color(0xFF9E9E9E),
+                    const Color(0xFFF0F0F0)
+                  ),
+                  (
+                    'Bantuan & Dukungan',
+                    Icons.help_outline_rounded,
+                    const Color(0xFF9E9E9E),
+                    const Color(0xFFF0F0F0)
+                  ),
+                ].map(
+                  (e) => _SettingTile(
+                    label: e.$1,
+                    icon: e.$2,
+                    iconColor: e.$3,
+                    iconBg: e.$4,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                _SettingTile(
+                  label: 'Keluar dari Admin',
+                  icon: Icons.logout_rounded,
+                  iconColor: const Color(0xFFE63939),
+                  iconBg: const Color(0xFFFFEBEB),
+                  isDestructive: true,
+                  onTap: () => _confirmLogout(context),
+                ),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -504,30 +731,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       context: context,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      backgroundColor: Colors.white,
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 44, height: 5,
+              width: 44,
+              height: 5,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
                 color: const Color(0xFFDDDDDD),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const Icon(Icons.logout_rounded,
-                size: 48, color: Color(0xFFE63939)),
+            Container(
+              width: 70,
+              height: 70,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFFFEBEB),
+              ),
+              child: const Icon(Icons.logout_rounded,
+                  size: 36, color: Color(0xFFE63939)),
+            ),
             const SizedBox(height: 16),
-            Text('Keluar dari Admin?',
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(
+              'Keluar dari Admin?',
+              style: GoogleFonts.instrumentSans(
+                  fontSize: 20, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
-            Text('Kamu akan keluar dari sesi admin ini.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 14, color: const Color(0xFF808080))),
+            Text(
+              'Sesi admin akan berakhir dan kamu\nharus login kembali.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.instrumentSans(
+                  fontSize: 14, color: const Color(0xFF808080)),
+            ),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -538,10 +779,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
+                      side: const BorderSide(color: Color(0xFFE0E0E0)),
                     ),
                     child: Text('Batal',
                         style: GoogleFonts.instrumentSans(
-                            fontWeight: FontWeight.w600)),
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF555555))),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -556,6 +799,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
                     ),
                     child: Text('Keluar',
                         style: GoogleFonts.instrumentSans(
@@ -575,7 +819,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     const items = [
       (Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
       (Icons.people_rounded, Icons.people_outline_rounded, 'Pengguna'),
-      (Icons.check_circle_rounded, Icons.check_circle_outline_rounded, 'Approval'),
+      (Icons.check_circle_rounded, Icons.check_circle_outline_rounded,
+          'Approval'),
+      (Icons.notifications_rounded, Icons.notifications_outlined, 'Notifikasi'),
       (Icons.settings_rounded, Icons.settings_outlined, 'Pengaturan'),
     ];
 
@@ -599,49 +845,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               final selected = _currentTab == i;
               return Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _currentTab = i);
-                  },
+                  onTap: () => _switchTab(i),
                   behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? const Color(0xFFE8F8EE)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? const Color(0xFFE8F8EE)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
                           child: Icon(
                             selected ? items[i].$1 : items[i].$2,
+                            key: ValueKey(selected),
                             color: selected
                                 ? const Color(0xFF15A147)
                                 : const Color(0xFF9E9E9E),
-                            size: 24,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          items[i].$3,
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 10,
-                            fontWeight: selected
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: selected
-                                ? const Color(0xFF15A147)
-                                : const Color(0xFF9E9E9E),
-                          ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        items[i].$3,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 9,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: selected
+                              ? const Color(0xFF15A147)
+                              : const Color(0xFF9E9E9E),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -661,6 +906,87 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 }
 
+// ───────── Quick Action ─────────
+class _QuickAction extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x08000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2)),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF555555),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ───────── Section Label ─────────
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.instrumentSans(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF9E9E9E),
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
 // ───────── Stat Card ─────────
 class _StatCard extends StatelessWidget {
   final String label;
@@ -670,6 +996,7 @@ class _StatCard extends StatelessWidget {
   final Color iconBg;
   final Color iconColor;
   final Color valueColor;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.label,
@@ -679,60 +1006,65 @@ class _StatCard extends StatelessWidget {
     required this.iconBg,
     required this.iconColor,
     required this.valueColor,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: GoogleFonts.instrumentSans(
-              fontSize: 11,
-              color: const Color(0xFF808080),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedBuilder(
-            animation: counterAnim,
-            builder: (_, __) {
-              final displayed = (value * counterAnim.value).round();
-              return Text(
-                displayed >= 1000
-                    ? '${displayed ~/ 1000},${(displayed % 1000).toString().padLeft(3, '0')}'
-                    : displayed.toString(),
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: valueColor,
-                ),
-              );
-            },
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 11,
+                color: const Color(0xFF808080),
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedBuilder(
+              animation: counterAnim,
+              builder: (_, __) {
+                final displayed = (value * counterAnim.value).round();
+                return Text(
+                  displayed >= 1000
+                      ? '${displayed ~/ 1000},${(displayed % 1000).toString().padLeft(3, '0')}'
+                      : displayed.toString(),
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: valueColor,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -797,7 +1129,8 @@ class _ActivityCard extends StatelessWidget {
         children: [
           // Avatar
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: _avatarBg,
@@ -842,7 +1175,8 @@ class _ActivityCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                width: 8, height: 8,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _dotColor,
@@ -868,22 +1202,22 @@ class _ActivityCard extends StatelessWidget {
 class _SettingTile extends StatelessWidget {
   final String label;
   final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
   final bool isDestructive;
   final VoidCallback? onTap;
 
   const _SettingTile({
     required this.label,
     required this.icon,
+    required this.iconColor,
+    required this.iconBg,
     this.isDestructive = false,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isDestructive
-        ? const Color(0xFFE63939)
-        : const Color(0xFF1A1A1A);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -897,21 +1231,22 @@ class _SettingTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap ?? () {},
         leading: Container(
-          width: 36, height: 36,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: isDestructive
-                ? const Color(0xFFFFEBEB)
-                : const Color(0xFFF0F0F0),
+            color: iconBg,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: iconColor, size: 20),
         ),
         title: Text(
           label,
           style: GoogleFonts.instrumentSans(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: color,
+            color: isDestructive
+                ? const Color(0xFFE63939)
+                : const Color(0xFF1A1A1A),
           ),
         ),
         trailing: Icon(
