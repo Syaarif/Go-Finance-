@@ -9,12 +9,6 @@ on:
 permissions:
   contents: write
 
-env:
-  KEYSTORE_B64: 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
-  KEYSTORE_PASS: gofinance123
-  KEY_ALIAS: gofinance
-  KEY_PASS: gofinance123
-
 jobs:
   build:
     name: Build Flutter APK
@@ -37,16 +31,28 @@ jobs:
           flutter-version: '3.27.1'
           cache: true
 
-      - name: Install Android NDK 27
+      - name: Install Android NDK 28
         run: |
-          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973" || \
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973" || \
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;28.2.13676358" || \
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;28.2.13676358" || \
           echo "NDK install attempted"
 
       - name: Decode Keystore
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_B64" | base64 --decode > PJBL-GoFinance-main/android/app/gofinance.keystore
-          echo "Keystore decoded: $(stat -c%s PJBL-GoFinance-main/android/app/gofinance.keystore) bytes"
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || \
+             [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Android signing secrets are not configured; release publishing will be skipped."
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > PJBL-GoFinance-main/android/app/gofinance.keystore
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
 
       - name: Install Dependencies
         working-directory: PJBL-GoFinance-main
@@ -54,12 +60,21 @@ jobs:
 
       - name: Build Universal APK (Semua HP Android)
         working-directory: PJBL-GoFinance-main
+        env:
+          ANDROID_KEYSTORE_PATH: gofinance.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          flutter build apk --release \
-            --dart-define=KEYSTORE_PATH=android/app/gofinance.keystore
+          flutter build apk --release
 
       - name: Build Split APKs (Ringan per ABI)
         working-directory: PJBL-GoFinance-main
+        env:
+          ANDROID_KEYSTORE_PATH: gofinance.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --split-per-abi
 
       - name: Prepare Release APKs
@@ -80,6 +95,7 @@ jobs:
 
       - name: Publish GitHub Release (v1.2.0)
         uses: softprops/action-gh-release@v2
+        if: steps.signing.outputs.enabled == 'true'
         with:
           tag_name: v1.2.0
           name: "Go Finance v1.2.0 — Siap Pakai di Semua HP Android"
@@ -98,6 +114,7 @@ jobs:
 
       - name: Update GitHub Release (latest)
         uses: softprops/action-gh-release@v2
+        if: steps.signing.outputs.enabled == 'true'
         with:
           tag_name: latest
           name: "Go Finance v1.2.0 (Terbaru - Siap Pakai)"

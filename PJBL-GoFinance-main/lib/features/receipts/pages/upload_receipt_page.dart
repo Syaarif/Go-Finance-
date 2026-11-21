@@ -38,19 +38,20 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
   }
 
   Future<void> _pickReceipt() async {
-    final file = await FilePicker.pickFile(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf'],
+      withData: true,
     );
 
-    if (file == null) return;
-    final size = file.lengthSync();
-    if (size == null) {
-      _showMessage('Ukuran file tidak dapat dibaca.');
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    if (file.size > 10 * 1024 * 1024) {
+      _showMessage('Ukuran file maksimal 10 MB.');
       return;
     }
-    if (size > 10 * 1024 * 1024) {
-      _showMessage('Ukuran file maksimal 10 MB.');
+    if (file.bytes == null) {
+      _showMessage('File tidak dapat dibaca.');
       return;
     }
     setState(() => _selectedFile = file);
@@ -404,7 +405,7 @@ class _SelectedFileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    final size = file.lengthSync();
+    final size = file.size;
     final colors = context.colors;
     return Container(
       height: 61,
@@ -448,7 +449,7 @@ class _SelectedFileTile extends StatelessWidget {
                 Text(
                   l10n.receiptFileSize(
                     NumberFormat.decimalPattern(locale)
-                        .format((size ?? 0) / (1024 * 1024)),
+                        .format(size / (1024 * 1024)),
                   ),
                   style: AppTextStyles.footnote.copyWith(
                     color: colors.mutedText,

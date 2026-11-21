@@ -41,7 +41,10 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
 
   Future<void> _analyze() async {
     try {
-      final bytes = await widget.file.readAsBytes();
+      final bytes = widget.file.bytes;
+      if (bytes == null) {
+        throw const ReceiptAnalysisException('File struk tidak dapat dibaca.');
+      }
       final result = await _service.analyze(
         bytes: bytes,
         fileName: widget.file.name,

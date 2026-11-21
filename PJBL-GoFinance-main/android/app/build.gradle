@@ -5,10 +5,20 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def releaseSigningValues = [
+    System.getenv("ANDROID_KEYSTORE_PATH"),
+    System.getenv("ANDROID_KEYSTORE_PASSWORD"),
+    System.getenv("ANDROID_KEY_ALIAS"),
+    System.getenv("ANDROID_KEY_PASSWORD")
+]
+def releaseSigningEnabled = releaseSigningValues.every { value ->
+    value != null && !value.trim().isEmpty()
+}
+
 android {
     namespace = "com.gofinance.go_finance"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         coreLibraryDesugaringEnabled = true
@@ -30,16 +40,20 @@ android {
 
     signingConfigs {
         release {
-            keyAlias 'gofinance'
-            keyPassword 'gofinance123'
-            storeFile file('gofinance.keystore')
-            storePassword 'gofinance123'
+            if (releaseSigningEnabled) {
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.release
+            signingConfig = releaseSigningEnabled
+                ? signingConfigs.release
+                : signingConfigs.debug
         }
     }
 
