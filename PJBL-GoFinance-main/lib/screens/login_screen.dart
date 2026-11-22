@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import 'package:go_finance/core/services/app_update_service.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
 import 'package:go_finance/core/widgets/login_update_banner.dart';
 import 'package:go_finance/core/widgets/update_notification_sheet.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
+import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/register_screen.dart';
 import 'package:go_finance/screens/admin/admin_login_screen.dart';
@@ -14,8 +19,6 @@ import 'package:go_finance/widgets/staggered_fade_slide.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
-/// Login Screen - "Masuk" dari Figma (node 187-1904)
-/// Tata letak responsif mobile untuk Android & iOS (mendukung scroll saat keyboard aktif)
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -30,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   AppUpdateInfo? _updateInfo;
   bool _isCheckingUpdate = false;
   bool _isUpdateBannerDismissed = false;
+  bool _isLoggingIn = false;
 
   @override
   void initState() {
@@ -71,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Background SVG Texture
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/svg/bg_green.svg',
@@ -80,8 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(color: AppTheme.backgroundGreen),
             ),
           ),
-
-          // 2. Konten Responsif Mobile
           SafeArea(
             bottom: false,
             child: LayoutBuilder(
@@ -100,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Header bar dengan Piggy Bank & Tombol Update GitHub
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 100),
                                   child: Stack(
@@ -125,7 +125,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Tombol Periksa Update di Pojok Kanan Atas
                                       Positioned(
                                         right: 0,
                                         child: Tooltip(
@@ -221,8 +220,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // Headline & Subtitle
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 200),
                                   child: Column(
@@ -254,8 +251,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-
-                                // Banner Notifikasi Pembaruan GitHub
                                 if (!_isUpdateBannerDismissed &&
                                     (_updateInfo?.hasUpdate == true ||
                                         _isCheckingUpdate))
@@ -271,10 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           _checkForUpdate(force: true),
                                     ),
                                   ),
-
                                 const SizedBox(height: 12),
-
-                                // Kolom Form Email
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 320),
                                   child: GlowInputField(
@@ -285,8 +277,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // Kolom Form Password
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 400),
                                   child: GlowInputField(
@@ -297,8 +287,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 18),
-
-                                // Checkbox "Ingat saya" + "Lupa password?"
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 480),
                                   child: Row(
@@ -376,10 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ],
                             ),
                           ),
-
                           const Spacer(),
-
-                          // Panel Putih di Bagian Bawah
                           StaggeredFadeSlide(
                             delay: const Duration(milliseconds: 400),
                             offset: const Offset(0, 0.25),
@@ -410,14 +395,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Tombol "Masuk" dengan animasi Bounce
                                       BounceButton(
                                         height: 50,
                                         borderRadius: 16,
                                         backgroundColor: AppTheme.primaryGreen,
                                         onPressed: _handleLogin,
                                         child: Text(
-                                          l10n.login,
+                                          _isLoggingIn
+                                              ? 'Memproses...'
+                                              : l10n.login,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -426,10 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                       ),
-
                                       const SizedBox(height: 22),
-
-                                      // ── Tombol Admin Portal ──
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).push(
@@ -443,18 +426,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 child: child,
                                               ),
                                               transitionDuration:
-                                                  const Duration(milliseconds: 350),
+                                                  const Duration(
+                                                      milliseconds: 350),
                                             ),
                                           );
                                         },
                                         behavior: HitTestBehavior.opaque,
                                         child: Container(
-                                          margin: const EdgeInsets.only(bottom: 16),
+                                          margin:
+                                              const EdgeInsets.only(bottom: 16),
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 16, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.6),
-                                            borderRadius: BorderRadius.circular(14),
+                                            color: Colors.white
+                                                .withValues(alpha: 0.6),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                             border: Border.all(
                                               color: AppTheme.primaryGreen
                                                   .withValues(alpha: 0.3),
@@ -466,25 +453,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 MainAxisAlignment.center,
                                             children: [
                                               const Icon(
-                                                Icons.admin_panel_settings_rounded,
+                                                Icons
+                                                    .admin_panel_settings_rounded,
                                                 size: 16,
-                                                color: AppTheme.primaryDarkGreen,
+                                                color:
+                                                    AppTheme.primaryDarkGreen,
                                               ),
                                               const SizedBox(width: 6),
                                               Text(
                                                 'Masuk sebagai Admin',
-                                                style: GoogleFonts.instrumentSans(
+                                                style:
+                                                    GoogleFonts.instrumentSans(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
-                                                  color: AppTheme.primaryDarkGreen,
+                                                  color:
+                                                      AppTheme.primaryDarkGreen,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
                                       ),
-
-                                      // "Belum punya akun? Daftar"
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).pushReplacement(
@@ -569,44 +558,135 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
-    if (_emailController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.emailPasswordRequired,
-            style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showLoginSnack(l10n.emailPasswordRequired, isError: true);
       return;
     }
+
+    if (_isLoggingIn) return;
+    setState(() => _isLoggingIn = true);
+
+    try {
+      await AwsAuthService.instance.signIn(email, password);
+      final profile = await AwsApiService.instance.getMyProfile();
+      if (!mounted) return;
+
+      final String status = profile['status'] ?? 'pending';
+
+      if (status == 'pending') {
+        setState(() => _isLoggingIn = false);
+        await AwsAuthService.instance.signOut();
+        _showStatusDialog(
+          title: 'Menunggu Persetujuan Admin',
+          message:
+              'Akun kamu sudah terdaftar, namun masih menunggu persetujuan dari Admin sebelum dapat digunakan.',
+          icon: Icons.hourglass_top_rounded,
+          color: Colors.orange.shade700,
+        );
+        return;
+      }
+
+      if (status == 'suspended') {
+        setState(() => _isLoggingIn = false);
+        await AwsAuthService.instance.signOut();
+        _showStatusDialog(
+          title: 'Akun Dinonaktifkan',
+          message:
+              'Akun kamu dinonaktifkan oleh Admin karena terindikasi aktivitas spam.',
+          icon: Icons.block_rounded,
+          color: Colors.red.shade700,
+        );
+        return;
+      }
+
+      await context.read<TransactionProvider>().syncFromAws();
+      if (!mounted) return;
+      setState(() => _isLoggingIn = false);
+
+      _showLoginSnack(l10n.loginSuccess);
+      Navigator.of(context).pushAndRemoveUntil(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const HomePage(),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+        (route) => false,
+      );
+    } on CognitoClientException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoggingIn = false);
+      _showLoginSnack(e.message ?? 'Email atau password salah', isError: true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoggingIn = false);
+      _showLoginSnack('Gagal terhubung ke server: $e', isError: true);
+    }
+  }
+
+  void _showStatusDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color color,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 56, color: color),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryDarkGreen,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: GoogleFonts.instrumentSans(fontSize: 13.5, height: 1.4),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoginSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n.loginSuccess,
+          message,
           style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: isError ? Colors.red.shade700 : AppTheme.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-    );
-    Navigator.of(context).pushAndRemoveUntil(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const HomePage(),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-      (route) => false,
     );
   }
 }

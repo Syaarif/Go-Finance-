@@ -1,22 +1,24 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
 import 'package:go_finance/features/transactions/models/transaction_model.dart';
 
-/// Provider state manajemen transaksi & saldo persisten (tersimpan permanen di HP).
 class TransactionProvider extends ChangeNotifier {
   static const String _keySaldoAktif = 'gf_saldo_aktif_v1';
   static const String _keySaldoTabungan = 'gf_saldo_tabungan_v1';
   static const String _keyTransactions = 'gf_transactions_json_v1';
 
-  double _saldoAktif = 2450000.0;
-  double _saldoTabungan = 1250000.0;
+  double _saldoAktif = 0.0;
+  double _saldoTabungan = 0.0;
+  int? _defaultWalletId;
   List<TransactionModel> _all = [];
   bool _isLoaded = false;
 
   String _searchQuery = '';
   TransactionCategory _selectedCategory = TransactionCategory.semua;
-  int _selectedTabIndex = 0; // 0=Harian, 1=Mingguan, 2=Bulanan
+  int _selectedTabIndex = 0;
 
   TransactionProvider() {
     _loadFromStorage();
@@ -31,12 +33,11 @@ class TransactionProvider extends ChangeNotifier {
   TransactionCategory get selectedCategory => _selectedCategory;
   int get selectedTabIndex => _selectedTabIndex;
 
-  /// Memuat saldo & riwayat transaksi dari memori permanen HP (SharedPreferences)
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _saldoAktif = prefs.getDouble(_keySaldoAktif) ?? 2450000.0;
-      _saldoTabungan = prefs.getDouble(_keySaldoTabungan) ?? 1250000.0;
+      _saldoAktif = prefs.getDouble(_keySaldoAktif) ?? 0.0;
+      _saldoTabungan = prefs.getDouble(_keySaldoTabungan) ?? 0.0;
 
       final jsonStr = prefs.getString(_keyTransactions);
       if (jsonStr != null && jsonStr.isNotEmpty) {
@@ -45,19 +46,79 @@ class TransactionProvider extends ChangeNotifier {
             .map((item) =>
                 TransactionModel.fromJson(item as Map<String, dynamic>))
             .toList();
-      } else {
-        _all = List.from(DummyTransactions.all);
+      }
+
+      final token = await AwsAuthService.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        await syncFromAws();
       }
     } catch (e) {
-      debugPrint('[TransactionProvider] Gagal memuat dari storage: $e');
-      _all = List.from(DummyTransactions.all);
+      debugPrint('[TransactionProvider] Gagal memuat data: $e');
     } finally {
       _isLoaded = true;
       notifyListeners();
     }
   }
 
-  /// Menyimpan saldo & riwayat transaksi ke memori permanen HP
+  /// Sinkronisasi saldo dompet & riwayat transaksi user dari AWS RDS MySQL
+  Future<void> syncFromAws() async {
+    try {
+      final wallets = await AwsApiService.instance.getWallets();
+      if (wallets.isNotEmpty) {
+        final primaryWallet = wallets.first as Map<String, dynamic>;
+        _defaultWalletId = (primaryWallet['id'] as num?)?.toInt();
+        _saldoAktif =
+            double.tryParse(primaryWallet['balance'].toString()) ?? _saldoAktif;
+
+        if (wallets.length > 1) {
+          final savingsWallet = wallets[1] as Map<String, dynamic>;
+          _saldoTabungan =
+              double.tryParse(savingsWallet['balance'].toString()) ??
+                  _saldoTabungan;
+        }
+      }
+
+      final rawTx = await AwsApiService.instance.getTransactions();
+      _all = rawTx.map((item) {
+        final map = item as Map<String, dynamic>;
+        final typeStr = (map['type'] ?? 'expense').toString();
+        final isIncome = typeStr == 'income' || typeStr == 'pemasukan';
+        final catName = (map['category_name'] ?? '').toString();
+        final rawNote = (map['note'] ?? '').toString();
+
+        String title = catName.isNotEmpty ? catName : 'Transaksi';
+        String subtitle = rawNote;
+        if (rawNote.contains(' - ')) {
+          final parts = rawNote.split(' - ');
+          title = parts.first;
+          subtitle = parts.sublist(1).join(' - ');
+        } else if (rawNote.isNotEmpty) {
+          title = rawNote;
+          subtitle = catName;
+        }
+
+        return TransactionModel(
+          id: map['id'].toString(),
+          title: title,
+          subtitle: subtitle,
+          amount: double.tryParse(map['amount'].toString()) ?? 0.0,
+          type: isIncome
+              ? TransactionType.pemasukan
+              : TransactionType.pengeluaran,
+          category: _mapBackendCategory(catName),
+          date: DateTime.tryParse(map['transaction_date'].toString()) ??
+              DateTime.now(),
+          note: rawNote,
+        );
+      }).toList();
+
+      await _saveToStorage();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[TransactionProvider] Gagal sync dari AWS: $e');
+    }
+  }
+
   Future<void> _saveToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -67,6 +128,69 @@ class TransactionProvider extends ChangeNotifier {
       await prefs.setString(_keyTransactions, jsonEncode(jsonList));
     } catch (e) {
       debugPrint('[TransactionProvider] Gagal menyimpan ke storage: $e');
+    }
+  }
+
+  int _categoryToBackendId(TransactionCategory cat) {
+    switch (cat) {
+      case TransactionCategory.makananMinuman:
+        return 1;
+      case TransactionCategory.transportasi:
+        return 2;
+      case TransactionCategory.belanja:
+        return 3;
+      case TransactionCategory.tagihan:
+        return 4;
+      case TransactionCategory.gaji:
+        return 5;
+      case TransactionCategory.transfer:
+        return 6;
+      case TransactionCategory.semua:
+      case TransactionCategory.lainnya:
+        return 7;
+    }
+  }
+
+  TransactionCategory _mapBackendCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('makan') || lower.contains('minum')) {
+      return TransactionCategory.makananMinuman;
+    }
+    if (lower.contains('transport')) return TransactionCategory.transportasi;
+    if (lower.contains('belanja')) return TransactionCategory.belanja;
+    if (lower.contains('tagihan')) return TransactionCategory.tagihan;
+    if (lower.contains('gaji') || lower.contains('pemasukan')) {
+      return TransactionCategory.gaji;
+    }
+    if (lower.contains('transfer')) return TransactionCategory.transfer;
+    return TransactionCategory.lainnya;
+  }
+
+  Future<void> _pushTransactionToAws(TransactionModel tx) async {
+    try {
+      if (_defaultWalletId == null) {
+        final wallets = await AwsApiService.instance.getWallets();
+        if (wallets.isNotEmpty) {
+          _defaultWalletId = (wallets.first['id'] as num).toInt();
+        }
+      }
+      if (_defaultWalletId == null) return;
+
+      final combinedNote = tx.subtitle.isNotEmpty
+          ? '${tx.title} - ${tx.subtitle}'
+          : tx.title;
+
+      await AwsApiService.instance.createTransaction(
+        walletId: _defaultWalletId!,
+        categoryId: _categoryToBackendId(tx.category),
+        type: tx.type == TransactionType.pemasukan ? 'income' : 'expense',
+        amount: tx.amount,
+        note: combinedNote,
+        transactionDate: tx.date.toIso8601String().split('T').first,
+      );
+      await syncFromAws();
+    } catch (e) {
+      debugPrint('[TransactionProvider] Gagal kirim transaksi ke AWS: $e');
     }
   }
 
@@ -85,7 +209,6 @@ class TransactionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Menambah transaksi baru (mempengaruhi saldo aktif secara permanen)
   void addTransaction(TransactionModel tx) {
     _all = [tx, ..._all];
     if (tx.type == TransactionType.pemasukan) {
@@ -95,9 +218,9 @@ class TransactionProvider extends ChangeNotifier {
     }
     _saveToStorage();
     notifyListeners();
+    _pushTransactionToAws(tx);
   }
 
-  /// Menabung: Mengurangi saldo aktif & menambah saldo tabungan secara nyata & permanen
   bool setorTabungan(double nominal, {String? catatan}) {
     if (nominal <= 0) return false;
     if (_saldoAktif < nominal) return false;
@@ -121,10 +244,10 @@ class TransactionProvider extends ChangeNotifier {
 
     _saveToStorage();
     notifyListeners();
+    _pushTransactionToAws(tx);
     return true;
   }
 
-  /// Tarik Tabungan: Mengembalikan uang dari tabungan ke saldo aktif secara nyata & permanen
   bool tarikTabungan(double nominal, {String? catatan}) {
     if (nominal <= 0) return false;
     if (_saldoTabungan < nominal) return false;
@@ -148,10 +271,10 @@ class TransactionProvider extends ChangeNotifier {
 
     _saveToStorage();
     notifyListeners();
+    _pushTransactionToAws(tx);
     return true;
   }
 
-  /// Top Up Saldo Aktif langsung
   void topUpSaldo(double nominal, {String? sumber}) {
     if (nominal <= 0) return;
     _saldoAktif += nominal;
@@ -170,12 +293,12 @@ class TransactionProvider extends ChangeNotifier {
 
     _saveToStorage();
     notifyListeners();
+    _pushTransactionToAws(tx);
   }
 
   List<TransactionModel> get filtered {
     final now = DateTime.now();
     return _all.where((tx) {
-      // Filter tab waktu
       bool inPeriod = true;
       if (_selectedTabIndex == 0) {
         inPeriod = tx.date.year == now.year &&
@@ -192,15 +315,13 @@ class TransactionProvider extends ChangeNotifier {
         inPeriod = tx.date.isAfter(weekAgo);
       } else {
         inPeriod =
-            tx.date.year == now.year && tx.date.month == now.month ||
-            tx.date.year == 2026 && tx.date.month == 10;
+            (tx.date.year == now.year && tx.date.month == now.month) ||
+                (tx.date.year == 2026 && tx.date.month == 10);
       }
 
-      // Filter kategori
       bool inCategory = _selectedCategory == TransactionCategory.semua ||
           tx.category == _selectedCategory;
 
-      // Filter pencarian
       bool inSearch = _searchQuery.isEmpty ||
           tx.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           tx.subtitle.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -209,7 +330,6 @@ class TransactionProvider extends ChangeNotifier {
     }).toList();
   }
 
-  /// Kelompokkan transaksi per tanggal.
   Map<DateTime, List<TransactionModel>> get groupedByDate {
     final result = <DateTime, List<TransactionModel>>{};
     for (final tx in filtered) {
