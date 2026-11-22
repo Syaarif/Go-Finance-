@@ -1841,7 +1841,7 @@ abstract class AppLocalizations {
   /// No description provided for @receiptAnalysisTitle.
   ///
   /// In id, this message translates to:
-  /// **'AI Analisis Struk'**
+  /// **'Scan Struk'**
   String get receiptAnalysisTitle;
 
   /// No description provided for @uploadReceiptFile.
@@ -1853,7 +1853,7 @@ abstract class AppLocalizations {
   /// No description provided for @receiptUploadInstructions.
   ///
   /// In id, this message translates to:
-  /// **'Pilih foto atau PDF bukti transaksi kamu.'**
+  /// **'Pilih foto struk JPG atau PNG.'**
   String get receiptUploadInstructions;
 
   /// No description provided for @filePickerUnavailable.
@@ -1877,13 +1877,13 @@ abstract class AppLocalizations {
   /// No description provided for @startAiAnalysis.
   ///
   /// In id, this message translates to:
-  /// **'Mulai Analisis AI'**
+  /// **'Mulai Scan OCR'**
   String get startAiAnalysis;
 
   /// No description provided for @fileProcessingNotice.
   ///
   /// In id, this message translates to:
-  /// **'File akan diproses setelah kamu menekan tombol.'**
+  /// **'Foto diproses langsung di perangkat dan tidak diunggah.'**
   String get fileProcessingNotice;
 
   /// No description provided for @upload.
@@ -1907,7 +1907,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportedReceiptFormats.
   ///
   /// In id, this message translates to:
-  /// **'Mendukung format JPG, PNG, PDF'**
+  /// **'Mendukung format JPG dan PNG'**
   String get supportedReceiptFormats;
 
   /// No description provided for @maxFileSize.
@@ -1931,13 +1931,13 @@ abstract class AppLocalizations {
   /// No description provided for @receiptPhotoTipBody.
   ///
   /// In id, this message translates to:
-  /// **'dan semua informasi terbaca agar hasil analisis AI lebih akurat.'**
+  /// **'dan semua informasi terbaca agar hasil OCR lebih akurat.'**
   String get receiptPhotoTipBody;
 
   /// No description provided for @receiptFileSize.
   ///
   /// In id, this message translates to:
-  /// **'JPG · {size} MB'**
+  /// **'File · {size} MB'**
   String receiptFileSize(Object size);
 
   /// No description provided for @analysisComplete.
@@ -1955,31 +1955,31 @@ abstract class AppLocalizations {
   /// No description provided for @analysisSimulationComplete.
   ///
   /// In id, this message translates to:
-  /// **'Simulasi selesai. Hasil OCR belum tersedia.'**
+  /// **'Pemindaian selesai. Periksa kembali hasilnya.'**
   String get analysisSimulationComplete;
 
   /// No description provided for @transactionExtractionSimulation.
   ///
   /// In id, this message translates to:
-  /// **'Simulasi ekstraksi data transaksi...'**
+  /// **'Membaca teks struk di perangkat...'**
   String get transactionExtractionSimulation;
 
   /// No description provided for @uploadingPhoto.
   ///
   /// In id, this message translates to:
-  /// **'Mengunggah foto'**
+  /// **'Menyiapkan foto'**
   String get uploadingPhoto;
 
   /// No description provided for @readingMerchantDate.
   ///
   /// In id, this message translates to:
-  /// **'Membaca merchant dan tanggal'**
+  /// **'Membaca nama toko dan tanggal'**
   String get readingMerchantDate;
 
   /// No description provided for @calculatingItems.
   ///
   /// In id, this message translates to:
-  /// **'Menghitung total dan item'**
+  /// **'Mengenali total pembayaran'**
   String get calculatingItems;
 
   /// No description provided for @backToUpload.
@@ -1997,13 +1997,13 @@ abstract class AppLocalizations {
   /// No description provided for @checkAiResults.
   ///
   /// In id, this message translates to:
-  /// **'Periksa Hasil AI'**
+  /// **'Periksa Hasil Scan'**
   String get checkAiResults;
 
   /// No description provided for @extractionSuccessful.
   ///
   /// In id, this message translates to:
-  /// **'Ekstraksi berhasil'**
+  /// **'Pemindaian selesai'**
   String get extractionSuccessful;
 
   /// No description provided for @checkBeforeSave.
@@ -2027,7 +2027,7 @@ abstract class AppLocalizations {
   /// No description provided for @editAiResults.
   ///
   /// In id, this message translates to:
-  /// **'Hasil AI bisa kamu edit jika ada yang kurang tepat.'**
+  /// **'Periksa dan edit data jika ada yang kurang tepat.'**
   String get editAiResults;
 
   /// No description provided for @merchantName.

@@ -977,14 +977,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get openingInstaller => 'Membuka pemasang paket Android...';
 
   @override
-  String get receiptAnalysisTitle => 'AI Analisis Struk';
+  String get receiptAnalysisTitle => 'Scan Struk';
 
   @override
   String get uploadReceiptFile => 'Unggah file struk';
 
   @override
-  String get receiptUploadInstructions =>
-      'Pilih foto atau PDF bukti transaksi kamu.';
+  String get receiptUploadInstructions => 'Pilih foto struk JPG atau PNG.';
 
   @override
   String get filePickerUnavailable =>
@@ -997,11 +996,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get noFileSelected => 'Belum ada file dipilih';
 
   @override
-  String get startAiAnalysis => 'Mulai Analisis AI';
+  String get startAiAnalysis => 'Mulai Scan OCR';
 
   @override
   String get fileProcessingNotice =>
-      'File akan diproses setelah kamu menekan tombol.';
+      'Foto diproses langsung di perangkat dan tidak diunggah.';
 
   @override
   String get upload => 'Upload';
@@ -1013,7 +1012,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get tapToUploadReceipt => 'Ketuk untuk Unggah File Struk';
 
   @override
-  String get supportedReceiptFormats => 'Mendukung format JPG, PNG, PDF';
+  String get supportedReceiptFormats => 'Mendukung format JPG dan PNG';
 
   @override
   String get maxFileSize => 'Ukuran maksimal 10 MB';
@@ -1026,11 +1025,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get receiptPhotoTipBody =>
-      'dan semua informasi terbaca agar hasil analisis AI lebih akurat.';
+      'dan semua informasi terbaca agar hasil OCR lebih akurat.';
 
   @override
   String receiptFileSize(Object size) {
-    return 'JPG · $size MB';
+    return 'File · $size MB';
   }
 
   @override
@@ -1041,20 +1040,20 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get analysisSimulationComplete =>
-      'Simulasi selesai. Hasil OCR belum tersedia.';
+      'Pemindaian selesai. Periksa kembali hasilnya.';
 
   @override
   String get transactionExtractionSimulation =>
-      'Simulasi ekstraksi data transaksi...';
+      'Membaca teks struk di perangkat...';
 
   @override
-  String get uploadingPhoto => 'Mengunggah foto';
+  String get uploadingPhoto => 'Menyiapkan foto';
 
   @override
-  String get readingMerchantDate => 'Membaca merchant dan tanggal';
+  String get readingMerchantDate => 'Membaca nama toko dan tanggal';
 
   @override
-  String get calculatingItems => 'Menghitung total dan item';
+  String get calculatingItems => 'Mengenali total pembayaran';
 
   @override
   String get backToUpload => 'Kembali ke halaman upload';
@@ -1063,10 +1062,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get doNotCloseApp => 'Jangan tutup aplikasi dulu';
 
   @override
-  String get checkAiResults => 'Periksa Hasil AI';
+  String get checkAiResults => 'Periksa Hasil Scan';
 
   @override
-  String get extractionSuccessful => 'Ekstraksi berhasil';
+  String get extractionSuccessful => 'Pemindaian selesai';
 
   @override
   String get checkBeforeSave => 'Periksa kembali data sebelum disimpan.';
@@ -1079,7 +1078,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get editAiResults =>
-      'Hasil AI bisa kamu edit jika ada yang kurang tepat.';
+      'Periksa dan edit data jika ada yang kurang tepat.';
 
   @override
   String get merchantName => 'Nama Merchant';

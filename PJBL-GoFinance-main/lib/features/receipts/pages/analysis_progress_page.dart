@@ -3,9 +3,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
 import 'package:go_finance/core/widgets/bottom_nav_bar.dart';
+import 'package:go_finance/features/receipts/models/receipt_analysis_model.dart';
 import 'package:go_finance/features/receipts/pages/review_receipt_page.dart';
 import 'package:go_finance/features/receipts/services/receipt_analysis_service.dart';
-import 'package:go_finance/features/transactions/models/transaction_model.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 class AnalysisProgressPage extends StatefulWidget {
@@ -41,47 +41,39 @@ class _AnalysisProgressPageState extends State<AnalysisProgressPage>
 
   Future<void> _analyze() async {
     try {
-      final bytes = widget.file.bytes;
-      if (bytes == null) {
-        throw const ReceiptAnalysisException('File struk tidak dapat dibaca.');
+      final path = widget.file.path;
+      if (path == null) {
+        throw const ReceiptAnalysisException(
+          'Foto struk tidak dapat dibuka di perangkat ini.',
+        );
       }
       final result = await _service.analyze(
-        bytes: bytes,
-        fileName: widget.file.name,
+        filePath: path,
       );
       if (!mounted) return;
       await _progressController.animateTo(
         1,
         duration: const Duration(milliseconds: 300),
       );
-      _openReview(
-          resultMerchant: result.merchant,
-          resultAmount: result.amount,
-          resultCategory: result.category,
-          resultDate: result.date);
+      _openReview(result);
     } on ReceiptAnalysisException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Tidak dapat terhubung ke layanan analisis.');
+      setState(() => _error = 'Gagal memindai struk di perangkat.');
     }
   }
 
-  void _openReview({
-    String? resultMerchant,
-    double? resultAmount,
-    TransactionCategory? resultCategory,
-    DateTime? resultDate,
-  }) {
+  void _openReview(ReceiptAnalysisModel result) {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
         builder: (_) => ReviewReceiptPage(
-          initialMerchant: resultMerchant ?? 'Indomaret',
-          initialAmount: resultAmount ?? 45000,
-          initialCategory: resultCategory ?? TransactionCategory.belanja,
-          initialDate: resultDate,
+          initialMerchant: result.merchant,
+          initialAmount: result.amount,
+          initialCategory: result.category,
+          initialDate: result.date,
           sourceFileName: widget.file.name,
           currentIndex: widget.currentIndex,
         ),

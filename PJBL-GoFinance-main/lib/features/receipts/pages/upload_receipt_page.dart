@@ -40,18 +40,18 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
   Future<void> _pickReceipt() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf'],
-      withData: true,
+      allowedExtensions: const ['jpg', 'jpeg', 'png'],
     );
 
+    if (!mounted) return;
     if (result == null || result.files.isEmpty) return;
     final file = result.files.single;
     if (file.size > 10 * 1024 * 1024) {
-      _showMessage('Ukuran file maksimal 10 MB.');
+      _showMessage(AppLocalizations.of(context)!.maxFileSize);
       return;
     }
-    if (file.bytes == null) {
-      _showMessage('File tidak dapat dibaca.');
+    if (file.path == null) {
+      _showMessage('Foto tidak dapat dibuka di perangkat ini.');
       return;
     }
     setState(() => _selectedFile = file);
@@ -204,7 +204,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                         children: [
                           Text(l10n.startAiAnalysis),
                           const SizedBox(width: 8),
-                          const Icon(Icons.auto_awesome, size: 16),
+                          const Icon(Icons.document_scanner_outlined, size: 16),
                         ],
                       ),
                     ),

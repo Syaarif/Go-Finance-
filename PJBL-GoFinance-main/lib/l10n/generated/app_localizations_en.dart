@@ -979,14 +979,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openingInstaller => 'Opening Android package installer...';
 
   @override
-  String get receiptAnalysisTitle => 'AI Receipt Analysis';
+  String get receiptAnalysisTitle => 'Scan Receipt';
 
   @override
   String get uploadReceiptFile => 'Upload receipt file';
 
   @override
-  String get receiptUploadInstructions =>
-      'Choose a photo or PDF of your transaction receipt.';
+  String get receiptUploadInstructions => 'Choose a JPG or PNG receipt photo.';
 
   @override
   String get filePickerUnavailable =>
@@ -999,11 +998,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFileSelected => 'No file selected';
 
   @override
-  String get startAiAnalysis => 'Start AI Analysis';
+  String get startAiAnalysis => 'Start OCR Scan';
 
   @override
   String get fileProcessingNotice =>
-      'The file will be processed after you press the button.';
+      'The photo is processed on this device and is not uploaded.';
 
   @override
   String get upload => 'Upload';
@@ -1015,7 +1014,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapToUploadReceipt => 'Tap to Upload Receipt';
 
   @override
-  String get supportedReceiptFormats => 'Supports JPG, PNG, and PDF';
+  String get supportedReceiptFormats => 'Supports JPG and PNG';
 
   @override
   String get maxFileSize => 'Maximum size 10 MB';
@@ -1028,11 +1027,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receiptPhotoTipBody =>
-      'and all information is readable for more accurate AI analysis.';
+      'and all information is readable for more accurate OCR.';
 
   @override
   String receiptFileSize(Object size) {
-    return 'JPG · $size MB';
+    return 'File · $size MB';
   }
 
   @override
@@ -1043,20 +1042,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analysisSimulationComplete =>
-      'Simulation complete. OCR results are not available yet.';
+      'Scan complete. Review the extracted results.';
 
   @override
   String get transactionExtractionSimulation =>
-      'Simulating transaction data extraction...';
+      'Reading receipt text on this device...';
 
   @override
-  String get uploadingPhoto => 'Uploading photo';
+  String get uploadingPhoto => 'Preparing image';
 
   @override
   String get readingMerchantDate => 'Reading merchant and date';
 
   @override
-  String get calculatingItems => 'Calculating total and items';
+  String get calculatingItems => 'Detecting receipt total';
 
   @override
   String get backToUpload => 'Back to upload page';
@@ -1065,10 +1064,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doNotCloseApp => 'Don\'t close the app yet';
 
   @override
-  String get checkAiResults => 'Review AI Results';
+  String get checkAiResults => 'Review Scan Results';
 
   @override
-  String get extractionSuccessful => 'Extraction successful';
+  String get extractionSuccessful => 'Scan complete';
 
   @override
   String get checkBeforeSave => 'Review the data before saving.';
@@ -1080,8 +1079,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionDraft => 'Transaction Draft';
 
   @override
-  String get editAiResults =>
-      'You can edit AI results if anything needs correction.';
+  String get editAiResults => 'Review and edit anything that needs correction.';
 
   @override
   String get merchantName => 'Merchant Name';

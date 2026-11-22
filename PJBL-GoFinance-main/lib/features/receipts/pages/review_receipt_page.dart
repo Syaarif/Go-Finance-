@@ -15,17 +15,17 @@ class ReviewReceiptPage extends StatefulWidget {
   final String initialMerchant;
   final double initialAmount;
   final TransactionCategory initialCategory;
-  final DateTime? initialDate;
+  final DateTime initialDate;
   final String sourceFileName;
   final NavTab currentIndex;
 
   const ReviewReceiptPage({
     super.key,
-    this.initialMerchant = 'Indomaret',
-    this.initialAmount = 45000,
-    this.initialCategory = TransactionCategory.belanja,
-    this.initialDate,
-    this.sourceFileName = 'struk_indomaret.jpg',
+    required this.initialMerchant,
+    required this.initialAmount,
+    required this.initialCategory,
+    required this.initialDate,
+    required this.sourceFileName,
     this.currentIndex = NavTab.home,
   });
 
@@ -45,7 +45,7 @@ class _ReviewReceiptPageState extends State<ReviewReceiptPage> {
     _merchant = widget.initialMerchant;
     _amount = widget.initialAmount;
     _category = widget.initialCategory;
-    _date = widget.initialDate ?? DateTime(2025, 4, 12);
+    _date = widget.initialDate;
   }
 
   Future<String?> _showTextEditor({
