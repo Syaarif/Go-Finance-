@@ -24,6 +24,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -66,7 +69,33 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          flutter build apk --release
+          for attempt in 1 2 3; do
+            log_file="$(mktemp)"
+            set +e
+            flutter build apk --release 2>&1 | tee "$log_file"
+            build_status=${PIPESTATUS[0]}
+            set -e
+
+            if [ "$build_status" -eq 0 ]; then
+              rm -f "$log_file"
+              exit 0
+            fi
+
+            if ! grep -Eq '429|Too Many Requests' "$log_file"; then
+              rm -f "$log_file"
+              exit "$build_status"
+            fi
+
+            rm -f "$log_file"
+            if [ "$attempt" -eq 3 ]; then
+              echo "Dependency downloads remained rate-limited after 3 attempts." >&2
+              exit "$build_status"
+            fi
+
+            delay=$((attempt * 30))
+            echo "Maven returned HTTP 429; retrying in ${delay}s (attempt ${attempt}/3)." >&2
+            sleep "$delay"
+          done
 
       - name: Build Split APKs (Ringan per ABI)
         working-directory: PJBL-GoFinance-main
