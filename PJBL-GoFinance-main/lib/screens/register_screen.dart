@@ -11,8 +11,6 @@ import 'package:go_finance/widgets/staggered_fade_slide.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
-/// Register Screen - "Daftar" dari Figma (node 187-1925)
-/// Tata letak responsif mobile untuk Android & iOS (mendukung scroll saat keyboard aktif)
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -24,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _isRegistering = false;
 
   @override
   void dispose() {
@@ -40,7 +39,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Background SVG Texture
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/svg/bg_green.svg',
@@ -49,8 +47,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Container(color: AppTheme.backgroundGreen),
             ),
           ),
-
-          // 2. Konten Responsif Mobile
           SafeArea(
             bottom: false,
             child: LayoutBuilder(
@@ -69,7 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Piggy bank coin dengan animasi mengambang
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 100),
                                   child: Center(
@@ -93,8 +88,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // Headline & Subtitle
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 200),
                                   child: Column(
@@ -126,8 +119,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 36),
-
-                                // Kolom Form Email
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 320),
                                   child: GlowInputField(
@@ -138,8 +129,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // Kolom Form Password
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 400),
                                   child: GlowInputField(
@@ -150,8 +139,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 18),
-
-                                // Checkbox "Ingat saya"
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 480),
                                   child: GestureDetector(
@@ -210,10 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ],
                             ),
                           ),
-
                           const Spacer(),
-
-                          // Panel Putih di Bagian Bawah
                           StaggeredFadeSlide(
                             delay: const Duration(milliseconds: 400),
                             offset: const Offset(0, 0.25),
@@ -244,14 +228,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Tombol "Daftar" dengan animasi Bounce
                                       BounceButton(
                                         height: 50,
                                         borderRadius: 16,
                                         backgroundColor: AppTheme.primaryGreen,
                                         onPressed: _handleRegister,
                                         child: Text(
-                                          l10n.register,
+                                          _isRegistering
+                                              ? 'Mendaftar...'
+                                              : l10n.register,
                                           style: GoogleFonts.instrumentSans(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -260,10 +245,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           ),
                                         ),
                                       ),
-
                                       const SizedBox(height: 22),
-
-                                      // "Sudah punya akun? Masuk"
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.of(context).pushReplacement(
@@ -333,42 +315,145 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void _handleRegister() {
+  Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
-    if (_emailController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.emailPasswordRequired,
-            style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    final email = _emailController.text.trim().toLowerCase();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.trim().isEmpty) {
+      _showSnack(l10n.emailPasswordRequired, isError: true);
       return;
     }
+
+    if (_isRegistering) return;
+    setState(() => _isRegistering = true);
+
+    try {
+      final isConfirmed = await AwsAuthService.instance.signUp(
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
+      setState(() => _isRegistering = false);
+
+      if (!isConfirmed) {
+        await _showOtpDialog(email);
+        if (!mounted) return;
+      }
+
+      _showSnack(l10n.registerSuccess);
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const LoginScreen(),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
+    } on CognitoClientException catch (e) {
+      if (!mounted) return;
+      setState(() => _isRegistering = false);
+      _showSnack(e.message ?? 'Gagal mendaftar ke Cognito', isError: true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isRegistering = false);
+      _showSnack('Gagal mendaftar: $e', isError: true);
+    }
+  }
+
+  Future<void> _showOtpDialog(String email) async {
+    final otpController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        bool confirming = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              'Verifikasi Kode OTP',
+              style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Masukkan kode verifikasi yang dikirim ke $email.',
+                  style: GoogleFonts.instrumentSans(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Kode OTP (6 digit)',
+                    errorText: errorText,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: confirming
+                    ? null
+                    : () async {
+                        await AwsAuthService.instance
+                            .resendConfirmationCode(email);
+                        if (dialogCtx.mounted) {
+                          setDialogState(() => errorText = null);
+                        }
+                      },
+                child: const Text('Kirim Ulang'),
+              ),
+              ElevatedButton(
+                onPressed: confirming
+                    ? null
+                    : () async {
+                        final code = otpController.text.trim();
+                        if (code.isEmpty) {
+                          setDialogState(
+                              () => errorText = 'Kode OTP wajib diisi');
+                          return;
+                        }
+                        setDialogState(() {
+                          confirming = true;
+                          errorText = null;
+                        });
+                        try {
+                          await AwsAuthService.instance
+                              .confirmUser(email, code);
+                          if (ctx.mounted) Navigator.of(ctx).pop();
+                        } catch (e) {
+                          setDialogState(() {
+                            confirming = false;
+                            errorText = 'Kode OTP tidak valid: $e';
+                          });
+                        }
+                      },
+                child: Text(confirming ? 'Memverifikasi...' : 'Konfirmasi'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    otpController.dispose();
+  }
+
+  void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n.registerSuccess,
+          message,
           style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: isError ? Colors.red.shade700 : AppTheme.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginScreen(),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
