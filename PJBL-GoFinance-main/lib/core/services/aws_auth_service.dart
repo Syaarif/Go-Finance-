@@ -35,34 +35,46 @@ class AwsAuthService {
     }
   }
 
-  Future<void> signUp({
+  bool isTokenExpired(String? token) {
+    if (token == null || token.isEmpty) return true;
+    final payload = _decodeJwtPayload(token);
+    final exp = payload['exp'];
+    if (exp is! int) return false;
+    final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return nowSeconds >= (exp - 30);
+  }
+
+  Future<bool> signUp({
     required String email,
     required String password,
     String? fullName,
   }) async {
+    final cleanEmail = email.trim().toLowerCase();
     final nameToUse = (fullName != null && fullName.trim().isNotEmpty)
         ? fullName.trim()
-        : email.split('@').first;
+        : cleanEmail.split('@').first;
 
     final userAttributes = [
-      AttributeArg(name: 'email', value: email.trim()),
+      AttributeArg(name: 'email', value: cleanEmail),
       AttributeArg(name: 'name', value: nameToUse),
     ];
 
-    await _userPool.signUp(
-      email.trim(),
+    final result = await _userPool.signUp(
+      cleanEmail,
       password,
       userAttributes: userAttributes,
     );
+
+    return result.userConfirmed ?? false;
   }
 
   Future<bool> confirmUser(String email, String otpCode) async {
-    final cognitoUser = CognitoUser(email.trim(), _userPool);
+    final cognitoUser = CognitoUser(email.trim().toLowerCase(), _userPool);
     return await cognitoUser.confirmRegistration(otpCode.trim());
   }
 
   Future<void> resendConfirmationCode(String email) async {
-    final cognitoUser = CognitoUser(email.trim(), _userPool);
+    final cognitoUser = CognitoUser(email.trim().toLowerCase(), _userPool);
     await cognitoUser.resendConfirmationCode();
   }
 
@@ -92,43 +104,49 @@ class AwsAuthService {
         [];
 
     String role = (groups.contains('admin') ||
-            cleanEmail == AwsConfig.primaryAdminEmail)
+            cleanEmail == AwsConfig.primaryAdminEmail.toLowerCase())
         ? 'admin'
         : 'user';
-    String status = role == 'admin' ? 'approved' : 'pending';
+    String status = role == 'admin' ? 'active' : 'pending';
 
-    try {
-      final profile = await AwsApiService.instance.getMyProfile();
-      final data = profile['data'] is Map
-          ? Map<String, dynamic>.from(profile['data'])
-          : profile;
+    final profile = await AwsApiService.instance.getMyProfile();
+    final data = profile['data'] is Map
+        ? Map<String, dynamic>.from(profile['data'])
+        : profile;
 
-      final apiRole = data['role']?.toString().toLowerCase();
-      final apiStatus = data['status']?.toString().toLowerCase();
+    final apiRole = data['role']?.toString().toLowerCase();
+    final apiStatus = data['status']?.toString().toLowerCase();
 
-      if (apiRole != null && apiRole.isNotEmpty) {
-        role = (cleanEmail == AwsConfig.primaryAdminEmail) ? 'admin' : apiRole;
-      }
-      if (apiStatus != null && apiStatus.isNotEmpty) {
-        status = role == 'admin' ? 'approved' : apiStatus;
-      }
-    } catch (_) {}
+    if (apiRole != null && apiRole.isNotEmpty) {
+      role = (cleanEmail == AwsConfig.primaryAdminEmail.toLowerCase())
+          ? 'admin'
+          : apiRole;
+    }
+    if (apiStatus != null && apiStatus.isNotEmpty) {
+      status = role == 'admin' ? 'active' : apiStatus;
+    }
 
     await prefs.setString('aws_user_role', role);
     await prefs.setString('aws_user_status', status);
 
-    if (onLoginSuccess != null && role != 'admin') {
+    if (onLoginSuccess != null && role != 'admin' && status == 'active') {
       await onLoginSuccess!();
     }
 
     return idToken;
   }
 
+  Future<bool> hasValidSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('aws_jwt_token');
+    return token != null && token.isNotEmpty && !isTokenExpired(token);
+  }
+
   Future<bool> isAdmin() async {
     final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('aws_user_role') ?? 'user';
-    final email = prefs.getString('aws_user_email') ?? '';
-    return role == 'admin' || email == AwsConfig.primaryAdminEmail;
+    final role = (prefs.getString('aws_user_role') ?? 'user').toLowerCase();
+    final email = (prefs.getString('aws_user_email') ?? '').toLowerCase();
+    return role == 'admin' || email == AwsConfig.primaryAdminEmail.toLowerCase();
   }
 
   Future<String> getUserStatus() async {
