@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import 'package:go_finance/core/services/app_update_service.dart';
 import 'package:go_finance/core/services/aws_auth_service.dart';
-import 'package:go_finance/core/services/aws_api_service.dart';
 import 'package:go_finance/core/widgets/login_update_banner.dart';
 import 'package:go_finance/core/widgets/update_notification_sheet.dart';
 import 'package:go_finance/features/home/pages/home_page.dart';
-import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/register_screen.dart';
 import 'package:go_finance/screens/admin/admin_login_screen.dart';
+import 'package:go_finance/screens/admin/admin_dashboard_screen.dart';
 import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/glow_input_field.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
@@ -574,10 +572,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AwsAuthService.instance.signIn(email, password);
-      final profile = await AwsApiService.instance.getMyProfile();
       if (!mounted) return;
 
-      final String status = profile['status'] ?? 'pending';
+      final isAdmin = await AwsAuthService.instance.isAdmin();
+      if (!mounted) return;
+
+      if (isAdmin) {
+        setState(() => _isLoggingIn = false);
+        _showLoginSnack('Login Admin berhasil');
+        Navigator.of(context).pushAndRemoveUntil(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const AdminDashboardScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
+      final status = await AwsAuthService.instance.getUserStatus();
+      if (!mounted) return;
 
       if (status == 'pending') {
         setState(() => _isLoggingIn = false);
@@ -592,7 +608,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      if (status == 'suspended') {
+      if (status == 'suspended' || status == 'rejected') {
         setState(() => _isLoggingIn = false);
         await AwsAuthService.instance.signOut();
         _showStatusDialog(
@@ -605,10 +621,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      await context.read<TransactionProvider>().syncFromAws();
-      if (!mounted) return;
       setState(() => _isLoggingIn = false);
-
       _showLoginSnack(l10n.loginSuccess);
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(

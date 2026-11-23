@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/theme/app_text_styles.dart';
@@ -26,7 +27,8 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _anim;
   bool _isBalanceVisible = true;
-  int? _selectedChartDayIndex; // untuk tooltip interaktif pada chart
+  int? _selectedChartDayIndex;
+  String _userName = 'Pengguna';
 
   @override
   void initState() {
@@ -35,6 +37,19 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await AwsApiService.instance.getMyProfile();
+      if (!mounted) return;
+      final fullName =
+          (profile['full_name'] ?? profile['name'] ?? '').toString().trim();
+      if (fullName.isNotEmpty) {
+        setState(() => _userName = fullName.split(' ').first);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -74,25 +89,28 @@ class _HomePageState extends State<HomePage>
     AppBottomNav.navigateTo(context, NavTab.transactions);
   }
 
-  void _showAiInsightSheet() {
+  void _showAiInsightSheet(List<TransactionModel> transactions) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colors.canvas.withValues(alpha: 0),
       isScrollControlled: true,
-      builder: (ctx) => _AiInsightModal(onAction: () {
-        Navigator.pop(ctx);
-        _goToTransactionsTab();
-      }),
+      builder: (ctx) => _AiInsightModal(
+        transactions: transactions,
+        onAction: () {
+          Navigator.pop(ctx);
+          _goToTransactionsTab();
+        },
+      ),
     );
   }
 
-  void _showNotificationSheet() {
+  void _showNotificationSheet(List<TransactionModel> transactions) {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colors.canvas.withValues(alpha: 0),
-      builder: (_) => const _NotificationModal(),
+      builder: (_) => _NotificationModal(transactions: transactions),
     );
   }
 
@@ -100,9 +118,9 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final txProvider = context.watch<TransactionProvider>();
-    final recentTransactions = txProvider.filtered.take(3).toList();
+    final allTransactions = txProvider.allTransactions;
+    final recentTransactions = allTransactions.take(3).toList();
 
-    // Ambil saldo aktif & saldo tabungan langsung dari storage permanen
     final double dynamicBalance = txProvider.saldoAktif;
     final double savingsBalance = txProvider.saldoTabungan;
 
@@ -116,7 +134,6 @@ class _HomePageState extends State<HomePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ===== 1. TOP BAR =====
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal,
@@ -126,7 +143,6 @@ class _HomePageState extends State<HomePage>
                 ),
                 child: Row(
                   children: [
-                    // Piggy Logo
                     Image.asset(
                       'assets/images/piggy_coin.png',
                       width: 32,
@@ -151,7 +167,6 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    // Notification Bell with interactive badge (Rounded Square)
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -174,32 +189,30 @@ class _HomePageState extends State<HomePage>
                             ),
                           ],
                           tooltip: l10n.notifications,
-                          onTap: _showNotificationSheet,
+                          onTap: () => _showNotificationSheet(allTransactions),
                         ),
-                        Positioned(
-                          top: 9,
-                          right: 10,
-                          child: IgnorePointer(
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: context.colors.negative,
-                                shape: BoxShape.circle,
+                        if (recentTransactions.isNotEmpty)
+                          Positioned(
+                            top: 9,
+                            right: 10,
+                            child: IgnorePointer(
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: context.colors.negative,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    // Profile Action di pojok kanan atas
                     const ProfileAction(),
                   ],
                 ),
               ),
-
-              // ===== 2. GREETING =====
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageHorizontal,
@@ -213,7 +226,7 @@ class _HomePageState extends State<HomePage>
                     Row(
                       children: [
                         Text(
-                          l10n.greeting('Wowowi'),
+                          l10n.greeting(_userName),
                           style: AppTextStyles.pageTitle.copyWith(
                             color: context.colors.textPrimary,
                             fontSize: 22,
@@ -235,8 +248,6 @@ class _HomePageState extends State<HomePage>
                   ],
                 ),
               ),
-
-              // ===== 3. SALDO AKTIF CARD =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
@@ -250,10 +261,7 @@ class _HomePageState extends State<HomePage>
                   },
                 ),
               ),
-
               const SizedBox(height: AppSpacing.md),
-
-              // ===== 4. SALDO TABUNGAN CARD =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
@@ -263,27 +271,23 @@ class _HomePageState extends State<HomePage>
                   onTap: () => TabunganActionSheet.show(context),
                 ),
               ),
-
               const SizedBox(height: AppSpacing.md),
-
-              // ===== 5. EVALUASI KEUANGAN AI CARD =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
                 ),
                 child: _AiEvaluationCard(
-                  onTap: _showAiInsightSheet,
+                  transactions: allTransactions,
+                  onTap: () => _showAiInsightSheet(allTransactions),
                 ),
               ),
-
               const SizedBox(height: AppSpacing.md),
-
-              // ===== 6. RINGKASAN 7 HARI TERAKHIR (CHART) =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
                 ),
                 child: _ChartCard(
+                  transactions: allTransactions,
                   selectedDayIndex: _selectedChartDayIndex,
                   onSelectDay: (idx) {
                     setState(() {
@@ -294,10 +298,7 @@ class _HomePageState extends State<HomePage>
                   onDetailTap: _goToTransactionsTab,
                 ),
               ),
-
               const SizedBox(height: AppSpacing.md),
-
-              // ===== 7. QUICK ACTION BUTTONS =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
@@ -322,10 +323,7 @@ class _HomePageState extends State<HomePage>
                   ],
                 ),
               ),
-
               const SizedBox(height: AppSpacing.lg),
-
-              // ===== 8. TRANSAKSI TERBARU =====
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
@@ -355,10 +353,7 @@ class _HomePageState extends State<HomePage>
                   ],
                 ),
               ),
-
               const SizedBox(height: AppSpacing.sm),
-
-              // Transaction Items
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageHorizontal,
@@ -377,26 +372,43 @@ class _HomePageState extends State<HomePage>
                       ),
                     ],
                   ),
-                  child: Column(
-                    children: List.generate(recentTransactions.length, (i) {
-                      final tx = recentTransactions[i];
-                      final isLast = i == recentTransactions.length - 1;
-                      return Column(
-                        children: [
-                          _HomeTransactionTile(tx: tx),
-                          if (!isLast)
-                            Divider(
-                              height: 1,
-                              thickness: 1,
-                              indent: 56,
-                              endIndent: AppSpacing.md,
-                              color:
-                                  context.colors.border.withValues(alpha: 0.6),
+                  child: recentTransactions.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.xl,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Belum ada transaksi tercatat.',
+                              style: AppTextStyles.footnote.copyWith(
+                                color: context.colors.mutedText,
+                                fontSize: 13,
+                              ),
                             ),
-                        ],
-                      );
-                    }),
-                  ),
+                          ),
+                        )
+                      : Column(
+                          children:
+                              List.generate(recentTransactions.length, (i) {
+                            final tx = recentTransactions[i];
+                            final isLast = i == recentTransactions.length - 1;
+                            return Column(
+                              children: [
+                                _HomeTransactionTile(tx: tx),
+                                if (!isLast)
+                                  Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    indent: 56,
+                                    endIndent: AppSpacing.md,
+                                    color: context.colors.border
+                                        .withValues(alpha: 0.6),
+                                  ),
+                              ],
+                            );
+                          }),
+                        ),
                 ),
               ),
             ],
@@ -408,9 +420,6 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// CARD 1: SALDO AKTIF
-// ───────────────────────────────────────────────────────────────
 class _SaldoAktifCard extends StatelessWidget {
   final double balance;
   final bool isVisible;
@@ -448,7 +457,6 @@ class _SaldoAktifCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Background subtle pattern
           Positioned(
             right: -10,
             top: -10,
@@ -477,7 +485,6 @@ class _SaldoAktifCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header "SALDO AKTIF" + Eye toggle
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -504,7 +511,6 @@ class _SaldoAktifCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      // Nominal
                       Text(
                         isVisible ? formatted : 'Rp ••••••••',
                         style: const TextStyle(
@@ -516,7 +522,6 @@ class _SaldoAktifCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      // Subtitle
                       Text(
                         l10n.balanceCalculation,
                         style: TextStyle(
@@ -528,7 +533,6 @@ class _SaldoAktifCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Decorative Circle Graphic with piggy
                 Container(
                   width: 76,
                   height: 76,
@@ -543,22 +547,16 @@ class _SaldoAktifCard extends StatelessWidget {
                       color: context.colors.surface,
                     ),
                     padding: const EdgeInsets.all(8),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/piggy_coin.png',
-                          width: 44,
-                          height: 44,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.savings_rounded,
-                            color: context.colors.primaryText,
-                            size: 32,
-                          ),
-                        ),
-                      ],
+                    child: Image.asset(
+                      'assets/images/piggy_coin.png',
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.savings_rounded,
+                        color: context.colors.primaryText,
+                        size: 32,
+                      ),
                     ),
                   ),
                 ),
@@ -571,9 +569,6 @@ class _SaldoAktifCard extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// CARD 2: SALDO TABUNGAN
-// ───────────────────────────────────────────────────────────────
 class _SaldoTabunganCard extends StatelessWidget {
   final double balance;
   final VoidCallback onTap;
@@ -615,7 +610,6 @@ class _SaldoTabunganCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Piggy icon dengan rounded square container
               RoundedSquareIcon(
                 imageAsset: 'assets/images/piggy_coin.png',
                 icon: Icons.savings_outlined,
@@ -662,17 +656,28 @@ class _SaldoTabunganCard extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// CARD 3: EVALUASI KEUANGAN AI
-// ───────────────────────────────────────────────────────────────
 class _AiEvaluationCard extends StatelessWidget {
+  final List<TransactionModel> transactions;
   final VoidCallback onTap;
-  const _AiEvaluationCard({required this.onTap});
+
+  const _AiEvaluationCard({
+    required this.transactions,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locale = Localizations.localeOf(context).toString();
+
+    final double totalExpense = transactions
+        .where((t) => !t.isIncome)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final String summaryText = transactions.isEmpty
+        ? 'Catat transaksi pertamamu untuk analisis otomatis'
+        : 'Total pengeluaran tercatat: ${NumberFormat.currency(locale: locale, symbol: 'Rp ', decimalDigits: 0).format(totalExpense)}';
+
     return Material(
       color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
@@ -698,7 +703,6 @@ class _AiEvaluationCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // AI Bronze/Gold Star Icon dengan rounded square container
               RoundedSquareIcon(
                 icon: Icons.auto_awesome,
                 backgroundColor:
@@ -724,7 +728,7 @@ class _AiEvaluationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      l10n.foodSpendingIncrease(8),
+                      summaryText,
                       style: AppTextStyles.footnote.copyWith(
                         fontSize: 12,
                         color: context.colors.mutedText,
@@ -756,29 +760,44 @@ class _AiEvaluationCard extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// CARD 4: RINGKASAN 7 HARI TERAKHIR (CHART)
-// ───────────────────────────────────────────────────────────────
 class _ChartCard extends StatelessWidget {
+  final List<TransactionModel> transactions;
   final int? selectedDayIndex;
   final ValueChanged<int> onSelectDay;
   final VoidCallback onDetailTap;
 
   const _ChartCard({
+    required this.transactions,
     required this.selectedDayIndex,
     required this.onSelectDay,
     required this.onDetailTap,
   });
 
-  static const List<Map<String, int>> _chartData = [
-    {'in': 180000, 'out': 120000},
-    {'in': 140000, 'out': 220000},
-    {'in': 320000, 'out': 110000},
-    {'in': 190000, 'out': 195000},
-    {'in': 280000, 'out': 130000},
-    {'in': 450000, 'out': 180000},
-    {'in': 290000, 'out': 150000},
-  ];
+  List _buildLast7DaysData() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return List.generate(7, (i) {
+      final day = today.subtract(Duration(days: 6 - i));
+      double income = 0;
+      double expense = 0;
+      for (final tx in transactions) {
+        if (tx.date.year == day.year &&
+            tx.date.month == day.month &&
+            tx.date.day == day.day) {
+          if (tx.isIncome) {
+            income += tx.amount;
+          } else {
+            expense += tx.amount;
+          }
+        }
+      }
+      return {
+        'date': day,
+        'in': income.round(),
+        'out': expense.round(),
+      };
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -787,7 +806,16 @@ class _ChartCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final outflowColor =
         isDark ? context.colors.mutedText : const Color(0xFF7B8F77);
-    const double maxVal = 500000;
+
+    final chartData = _buildLast7DaysData();
+    int highest = 100000;
+    for (final d in chartData) {
+      final inVal = d['in'] as int;
+      final outVal = d['out'] as int;
+      if (inVal > highest) highest = inVal;
+      if (outVal > highest) highest = outVal;
+    }
+    final double maxVal = highest.toDouble();
     const double chartHeight = 90.0;
 
     return Container(
@@ -807,7 +835,6 @@ class _ChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Judul & Detail link
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -831,10 +858,7 @@ class _ChartCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: AppSpacing.md),
-
-          // Tooltip jika hari tertentu ditekan
           if (selectedDayIndex != null)
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -856,10 +880,10 @@ class _ChartCard extends StatelessWidget {
                   Text(
                     l10n.chartIncome(
                       DateFormat('EEE', locale).format(
-                        DateTime(2023, 1, selectedDayIndex! + 2),
+                        chartData[selectedDayIndex!]['date'] as DateTime,
                       ),
                       _formatShort(
-                        _chartData[selectedDayIndex!]['in']!,
+                        chartData[selectedDayIndex!]['in'] as int,
                         locale,
                       ),
                     ),
@@ -872,7 +896,7 @@ class _ChartCard extends StatelessWidget {
                   Text(
                     l10n.chartExpense(
                       _formatShort(
-                        _chartData[selectedDayIndex!]['out']!,
+                        chartData[selectedDayIndex!]['out'] as int,
                         locale,
                       ),
                     ),
@@ -885,17 +909,21 @@ class _ChartCard extends StatelessWidget {
                 ],
               ),
             ),
-
-          // Bar chart
           SizedBox(
             height: chartHeight + 28,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(_chartData.length, (i) {
-                final d = _chartData[i];
-                final double inH = (d['in']! / maxVal) * chartHeight;
-                final double outH = (d['out']! / maxVal) * chartHeight;
+              children: List.generate(chartData.length, (i) {
+                final d = chartData[i];
+                final int inVal = d['in'] as int;
+                final int outVal = d['out'] as int;
+                final double inH = inVal == 0
+                    ? 6
+                    : ((inVal / maxVal) * chartHeight).clamp(8, chartHeight);
+                final double outH = outVal == 0
+                    ? 6
+                    : ((outVal / maxVal) * chartHeight).clamp(8, chartHeight);
                 final bool isSelected = selectedDayIndex == i;
 
                 return GestureDetector(
@@ -906,15 +934,13 @@ class _ChartCard extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Dual bars
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          // In bar (Green)
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             width: 10,
-                            height: inH.clamp(8, chartHeight),
+                            height: inH,
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? context.colors.primary
@@ -927,11 +953,10 @@ class _ChartCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          // Out bar (Slate gray-green)
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             width: 10,
-                            height: outH.clamp(8, chartHeight),
+                            height: outH,
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? (isDark
@@ -947,10 +972,8 @@ class _ChartCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      // Day label
                       Text(
-                        DateFormat('EEE', locale)
-                            .format(DateTime(2023, 1, i + 2)),
+                        DateFormat('EEE', locale).format(d['date'] as DateTime),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight:
@@ -966,10 +989,7 @@ class _ChartCard extends StatelessWidget {
               }),
             ),
           ),
-
           const SizedBox(height: AppSpacing.sm),
-
-          // Legend
           Row(
             children: [
               Container(
@@ -981,11 +1001,13 @@ class _ChartCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Text(l10n.income,
-                  style: AppTextStyles.footnote.copyWith(
-                    color: context.colors.mutedText,
-                    fontSize: 11,
-                  )),
+              Text(
+                l10n.income,
+                style: AppTextStyles.footnote.copyWith(
+                  color: context.colors.mutedText,
+                  fontSize: 11,
+                ),
+              ),
               const SizedBox(width: AppSpacing.lg),
               Container(
                 width: 8,
@@ -996,11 +1018,13 @@ class _ChartCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Text(l10n.expense,
-                  style: AppTextStyles.footnote.copyWith(
-                    color: context.colors.mutedText,
-                    fontSize: 11,
-                  )),
+              Text(
+                l10n.expense,
+                style: AppTextStyles.footnote.copyWith(
+                  color: context.colors.mutedText,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
         ],
@@ -1012,9 +1036,6 @@ class _ChartCard extends StatelessWidget {
       NumberFormat.compact(locale: locale).format(value);
 }
 
-// ───────────────────────────────────────────────────────────────
-// QUICK ACTION BUTTON
-// ───────────────────────────────────────────────────────────────
 class _QuickActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
@@ -1102,9 +1123,6 @@ class _QuickActionButtonState extends State<_QuickActionButton>
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// HOME TRANSACTION TILE
-// ───────────────────────────────────────────────────────────────
 class _HomeTransactionTile extends StatelessWidget {
   final TransactionModel tx;
   const _HomeTransactionTile({required this.tx});
@@ -1181,17 +1199,36 @@ class _HomeTransactionTile extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// AI INSIGHT MODAL
-// ───────────────────────────────────────────────────────────────
 class _AiInsightModal extends StatelessWidget {
+  final List<TransactionModel> transactions;
   final VoidCallback onAction;
-  const _AiInsightModal({required this.onAction});
+
+  const _AiInsightModal({
+    required this.transactions,
+    required this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
+    final fmt = NumberFormat.currency(
+      locale: locale,
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    final double totalIn = transactions
+        .where((t) => t.isIncome)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final double totalOut = transactions
+        .where((t) => !t.isIncome)
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    final String insightText = transactions.isEmpty
+        ? 'Belum ada data transaksi untuk dievaluasi. Mulai catat pemasukan dan pengeluaranmu agar sistem dapat menganalisis pola keuanganmu.'
+        : 'Total pemasukanmu ${fmt.format(totalIn)} dan pengeluaranmu ${fmt.format(totalOut)}. Pertahankan rasio tabungan minimal 20% dari pemasukan bulanan.';
+
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -1239,10 +1276,12 @@ class _AiInsightModal extends StatelessWidget {
                         color: context.colors.textPrimary,
                       ),
                     ),
-                    Text(l10n.aiBasedOnMonth,
-                        style: AppTextStyles.footnote.copyWith(
-                          color: context.colors.mutedText,
-                        )),
+                    Text(
+                      l10n.aiBasedOnMonth,
+                      style: AppTextStyles.footnote.copyWith(
+                        color: context.colors.mutedText,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1268,11 +1307,7 @@ class _AiInsightModal extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  l10n.aiRecommendationBody(
-                    42,
-                    2,
-                    NumberFormat.decimalPattern(locale).format(400000),
-                  ),
+                  insightText,
                   style: AppTextStyles.footnote.copyWith(
                     fontSize: 12,
                     color: context.colors.textPrimary,
@@ -1308,19 +1343,21 @@ class _AiInsightModal extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// NOTIFICATION MODAL
-// ───────────────────────────────────────────────────────────────
 class _NotificationModal extends StatelessWidget {
-  const _NotificationModal();
+  final List<TransactionModel> transactions;
+  const _NotificationModal({required this.transactions});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    final amountFormat = NumberFormat.decimalPattern(locale);
-    final billDate =
-        DateFormat('d MMMM yyyy', locale).format(DateTime(2026, 10, 29));
+    final fmt = NumberFormat.currency(
+      locale: locale,
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+    final recent = transactions.take(3).toList();
+
     return Container(
       margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -1350,20 +1387,24 @@ class _NotificationModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _NotifTile(
-            title: l10n.billNotificationTitle,
-            subtitle: l10n.billNotificationDetails(
-              billDate,
-              amountFormat.format(300000),
+          if (recent.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Text(
+                'Belum ada notifikasi aktivitas terbaru.',
+                style: AppTextStyles.footnote.copyWith(
+                  color: context.colors.mutedText,
+                ),
+              ),
+            )
+          else
+            ...recent.map(
+              (tx) => _NotifTile(
+                title: tx.isIncome ? 'Pemasukan Tercatat' : 'Pengeluaran Tercatat',
+                subtitle: '${tx.title} • ${fmt.format(tx.amount)}',
+                time: DateFormat('dd MMM, HH:mm', locale).format(tx.date),
+              ),
             ),
-            time: l10n.hoursAgo(2),
-          ),
-          _NotifTile(
-            title: l10n.salaryNotificationTitle,
-            subtitle:
-                l10n.salaryNotificationDetails(amountFormat.format(3500000)),
-            time: l10n.yesterday,
-          ),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,

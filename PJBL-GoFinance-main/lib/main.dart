@@ -42,7 +42,9 @@ class GoFinanceApp extends StatelessWidget {
         ChangeNotifierProvider<SavingsProvider>(
             create: (_) => SavingsProvider()),
         ChangeNotifierProvider<TransactionProvider>(
-            create: (_) => TransactionProvider()),
+          lazy: false,
+          create: (_) => TransactionProvider(),
+        ),
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
       ],
       child: Consumer<ThemeProvider>(

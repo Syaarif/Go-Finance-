@@ -15,6 +15,8 @@ class TransactionProvider extends ChangeNotifier {
   int? _defaultWalletId;
   List<TransactionModel> _all = [];
   bool _isLoaded = false;
+  bool _isSyncing = false;
+  String? _lastSyncError;
 
   String _searchQuery = '';
   TransactionCategory _selectedCategory = TransactionCategory.semua;
@@ -27,11 +29,25 @@ class TransactionProvider extends ChangeNotifier {
   double get saldoAktif => _saldoAktif;
   double get saldoTabungan => _saldoTabungan;
   bool get isLoaded => _isLoaded;
+  bool get isSyncing => _isSyncing;
+  String? get lastSyncError => _lastSyncError;
   List<TransactionModel> get allTransactions => List.unmodifiable(_all);
 
   String get searchQuery => _searchQuery;
   TransactionCategory get selectedCategory => _selectedCategory;
   int get selectedTabIndex => _selectedTabIndex;
+
+  int? _extractInt(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final val = map[key];
+      if (val is num) return val.toInt();
+      if (val != null) {
+        final parsed = int.tryParse(val.toString());
+        if (parsed != null) return parsed;
+      }
+    }
+    return null;
+  }
 
   Future<void> _loadFromStorage() async {
     try {
@@ -53,6 +69,7 @@ class TransactionProvider extends ChangeNotifier {
         await syncFromAws();
       }
     } catch (e) {
+      _lastSyncError = e.toString();
       debugPrint('[TransactionProvider] Gagal memuat data: $e');
     } finally {
       _isLoaded = true;
@@ -60,31 +77,44 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  /// Sinkronisasi saldo dompet & riwayat transaksi user dari AWS RDS MySQL
+  /// Panggil method ini setelah Login sukses atau saat Pull-to-Refresh
   Future<void> syncFromAws() async {
+    _isSyncing = true;
+    _lastSyncError = null;
+    notifyListeners();
+
     try {
+      // 1. Pastikan profil user di RDS terdaftar/tersinkron lewat /me
+      await AwsApiService.instance.getMyProfile();
+
+      // 2. Ambil daftar dompet dari RDS
       final wallets = await AwsApiService.instance.getWallets();
       if (wallets.isNotEmpty) {
-        final primaryWallet = wallets.first as Map<String, dynamic>;
-        _defaultWalletId = (primaryWallet['id'] as num?)?.toInt();
+        final primaryWallet =
+            Map<String, dynamic>.from(wallets.first as Map);
+        _defaultWalletId = _extractInt(primaryWallet, ['wallet_id', 'id']);
         _saldoAktif =
             double.tryParse(primaryWallet['balance'].toString()) ?? _saldoAktif;
 
         if (wallets.length > 1) {
-          final savingsWallet = wallets[1] as Map<String, dynamic>;
+          final savingsWallet =
+              Map<String, dynamic>.from(wallets[1] as Map);
           _saldoTabungan =
               double.tryParse(savingsWallet['balance'].toString()) ??
                   _saldoTabungan;
         }
       }
 
+      // 3. Ambil daftar transaksi dari RDS
       final rawTx = await AwsApiService.instance.getTransactions();
       _all = rawTx.map((item) {
-        final map = item as Map<String, dynamic>;
+        final map = Map<String, dynamic>.from(item as Map);
         final typeStr = (map['type'] ?? 'expense').toString();
         final isIncome = typeStr == 'income' || typeStr == 'pemasukan';
         final catName = (map['category_name'] ?? '').toString();
         final rawNote = (map['note'] ?? '').toString();
+        final txId = _extractInt(map, ['transaction_id', 'id'])?.toString() ??
+            DateTime.now().millisecondsSinceEpoch.toString();
 
         String title = catName.isNotEmpty ? catName : 'Transaksi';
         String subtitle = rawNote;
@@ -98,7 +128,7 @@ class TransactionProvider extends ChangeNotifier {
         }
 
         return TransactionModel(
-          id: map['id'].toString(),
+          id: txId,
           title: title,
           subtitle: subtitle,
           amount: double.tryParse(map['amount'].toString()) ?? 0.0,
@@ -113,10 +143,27 @@ class TransactionProvider extends ChangeNotifier {
       }).toList();
 
       await _saveToStorage();
-      notifyListeners();
     } catch (e) {
+      _lastSyncError = e.toString();
       debugPrint('[TransactionProvider] Gagal sync dari AWS: $e');
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
     }
+  }
+
+  /// Bersihkan cache lokal saat logout agar akun berikutnya tidak tercampur
+  Future<void> clearLocalSession() async {
+    _saldoAktif = 0.0;
+    _saldoTabungan = 0.0;
+    _defaultWalletId = null;
+    _all = [];
+    _lastSyncError = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keySaldoAktif);
+    await prefs.remove(_keySaldoTabungan);
+    await prefs.remove(_keyTransactions);
+    notifyListeners();
   }
 
   Future<void> _saveToStorage() async {
@@ -131,19 +178,22 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  /// Cocok dengan category_id di tabel categories RDS MySQL:
+  /// 1=Gaji, 2=Bonus & Freelance, 3=Makanan & Minuman, 4=Transportasi,
+  /// 5=Tagihan & Utilitas, 6=Belanja, 7=Hiburan, 8=Kesehatan
   int _categoryToBackendId(TransactionCategory cat) {
     switch (cat) {
-      case TransactionCategory.makananMinuman:
-        return 1;
-      case TransactionCategory.transportasi:
-        return 2;
-      case TransactionCategory.belanja:
-        return 3;
-      case TransactionCategory.tagihan:
-        return 4;
       case TransactionCategory.gaji:
-        return 5;
+        return 1;
       case TransactionCategory.transfer:
+        return 2;
+      case TransactionCategory.makananMinuman:
+        return 3;
+      case TransactionCategory.transportasi:
+        return 4;
+      case TransactionCategory.tagihan:
+        return 5;
+      case TransactionCategory.belanja:
         return 6;
       case TransactionCategory.semua:
       case TransactionCategory.lainnya:
@@ -158,26 +208,39 @@ class TransactionProvider extends ChangeNotifier {
     }
     if (lower.contains('transport')) return TransactionCategory.transportasi;
     if (lower.contains('belanja')) return TransactionCategory.belanja;
-    if (lower.contains('tagihan')) return TransactionCategory.tagihan;
+    if (lower.contains('tagihan') || lower.contains('utilitas')) {
+      return TransactionCategory.tagihan;
+    }
     if (lower.contains('gaji') || lower.contains('pemasukan')) {
       return TransactionCategory.gaji;
     }
-    if (lower.contains('transfer')) return TransactionCategory.transfer;
+    if (lower.contains('transfer') ||
+        lower.contains('bonus') ||
+        lower.contains('freelance')) {
+      return TransactionCategory.transfer;
+    }
     return TransactionCategory.lainnya;
   }
 
   Future<void> _pushTransactionToAws(TransactionModel tx) async {
     try {
       if (_defaultWalletId == null) {
+        await AwsApiService.instance.getMyProfile();
         final wallets = await AwsApiService.instance.getWallets();
         if (wallets.isNotEmpty) {
-          _defaultWalletId = (wallets.first['id'] as num).toInt();
+          final firstWallet =
+              Map<String, dynamic>.from(wallets.first as Map);
+          _defaultWalletId = _extractInt(firstWallet, ['wallet_id', 'id']);
         }
       }
-      if (_defaultWalletId == null) return;
+      if (_defaultWalletId == null) {
+        _lastSyncError = 'Wallet ID tidak ditemukan di backend.';
+        notifyListeners();
+        return;
+      }
 
       final combinedNote = tx.subtitle.isNotEmpty
-          ? '${tx.title} - ${tx.subtitle}'
+          ? '${tx.title} -${tx.subtitle}'
           : tx.title;
 
       await AwsApiService.instance.createTransaction(
@@ -190,7 +253,9 @@ class TransactionProvider extends ChangeNotifier {
       );
       await syncFromAws();
     } catch (e) {
+      _lastSyncError = e.toString();
       debugPrint('[TransactionProvider] Gagal kirim transaksi ke AWS: $e');
+      notifyListeners();
     }
   }
 
@@ -314,9 +379,7 @@ class TransactionProvider extends ChangeNotifier {
         final weekAgo = now.subtract(const Duration(days: 7));
         inPeriod = tx.date.isAfter(weekAgo);
       } else {
-        inPeriod =
-            (tx.date.year == now.year && tx.date.month == now.month) ||
-                (tx.date.year == 2026 && tx.date.month == 10);
+        inPeriod = tx.date.year == now.year && tx.date.month == now.month;
       }
 
       bool inCategory = _selectedCategory == TransactionCategory.semua ||

@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
 
 class AwsConfig {
   static const String apiBaseUrl =
       'https://f60yfb7vcj.execute-api.us-east-1.amazonaws.com';
   static const String cognitoUserPoolId = 'us-east-1_rjWKiBG0I';
   static const String cognitoClientId = 'nl8s0pt9hl834ad6v20ttpn4c';
+  static const String primaryAdminEmail = 'admin@gofinance.id';
 }
 
 class AwsAuthService {
@@ -16,6 +19,21 @@ class AwsAuthService {
     AwsConfig.cognitoUserPoolId,
     AwsConfig.cognitoClientId,
   );
+
+  Future<void> Function()? onLoginSuccess;
+  Future<void> Function()? onLogout;
+
+  Map<String, dynamic> _decodeJwtPayload(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return {};
+      final normalized = base64Url.normalize(parts[1]);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      return Map<String, dynamic>.from(jsonDecode(decoded));
+    } catch (_) {
+      return {};
+    }
+  }
 
   Future<void> signUp({
     required String email,
@@ -49,9 +67,10 @@ class AwsAuthService {
   }
 
   Future<String> signIn(String email, String password) async {
-    final cognitoUser = CognitoUser(email.trim(), _userPool);
+    final cleanEmail = email.trim().toLowerCase();
+    final cognitoUser = CognitoUser(cleanEmail, _userPool);
     final authDetails = AuthenticationDetails(
-      username: email.trim(),
+      username: cleanEmail,
       password: password,
     );
 
@@ -64,8 +83,57 @@ class AwsAuthService {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('aws_jwt_token', idToken);
-    await prefs.setString('aws_user_email', email.trim());
+    await prefs.setString('aws_user_email', cleanEmail);
+
+    final payload = _decodeJwtPayload(idToken);
+    final groups = (payload['cognito:groups'] as List<dynamic>?)
+            ?.map((e) => e.toString().toLowerCase())
+            .toList() ??
+        [];
+
+    String role = (groups.contains('admin') ||
+            cleanEmail == AwsConfig.primaryAdminEmail)
+        ? 'admin'
+        : 'user';
+    String status = role == 'admin' ? 'approved' : 'pending';
+
+    try {
+      final profile = await AwsApiService.instance.getMyProfile();
+      final data = profile['data'] is Map
+          ? Map<String, dynamic>.from(profile['data'])
+          : profile;
+
+      final apiRole = data['role']?.toString().toLowerCase();
+      final apiStatus = data['status']?.toString().toLowerCase();
+
+      if (apiRole != null && apiRole.isNotEmpty) {
+        role = (cleanEmail == AwsConfig.primaryAdminEmail) ? 'admin' : apiRole;
+      }
+      if (apiStatus != null && apiStatus.isNotEmpty) {
+        status = role == 'admin' ? 'approved' : apiStatus;
+      }
+    } catch (_) {}
+
+    await prefs.setString('aws_user_role', role);
+    await prefs.setString('aws_user_status', status);
+
+    if (onLoginSuccess != null && role != 'admin') {
+      await onLoginSuccess!();
+    }
+
     return idToken;
+  }
+
+  Future<bool> isAdmin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('aws_user_role') ?? 'user';
+    final email = prefs.getString('aws_user_email') ?? '';
+    return role == 'admin' || email == AwsConfig.primaryAdminEmail;
+  }
+
+  Future<String> getUserStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('aws_user_status') ?? 'pending';
   }
 
   Future<String?> getToken() async {
@@ -86,5 +154,9 @@ class AwsAuthService {
     await prefs.remove('aws_user_email');
     await prefs.remove('aws_user_role');
     await prefs.remove('aws_user_status');
+
+    if (onLogout != null) {
+      await onLogout!();
+    }
   }
 }

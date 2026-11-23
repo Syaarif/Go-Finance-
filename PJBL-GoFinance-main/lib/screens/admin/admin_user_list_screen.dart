@@ -35,19 +35,23 @@ class AdminUser {
 
   factory AdminUser.fromApi(Map<String, dynamic> map) {
     final rawStatus = (map['status'] ?? 'pending').toString().toLowerCase();
-    final parsedStatus = rawStatus == 'active'
+    final parsedStatus = (rawStatus == 'active' || rawStatus == 'approved')
         ? AdminUserStatus.active
-        : (rawStatus == 'suspended' || rawStatus == 'inactive')
+        : (rawStatus == 'suspended' ||
+                rawStatus == 'inactive' ||
+                rawStatus == 'rejected')
             ? AdminUserStatus.inactive
             : AdminUserStatus.pending;
 
     final email = (map['email'] ?? '').toString();
-    final rawName = (map['full_name'] ?? '').toString().trim();
-    final displayName =
-        rawName.isNotEmpty ? rawName : (email.contains('@') ? email.split('@').first : 'User');
+    final rawName =
+        (map['full_name'] ?? map['name'] ?? '').toString().trim();
+    final displayName = rawName.isNotEmpty
+        ? rawName
+        : (email.contains('@') ? email.split('@').first : 'User');
 
     return AdminUser(
-      id: (map['id'] ?? '').toString(),
+      id: (map['user_id'] ?? map['id'] ?? '').toString(),
       name: displayName,
       email: email,
       phone: (map['phone'] ?? '-').toString(),
@@ -139,8 +143,8 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
         setState(() {});
       }
     });
-    _searchCtrl.addListener(
-        () => setState(() => _searchQuery = _searchCtrl.text.trim().toLowerCase()));
+    _searchCtrl.addListener(() =>
+        setState(() => _searchQuery = _searchCtrl.text.trim().toLowerCase()));
     _fetchUsers();
   }
 
@@ -152,6 +156,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
       setState(() {
         _users = rawList
             .map((e) => AdminUser.fromApi(Map<String, dynamic>.from(e)))
+            .where((u) => u.email.toLowerCase() != 'admin@gofinance.id')
             .toList();
         _isLoading = false;
       });

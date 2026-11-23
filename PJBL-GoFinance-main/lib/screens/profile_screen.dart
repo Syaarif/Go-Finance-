@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
 import 'package:go_finance/core/theme/app_colors.dart';
 import 'package:go_finance/core/theme/app_spacing.dart';
 import 'package:go_finance/core/providers/theme_provider.dart';
 import 'package:go_finance/core/widgets/rounded_square_icon.dart';
+import 'package:go_finance/features/bills/providers/bill_provider.dart';
+import 'package:go_finance/features/savings/providers/savings_provider.dart';
+import 'package:go_finance/features/transactions/providers/transaction_provider.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 import 'package:go_finance/screens/edit_profile_screen.dart';
 import 'package:go_finance/screens/security_screen.dart';
@@ -21,9 +27,6 @@ class ProfileColors {
   static const Color divider = Color(0xFFEEEEEE);
 }
 
-// ═════════════════════════════════════════════
-// ProfileScreen
-// ═════════════════════════════════════════════
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -32,12 +35,75 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // ── Dummy data & state lokal ──
-  String _username = 'Wowowi';
-  final String _email = 'Wowodanwiwi@email.com';
+  static const String _keyUserName = 'gf_profile_name_v1';
+  static const String _keyUserEmail = 'gf_profile_email_v1';
+  static const String _keyTimezone = 'gf_profile_timezone_v1';
+  static const String _keyNotifTx = 'gf_notif_tx_v1';
+  static const String _keyNotifSavings = 'gf_notif_savings_v1';
+
+  String _username = 'Pengguna';
+  String _email = '-';
   String _timezone = 'WIB (UTC+7)';
   bool _notifTransaksi = true;
   bool _notifTabungan = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedName = prefs.getString(_keyUserName);
+      final cachedEmail = prefs.getString(_keyUserEmail);
+      final savedTz = prefs.getString(_keyTimezone);
+      final savedNotifTx = prefs.getBool(_keyNotifTx);
+      final savedNotifSavings = prefs.getBool(_keyNotifSavings);
+
+      if (mounted) {
+        setState(() {
+          if (cachedName != null && cachedName.isNotEmpty) {
+            _username = cachedName;
+          }
+          if (cachedEmail != null && cachedEmail.isNotEmpty) {
+            _email = cachedEmail;
+          }
+          if (savedTz != null && savedTz.isNotEmpty) {
+            _timezone = savedTz;
+          }
+          if (savedNotifTx != null) _notifTransaksi = savedNotifTx;
+          if (savedNotifSavings != null) _notifTabungan = savedNotifSavings;
+        });
+      }
+
+      final profile = await AwsApiService.instance.getMyProfile();
+      final apiName =
+          (profile['full_name'] ?? profile['name'] ?? '').toString().trim();
+      final apiEmail = (profile['email'] ?? '').toString().trim();
+
+      if (apiName.isNotEmpty) {
+        await prefs.setString(_keyUserName, apiName);
+      }
+      if (apiEmail.isNotEmpty) {
+        await prefs.setString(_keyUserEmail, apiEmail);
+      }
+
+      if (mounted) {
+        setState(() {
+          if (apiName.isNotEmpty) {
+            _username = apiName;
+          } else if (apiEmail.contains('@') && _username == 'Pengguna') {
+            _username = apiEmail.split('@').first;
+          }
+          if (apiEmail.isNotEmpty) {
+            _email = apiEmail;
+          }
+        });
+      }
+    } catch (_) {}
+  }
 
   String _themeLabel(AppLocalizations l10n, ThemeMode mode) {
     switch (mode) {
@@ -75,14 +141,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String get _initial =>
       _username.isNotEmpty ? _username[0].toUpperCase() : '?';
 
-  // ── Callback dari EditProfileScreen ──
-  void _onProfileUpdated(String newUsername) {
+  Future<void> _onProfileUpdated(String newUsername) async {
     setState(() {
       _username = newUsername;
     });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserName, newUsername);
   }
 
-  // ── Zona Waktu ──
   void _showTimezonePicker() {
     final l10n = AppLocalizations.of(context)!;
     final timezones = [
@@ -149,12 +215,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ? Icon(Icons.check_circle,
                               color: context.colors.primaryText, size: 22)
                           : null,
-                      onTap: () {
+                      onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final msg = l10n.timezoneChanged(tz);
                         setState(() => _timezone = tz);
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString(_keyTimezone, tz);
+                        if (!ctx.mounted) return;
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        if (!mounted) return;
+                        messenger.showSnackBar(
                           SnackBar(
-                            content: Text(l10n.timezoneChanged(tz)),
+                            content: Text(msg),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -170,7 +242,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Tema ──
   void _showThemePicker() {
     const themes = [ThemeMode.light, ThemeMode.dark, ThemeMode.system];
     final themeProvider = context.read<ThemeProvider>();
@@ -232,11 +303,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         final saved = await themeProvider.setThemeMode(mode);
                         if (!ctx.mounted) return;
                         Navigator.pop(ctx);
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text(saved
                                 ? l10n.themeChanged(_themeLabel(l10n, mode))
@@ -256,7 +328,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Ukuran Teks ──
   void _showTextSizePicker() {
     final themeProvider = context.read<ThemeProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -317,11 +388,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         final saved = await themeProvider.setTextSize(size);
                         if (!ctx.mounted) return;
                         Navigator.pop(ctx);
                         if (!saved && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(l10n.textSizeSaveFailed),
                             ),
@@ -337,7 +409,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Bahasa ──
   void _showLanguagePicker() {
     final themeProvider = context.read<ThemeProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -398,11 +469,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: context.colors.primaryText, size: 22)
                           : null,
                       onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         final saved = await themeProvider.setLanguage(language);
                         if (!ctx.mounted) return;
                         Navigator.pop(ctx);
                         if (!saved && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(content: Text(l10n.languageSaveFailed)),
                           );
                         }
@@ -416,7 +488,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Email detail dialog ──
   void _showEmailDialog() {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
@@ -493,7 +564,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Logout confirmation ──
   void _showLogoutDialog() {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
@@ -527,10 +597,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(ctx); // tutup dialog
-              // Navigasi ke LoginScreen, hapus semua route sebelumnya
-              Navigator.of(context).pushAndRemoveUntil(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final txProvider = context.read<TransactionProvider>();
+              final billProvider = context.read<BillProvider>();
+              final savingsProvider = context.read<SavingsProvider>();
+
+              Navigator.pop(ctx);
+
+              await AwsAuthService.instance.signOut();
+              await txProvider.clearLocalSession();
+              await billProvider.clearLocalSession();
+              await savingsProvider.clearLocalSession();
+
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove(_keyUserName);
+              await prefs.remove(_keyUserEmail);
+
+              if (!mounted) return;
+              navigator.pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,
               );
@@ -550,6 +635,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: context.colors.canvas,
       appBar: AppBar(
@@ -562,7 +648,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          AppLocalizations.of(context)!.profileSettingsTitle,
+          l10n.profileSettingsTitle,
           style: GoogleFonts.instrumentSans(
             color: context.colors.deepGreen,
             fontWeight: FontWeight.bold,
@@ -576,25 +662,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Profile Card ──
             _buildProfileCard(),
             const SizedBox(height: 24),
-
-            // ── Akun ──
-            _sectionHeader(AppLocalizations.of(context)!.accountSection),
+            _sectionHeader(l10n.accountSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 CustomSettingsTile(
                   iconPath: 'assets/icons/email.png',
-                  label: AppLocalizations.of(context)!.email,
+                  label: l10n.email,
                   showChevron: true,
                   onTap: _showEmailDialog,
                 ),
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/timezone_globe.png',
-                  label: AppLocalizations.of(context)!.timezone,
+                  label: l10n.timezone,
                   showChevron: true,
                   trailingText: _timezone,
                   onTap: _showTimezonePicker,
@@ -602,7 +685,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/security.png',
-                  label: AppLocalizations.of(context)!.security,
+                  label: l10n.security,
                   showChevron: true,
                   onTap: () {
                     Navigator.push(
@@ -614,17 +697,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
-
-            // ── Preferensi ──
-            _sectionHeader(AppLocalizations.of(context)!.preferencesSection),
+            _sectionHeader(l10n.preferencesSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 CustomSettingsTile(
                   iconPath: 'assets/icons/light.png',
-                  label: AppLocalizations.of(context)!.theme,
+                  label: l10n.theme,
                   trailingText: _themeLabel(
-                    AppLocalizations.of(context)!,
+                    l10n,
                     context.watch<ThemeProvider>().themeMode,
                   ),
                   onTap: _showThemePicker,
@@ -632,9 +713,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/font_size.png',
-                  label: AppLocalizations.of(context)!.textSize,
+                  label: l10n.textSize,
                   trailingText: _textSizeLabel(
-                    AppLocalizations.of(context)!,
+                    l10n,
                     context.watch<ThemeProvider>().textSize,
                   ),
                   onTap: _showTextSizePicker,
@@ -642,9 +723,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 CustomSettingsTile(
                   iconPath: 'assets/icons/language.png',
-                  label: AppLocalizations.of(context)!.language,
+                  label: l10n.language,
                   trailingText: _languageLabel(
-                    AppLocalizations.of(context)!,
+                    l10n,
                     context.watch<ThemeProvider>().language,
                   ),
                   showChevron: true,
@@ -653,27 +734,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
-
-            // ── Notifikasi ──
-            _sectionHeader(AppLocalizations.of(context)!.notificationsSection),
+            _sectionHeader(l10n.notificationsSection),
             const SizedBox(height: 8),
             _buildCard(
               children: [
                 _NotifSwitchTile(
                   iconPath: 'assets/icons/notification.png',
-                  label: AppLocalizations.of(context)!.transactionNotifications,
+                  label: l10n.transactionNotifications,
                   value: _notifTransaksi,
-                  onChanged: (val) {
+                  onChanged: (val) async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final msg = val
+                        ? l10n.transactionNotificationsEnabled
+                        : l10n.transactionNotificationsDisabled;
                     setState(() => _notifTransaksi = val);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool(_keyNotifTx, val);
+                    if (!mounted) return;
+                    messenger.showSnackBar(
                       SnackBar(
-                        content: Text(
-                          val
-                              ? AppLocalizations.of(context)!
-                                  .transactionNotificationsEnabled
-                              : AppLocalizations.of(context)!
-                                  .transactionNotificationsDisabled,
-                        ),
+                        content: Text(msg),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -685,19 +765,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const _TileDivider(),
                 _NotifSwitchTile(
                   iconPath: 'assets/icons/notification.png',
-                  label: AppLocalizations.of(context)!.savingsNotifications,
+                  label: l10n.savingsNotifications,
                   value: _notifTabungan,
-                  onChanged: (val) {
+                  onChanged: (val) async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final msg = val
+                        ? l10n.savingsNotificationsEnabled
+                        : l10n.savingsNotificationsDisabled;
                     setState(() => _notifTabungan = val);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool(_keyNotifSavings, val);
+                    if (!mounted) return;
+                    messenger.showSnackBar(
                       SnackBar(
-                        content: Text(
-                          val
-                              ? AppLocalizations.of(context)!
-                                  .savingsNotificationsEnabled
-                              : AppLocalizations.of(context)!
-                                  .savingsNotificationsDisabled,
-                        ),
+                        content: Text(msg),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -709,8 +790,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 28),
-
-            // ── Tombol Keluar ──
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -725,7 +804,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 onPressed: _showLogoutDialog,
                 child: Text(
-                  AppLocalizations.of(context)!.logoutFromAccount,
+                  l10n.logoutFromAccount,
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -740,7 +819,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Profile Card ──────────────────────────
   Widget _buildProfileCard() {
     return Material(
       color: context.colors.surface,
@@ -758,14 +836,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
           if (result != null && result.isNotEmpty) {
-            _onProfileUpdated(result);
+            await _onProfileUpdated(result);
           }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              // Avatar inisial
               CircleAvatar(
                 radius: 26,
                 backgroundColor: context.colors.softSurface,
@@ -779,8 +856,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(width: 14),
-
-              // Nama & email
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,8 +880,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-
-              // Chevron
               Icon(
                 Icons.chevron_right,
                 color: context.colors.mutedText,
@@ -819,7 +892,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Section header ────────────────────────
   Widget _sectionHeader(String title) {
     return Text(
       title,
@@ -831,7 +903,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Card wrapper ──────────────────────────
   Widget _buildCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
@@ -843,9 +914,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ═════════════════════════════════════════════
-// CustomSettingsTile — widget reusable
-// ═════════════════════════════════════════════
 class CustomSettingsTile extends StatelessWidget {
   final String iconPath;
   final String label;
@@ -871,7 +939,6 @@ class CustomSettingsTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // Ikon PNG di dalam container rounded square yang seragam
             RoundedSquareIcon(
               backgroundColor: context.colors.softSurface,
               size: 40,
@@ -879,8 +946,6 @@ class CustomSettingsTile extends StatelessWidget {
               child: SettingsIcon(iconPath),
             ),
             const SizedBox(width: 14),
-
-            // Label
             Expanded(
               child: Text(
                 label,
@@ -892,8 +957,6 @@ class CustomSettingsTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-
-            // Trailing text (opsional)
             if (trailingText != null)
               Flexible(
                 child: Padding(
@@ -909,8 +972,6 @@ class CustomSettingsTile extends StatelessWidget {
                   ),
                 ),
               ),
-
-            // Chevron (opsional)
             if (showChevron)
               Icon(
                 Icons.chevron_right,
@@ -924,9 +985,6 @@ class CustomSettingsTile extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════
-// SettingsIcon — ikon menu 24x24 dari asset PNG
-// ═════════════════════════════════════════════
 class SettingsIcon extends StatelessWidget {
   final String assetPath;
   final double size;
@@ -941,15 +999,11 @@ class SettingsIcon extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
-      // Placeholder berukuran sama agar layout tidak bergeser bila asset gagal dimuat
       errorBuilder: (_, __, ___) => SizedBox(width: size, height: size),
     );
   }
 }
 
-// ═════════════════════════════════════════════
-// _NotifSwitchTile — tile dengan Switch
-// ═════════════════════════════════════════════
 class _NotifSwitchTile extends StatelessWidget {
   final String iconPath;
   final String label;
@@ -991,7 +1045,7 @@ class _NotifSwitchTile extends StatelessWidget {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: context.colors.primaryText,
+                activeThumbColor: context.colors.primaryText,
                 activeTrackColor: context.colors.softSurface,
                 inactiveThumbColor: context.colors.mutedText,
                 inactiveTrackColor: context.colors.border,
@@ -1004,9 +1058,6 @@ class _NotifSwitchTile extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════
-// Divider tipis di antara tile
-// ═════════════════════════════════════════════
 class _TileDivider extends StatelessWidget {
   const _TileDivider();
 

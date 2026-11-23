@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:amazon_cognito_identity_dart_2/cognito.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
 import 'package:go_finance/screens/admin/admin_dashboard_screen.dart';
 import 'package:go_finance/widgets/bounce_button.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 
-/// 00_Admin_Login — Halaman masuk khusus Admin via email
+/// 00_Admin_Login — Halaman masuk khusus Admin via AWS Cognito
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
 
@@ -23,16 +25,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
   bool _isLoading = false;
   bool _rememberMe = false;
 
-  // Animasi shield icon
   late AnimationController _shieldPulseController;
   late Animation<double> _shieldPulse;
 
-  // Animasi shake saat error
   late AnimationController _shakeController;
   late Animation<double> _shakeAnim;
-
-  static const _adminEmail = 'admin@gofinance.id';
-  static const _adminPassword = 'admin123';
 
   @override
   void initState() {
@@ -71,20 +68,32 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
   Future<void> _doLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
+    FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
     HapticFeedback.lightImpact();
-
-    // Simulasi pengecekan — ganti dengan API call jika sudah ada backend
-    await Future.delayed(const Duration(milliseconds: 1200));
-
-    if (!mounted) return;
 
     final email = _emailController.text.trim();
     final pass = _passwordController.text;
 
-    if (email == _adminEmail && pass == _adminPassword) {
+    try {
+      await AwsAuthService.instance.signIn(email, pass);
+      if (!mounted) return;
+
+      final isAdmin = await AwsAuthService.instance.isAdmin();
+      if (!mounted) return;
+
+      if (!isAdmin) {
+        await AwsAuthService.instance.signOut();
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        HapticFeedback.vibrate();
+        _shakeController.forward(from: 0);
+        _showError('Akun ini tidak memiliki hak akses Administrator.');
+        return;
+      }
+
       HapticFeedback.heavyImpact();
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (_, anim, __) => const AdminDashboardScreen(),
           transitionsBuilder: (_, anim, __, child) => FadeTransition(
@@ -93,30 +102,43 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
               position: Tween<Offset>(
                 begin: const Offset(0.06, 0),
                 end: Offset.zero,
-              ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+              ).animate(
+                  CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
               child: child,
             ),
           ),
           transitionDuration: const Duration(milliseconds: 480),
         ),
+        (route) => false,
       );
-    } else {
+    } on CognitoClientException catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       HapticFeedback.vibrate();
       _shakeController.forward(from: 0);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Email atau password salah. Coba lagi.',
-            style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
-          ),
-          backgroundColor: const Color(0xFFE63939),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      _showError(e.message ?? 'Email atau password admin salah.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      HapticFeedback.vibrate();
+      _shakeController.forward(from: 0);
+      _showError('Gagal terhubung ke server: $e');
     }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          msg,
+          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: const Color(0xFFE63939),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
@@ -126,7 +148,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
       child: Scaffold(
         body: Stack(
           children: [
-            // ── Latar gradien hijau ──
             Container(
               height: MediaQuery.of(context).size.height * 0.42,
               decoration: const BoxDecoration(
@@ -141,12 +162,12 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                 ),
               ),
             ),
-
-            // ── Lingkaran dekorasi (blurred circles) ──
             Positioned(
-              top: -60, right: -60,
+              top: -60,
+              right: -60,
               child: Container(
-                width: 220, height: 220,
+                width: 220,
+                height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.06),
@@ -154,17 +175,17 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
               ),
             ),
             Positioned(
-              top: 40, left: -40,
+              top: 40,
+              left: -40,
               child: Container(
-                width: 140, height: 140,
+                width: 140,
+                height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
             ),
-
-            // ── Tombol kembali ke Login Pengguna ──
             SafeArea(
               child: Align(
                 alignment: Alignment.topLeft,
@@ -186,24 +207,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                 ),
               ),
             ),
-
-            // ── Konten utama ──
             SafeArea(
               child: Column(
                 children: [
-                  // ── Bagian atas (shield + judul) ──
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.30,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Shield pulsing
                         StaggeredFadeSlide(
                           delay: const Duration(milliseconds: 100),
                           child: ScaleTransition(
                             scale: _shieldPulse,
                             child: Container(
-                              width: 80, height: 80,
+                              width: 80,
+                              height: 80,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.white.withValues(alpha: 0.15),
@@ -252,8 +270,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                       ],
                     ),
                   ),
-
-                  // ── Card form ──
                   Expanded(
                     child: AnimatedBuilder(
                       animation: _shakeAnim,
@@ -305,8 +321,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 28),
-
-                                // ── Email field ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 420),
                                   child: _buildLabel('Email Admin'),
@@ -331,8 +345,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // ── Password field ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 500),
                                   child: _buildLabel('Password'),
@@ -353,8 +365,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                         color: const Color(0xFF9E9E9E),
                                         size: 20,
                                       ),
-                                      onPressed: () => setState(
-                                          () => _obscurePassword = !_obscurePassword),
+                                      onPressed: () => setState(() =>
+                                          _obscurePassword = !_obscurePassword),
                                     ),
                                     validator: (v) {
                                       if (v == null || v.isEmpty) {
@@ -365,21 +377,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-
-                                // ── Remember me + lupa pass ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 580),
                                   child: Row(
                                     children: [
                                       SizedBox(
-                                        width: 20, height: 20,
+                                        width: 20,
+                                        height: 20,
                                         child: Checkbox(
                                           value: _rememberMe,
                                           onChanged: (v) =>
                                               setState(() => _rememberMe = v!),
                                           activeColor: const Color(0xFF15A147),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
                                           ),
                                           side: const BorderSide(
                                               color: Color(0xFFCCCCCC)),
@@ -409,8 +421,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // ── Badge keamanan ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 620),
                                   child: Container(
@@ -430,7 +440,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
-                                            'Dilindungi dengan keamanan 2 lapis',
+                                            'Dilindungi dengan autentikasi AWS Cognito',
                                             style: GoogleFonts.instrumentSans(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
@@ -443,8 +453,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-
-                                // ── Tombol Login ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 680),
                                   child: _isLoading
@@ -457,11 +465,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                                 Color(0xFF257029),
                                               ],
                                             ),
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: const Center(
                                             child: SizedBox(
-                                              width: 24, height: 24,
+                                              width: 24,
+                                              height: 24,
                                               child: CircularProgressIndicator(
                                                 color: Colors.white,
                                                 strokeWidth: 2.5,
@@ -471,7 +481,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                         )
                                       : BounceButton(
                                           onPressed: _doLogin,
-                                          backgroundColor: const Color(0xFF15A147),
+                                          backgroundColor:
+                                              const Color(0xFF15A147),
                                           height: 54,
                                           borderRadius: 16,
                                           child: Text(
@@ -485,8 +496,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                                         ),
                                 ),
                                 const SizedBox(height: 20),
-
-                                // ── Notice keamanan ──
                                 StaggeredFadeSlide(
                                   delay: const Duration(milliseconds: 740),
                                   child: Center(
@@ -527,9 +536,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
       );
 }
 
-// ─────────────────────────────────────────────────────────
-// Input field reusable untuk admin screens
-// ─────────────────────────────────────────────────────────
 class _AdminInputField extends StatefulWidget {
   final TextEditingController controller;
   final String hint;
@@ -631,7 +637,8 @@ class _AdminInputFieldState extends State<_AdminInputField>
           ),
           suffixIcon: widget.suffixIcon,
           filled: true,
-          fillColor: _focused ? const Color(0xFFF5FBF7) : const Color(0xFFF7F8F8),
+          fillColor:
+              _focused ? const Color(0xFFF5FBF7) : const Color(0xFFF7F8F8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
@@ -652,7 +659,8 @@ class _AdminInputFieldState extends State<_AdminInputField>
             borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: Color(0xFFE63939), width: 1.8),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_finance/core/services/aws_api_service.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
+import 'package:go_finance/screens/login_screen.dart';
 import 'package:go_finance/screens/admin/admin_user_list_screen.dart';
 import 'package:go_finance/screens/admin/admin_approval_screen.dart';
 import 'package:go_finance/screens/admin/admin_notification_screen.dart';
 import 'package:go_finance/widgets/staggered_fade_slide.dart';
 
-/// 01_Admin_Dashboard — Layar utama admin
+/// 01_Admin_Dashboard — Layar utama admin terhubung ke AWS RDS
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -18,69 +21,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with TickerProviderStateMixin {
   int _currentTab = 0;
 
-  // Animasi counter angka
   late AnimationController _counterCtrl;
   late Animation<double> _counterAnim;
 
-  // Animasi tab switch
   late AnimationController _tabAnimCtrl;
   late Animation<double> _tabAnim;
 
-  // Data dummy
-  static const _totalUsers = 5241;
-  static const _pendingUsers = 42;
-  static const _activeUsers = 4857;
-  static const _inactiveUsers = 382;
-  static const _todayTx = 1293;
-
-  static const _activities = [
-    _ActivityItem(
-      initials: 'BS',
-      name: 'Budi Santoso',
-      action: 'Mendaftar akun baru',
-      time: '2 mnt lalu',
-      type: _ActivityType.pending,
-    ),
-    _ActivityItem(
-      initials: 'SR',
-      name: 'Siti Rahma',
-      action: 'Verifikasi berhasil',
-      time: '15 mnt lalu',
-      type: _ActivityType.active,
-    ),
-    _ActivityItem(
-      initials: 'AF',
-      name: 'Ahmad Fauzi',
-      action: 'Reset password',
-      time: '1 jam lalu',
-      type: _ActivityType.info,
-    ),
-    _ActivityItem(
-      initials: 'DP',
-      name: 'Dewi Purnama',
-      action: 'Akun dinonaktifkan',
-      time: '3 jam lalu',
-      type: _ActivityType.inactive,
-    ),
-    _ActivityItem(
-      initials: 'RP',
-      name: 'Rizky Pratama',
-      action: 'Mendaftar akun baru',
-      time: '5 jam lalu',
-      type: _ActivityType.pending,
-    ),
-  ];
+  bool _isLoadingStats = true;
+  int _totalUsers = 0;
+  int _pendingUsers = 0;
+  int _activeUsers = 0;
+  int _inactiveUsers = 0;
+  List<_ActivityItem> _activities = [];
 
   @override
   void initState() {
     super.initState();
     _counterCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1200),
     );
     _counterAnim =
         CurvedAnimation(parent: _counterCtrl, curve: Curves.easeOut);
-    _counterCtrl.forward();
 
     _tabAnimCtrl = AnimationController(
       vsync: this,
@@ -89,6 +51,81 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     _tabAnim =
         CurvedAnimation(parent: _tabAnimCtrl, curve: Curves.easeOut);
     _tabAnimCtrl.value = 1.0;
+
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoadingStats = true);
+    try {
+      final rawUsers = await AwsApiService.instance.getAdminUsers();
+      final users = rawUsers
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .where((u) => (u['role'] ?? 'user').toString().toLowerCase() != 'admin')
+          .toList();
+
+      int pending = 0;
+      int approved = 0;
+      int inactive = 0;
+
+      for (final u in users) {
+        final st = (u['status'] ?? 'pending').toString().toLowerCase();
+        if (st == 'pending') {
+          pending++;
+        } else if (st == 'approved' || st == 'active') {
+          approved++;
+        } else {
+          inactive++;
+        }
+      }
+
+      final recent = users.take(5).map((u) {
+        final name = (u['full_name'] ?? u['name'] ?? u['email'] ?? 'Pengguna')
+            .toString();
+        final st = (u['status'] ?? 'pending').toString().toLowerCase();
+        final createdAt = (u['created_at'] ?? '').toString();
+
+        _ActivityType type = _ActivityType.pending;
+        String action = 'Menunggu persetujuan admin';
+        if (st == 'approved' || st == 'active') {
+          type = _ActivityType.active;
+          action = 'Akun aktif / disetujui';
+        } else if (st == 'suspended' || st == 'rejected') {
+          type = _ActivityType.inactive;
+          action = 'Akun dinonaktifkan';
+        }
+
+        return _ActivityItem(
+          initials: _getInitials(name),
+          name: name,
+          action: action,
+          time: createdAt.isNotEmpty ? createdAt.split('T').first : 'Baru',
+          type: type,
+        );
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _totalUsers = users.length;
+        _pendingUsers = pending;
+        _activeUsers = approved;
+        _inactiveUsers = inactive;
+        _activities = recent;
+        _isLoadingStats = false;
+      });
+      _counterCtrl.forward(from: 0);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingStats = false);
+      _counterCtrl.forward(from: 0);
+    }
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
   @override
@@ -101,6 +138,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   void _switchTab(int index) {
     if (_currentTab == index) return;
     HapticFeedback.selectionClick();
+    if (index == 0) {
+      _loadDashboardData();
+    }
     _tabAnimCtrl.reverse().then((_) {
       if (!mounted) return;
       setState(() => _currentTab = index);
@@ -133,138 +173,66 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildDashboard() {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        // ── SliverAppBar gradient ──
-        SliverAppBar(
-          expandedHeight: 230,
-          pinned: true,
-          automaticallyImplyLeading: false,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-          flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.parallax,
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF15A147),
-                    Color(0xFF257029),
-                    Color(0xFF123D18),
-                  ],
+    return RefreshIndicator(
+      color: const Color(0xFF15A147),
+      onRefresh: _loadDashboardData,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 230,
+            pinned: true,
+            automaticallyImplyLeading: false,
+            systemOverlayStyle: SystemUiOverlayStyle.light,
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.parallax,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF15A147),
+                      Color(0xFF257029),
+                      Color(0xFF123D18),
+                    ],
+                  ),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  // Dekoratif circle
-                  Positioned(
-                    top: -30,
-                    right: -30,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: -30,
+                      right: -30,
+                      child: Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: -20,
-                    left: -20,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
+                    Positioned(
+                      bottom: -20,
+                      left: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
                       ),
                     ),
-                  ),
-
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selamat datang,',
-                                      style: GoogleFonts.instrumentSans(
-                                        fontSize: 12,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.75),
-                                      ),
-                                    ),
-                                    Text(
-                                      'Admin Super 👋',
-                                      style: GoogleFonts.instrumentSans(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Notif bell → navigasi ke tab Notif
-                              GestureDetector(
-                                onTap: () => _switchTab(3),
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: 42,
-                                      height: 42,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.15),
-                                      ),
-                                      child: const Icon(
-                                        Icons.notifications_outlined,
-                                        color: Colors.white,
-                                        size: 22,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 6,
-                                      right: 6,
-                                      child: Container(
-                                        width: 10,
-                                        height: 10,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(0xFFFF4444),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // ── Card total users ──
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
                                 Expanded(
                                   child: Column(
@@ -272,255 +240,373 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Total Pengguna Terdaftar',
+                                        'Selamat datang,',
                                         style: GoogleFonts.instrumentSans(
                                           fontSize: 12,
                                           color: Colors.white
-                                              .withValues(alpha: 0.8),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      AnimatedBuilder(
-                                        animation: _counterAnim,
-                                        builder: (_, __) => Text(
-                                          _formatNumber((_totalUsers *
-                                                  _counterAnim.value)
-                                              .round()),
-                                          style: GoogleFonts.instrumentSans(
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ),
+                                              .withValues(alpha: 0.75),
                                         ),
                                       ),
                                       Text(
-                                        'bulan ini',
+                                        'Admin Go Finance',
                                         style: GoogleFonts.instrumentSans(
-                                          fontSize: 11,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.65),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '↑ 12.4%',
-                                    style: GoogleFonts.instrumentSans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFAAFFBB),
+                                GestureDetector(
+                                  onTap: _loadDashboardData,
+                                  child: Container(
+                                    width: 42,
+                                    height: 42,
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.15),
                                     ),
+                                    child: const Icon(
+                                      Icons.refresh_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => _switchTab(3),
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: 42,
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.15),
+                                        ),
+                                        child: const Icon(
+                                          Icons.notifications_outlined,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                      ),
+                                      if (_pendingUsers > 0)
+                                        Positioned(
+                                          top: 6,
+                                          right: 6,
+                                          child: Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xFFFF4444),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Total Pengguna Terdaftar',
+                                          style: GoogleFonts.instrumentSans(
+                                            fontSize: 12,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.8),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        AnimatedBuilder(
+                                          animation: _counterAnim,
+                                          builder: (_, __) => Text(
+                                            _formatNumber((_totalUsers *
+                                                    _counterAnim.value)
+                                                .round()),
+                                            style: GoogleFonts.instrumentSans(
+                                              fontSize: 32,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Database AWS RDS',
+                                          style: GoogleFonts.instrumentSans(
+                                            fontSize: 11,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.65),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      'LIVE',
+                                      style: GoogleFonts.instrumentSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFFAAFFBB),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          title: Text(
-            'Admin Dashboard',
-            style: GoogleFonts.instrumentSans(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontSize: 18,
+            title: Text(
+              'Admin Dashboard',
+              style: GoogleFonts.instrumentSans(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontSize: 18,
+              ),
             ),
+            backgroundColor: const Color(0xFF257029),
           ),
-          backgroundColor: const Color(0xFF257029),
-        ),
 
-        // ── Stat Cards ──
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: StaggeredFadeSlide(
-                        delay: const Duration(milliseconds: 100),
-                        child: _StatCard(
-                          label: 'Menunggu Review',
-                          value: _pendingUsers,
-                          counterAnim: _counterAnim,
-                          icon: Icons.access_time_rounded,
-                          iconBg: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9119),
-                          valueColor: const Color(0xFFFF9119),
-                          onTap: () => _switchTab(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StaggeredFadeSlide(
-                        delay: const Duration(milliseconds: 180),
-                        child: _StatCard(
-                          label: 'Pengguna Aktif',
-                          value: _activeUsers,
-                          counterAnim: _counterAnim,
-                          icon: Icons.person_rounded,
-                          iconBg: const Color(0xFFE8F8EE),
-                          iconColor: const Color(0xFF15A147),
-                          valueColor: const Color(0xFF15A147),
-                          onTap: () => _switchTab(1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: StaggeredFadeSlide(
-                        delay: const Duration(milliseconds: 260),
-                        child: _StatCard(
-                          label: 'Nonaktif',
-                          value: _inactiveUsers,
-                          counterAnim: _counterAnim,
-                          icon: Icons.person_off_rounded,
-                          iconBg: const Color(0xFFFFEBEB),
-                          iconColor: const Color(0xFFE63939),
-                          valueColor: const Color(0xFFE63939),
-                          onTap: () => _switchTab(1),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StaggeredFadeSlide(
-                        delay: const Duration(milliseconds: 340),
-                        child: _StatCard(
-                          label: 'Transaksi Hari Ini',
-                          value: _todayTx,
-                          counterAnim: _counterAnim,
-                          icon: Icons.credit_card_rounded,
-                          iconBg: const Color(0xFFE3EDFF),
-                          iconColor: const Color(0xFF3A82F7),
-                          valueColor: const Color(0xFF3A82F7),
-                          onTap: null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // ── Quick Actions ──
-                StaggeredFadeSlide(
-                  delay: const Duration(milliseconds: 400),
-                  child: Text(
-                    'Aksi Cepat',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                StaggeredFadeSlide(
-                  delay: const Duration(milliseconds: 460),
-                  child: Row(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      _QuickAction(
-                        label: 'Pengguna',
-                        icon: Icons.people_rounded,
-                        color: const Color(0xFF15A147),
-                        onTap: () => _switchTab(1),
+                      Expanded(
+                        child: StaggeredFadeSlide(
+                          delay: const Duration(milliseconds: 100),
+                          child: _StatCard(
+                            label: 'Menunggu Review',
+                            value: _pendingUsers,
+                            counterAnim: _counterAnim,
+                            icon: Icons.access_time_rounded,
+                            iconBg: const Color(0xFFFFF3E0),
+                            iconColor: const Color(0xFFFF9119),
+                            valueColor: const Color(0xFFFF9119),
+                            onTap: () => _switchTab(2),
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      _QuickAction(
-                        label: 'Approval',
-                        icon: Icons.check_circle_rounded,
-                        color: const Color(0xFFFF9119),
-                        onTap: () => _switchTab(2),
-                      ),
-                      const SizedBox(width: 10),
-                      _QuickAction(
-                        label: 'Notifikasi',
-                        icon: Icons.notifications_rounded,
-                        color: const Color(0xFF3A82F7),
-                        onTap: () => _switchTab(3),
-                      ),
-                      const SizedBox(width: 10),
-                      _QuickAction(
-                        label: 'Pengaturan',
-                        icon: Icons.settings_rounded,
-                        color: const Color(0xFF9E9E9E),
-                        onTap: () => _switchTab(4),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StaggeredFadeSlide(
+                          delay: const Duration(milliseconds: 180),
+                          child: _StatCard(
+                            label: 'Pengguna Aktif',
+                            value: _activeUsers,
+                            counterAnim: _counterAnim,
+                            icon: Icons.person_rounded,
+                            iconBg: const Color(0xFFE8F8EE),
+                            iconColor: const Color(0xFF15A147),
+                            valueColor: const Color(0xFF15A147),
+                            onTap: () => _switchTab(1),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // ── Aktivitas Terbaru ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Aktivitas Terbaru',
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: StaggeredFadeSlide(
+                          delay: const Duration(milliseconds: 260),
+                          child: _StatCard(
+                            label: 'Nonaktif',
+                            value: _inactiveUsers,
+                            counterAnim: _counterAnim,
+                            icon: Icons.person_off_rounded,
+                            iconBg: const Color(0xFFFFEBEB),
+                            iconColor: const Color(0xFFE63939),
+                            valueColor: const Color(0xFFE63939),
+                            onTap: () => _switchTab(1),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StaggeredFadeSlide(
+                          delay: const Duration(milliseconds: 340),
+                          child: _StatCard(
+                            label: 'Total Akun',
+                            value: _totalUsers,
+                            counterAnim: _counterAnim,
+                            icon: Icons.people_alt_rounded,
+                            iconBg: const Color(0xFFE3EDFF),
+                            iconColor: const Color(0xFF3A82F7),
+                            valueColor: const Color(0xFF3A82F7),
+                            onTap: () => _switchTab(1),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  StaggeredFadeSlide(
+                    delay: const Duration(milliseconds: 400),
+                    child: Text(
+                      'Aksi Cepat',
                       style: GoogleFonts.instrumentSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => _switchTab(1),
-                      child: Text(
-                        'Lihat Semua →',
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(height: 12),
+                  StaggeredFadeSlide(
+                    delay: const Duration(milliseconds: 460),
+                    child: Row(
+                      children: [
+                        _QuickAction(
+                          label: 'Pengguna',
+                          icon: Icons.people_rounded,
                           color: const Color(0xFF15A147),
+                          onTap: () => _switchTab(1),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickAction(
+                          label: 'Approval',
+                          icon: Icons.check_circle_rounded,
+                          color: const Color(0xFFFF9119),
+                          onTap: () => _switchTab(2),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickAction(
+                          label: 'Notifikasi',
+                          icon: Icons.notifications_rounded,
+                          color: const Color(0xFF3A82F7),
+                          onTap: () => _switchTab(3),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickAction(
+                          label: 'Pengaturan',
+                          icon: Icons.settings_rounded,
+                          color: const Color(0xFF9E9E9E),
+                          onTap: () => _switchTab(4),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Pengguna Terbaru',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1A1A1A),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
+                      GestureDetector(
+                        onTap: () => _switchTab(1),
+                        child: Text(
+                          'Lihat Semua →',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF15A147),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
-        ),
 
-        // ── Daftar aktivitas ──
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (ctx, i) {
-              final act = _activities[i];
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: StaggeredFadeSlide(
-                  delay: Duration(milliseconds: 500 + i * 80),
-                  child: _ActivityCard(item: act),
+          if (_isLoadingStats)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF15A147)),
                 ),
-              );
-            },
-            childCount: _activities.length,
-          ),
-        ),
+              ),
+            )
+          else if (_activities.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Belum ada pengguna terdaftar di database.',
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 13,
+                        color: const Color(0xFF808080),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (ctx, i) {
+                  final act = _activities[i];
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                    child: StaggeredFadeSlide(
+                      delay: Duration(milliseconds: 500 + i * 80),
+                      child: _ActivityCard(item: act),
+                    ),
+                  );
+                },
+                childCount: _activities.length,
+              ),
+            ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
-      ],
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        ],
+      ),
     );
   }
 
@@ -564,7 +650,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                // Avatar card admin
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -605,14 +690,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        'Admin Super',
+                        'Admin Go Finance',
                         style: GoogleFonts.instrumentSans(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF1A1A1A)),
                       ),
                       const SizedBox(height: 4),
-                      Text('admin@gofinance.id',
+                      Text(AwsConfig.primaryAdminEmail,
                           style: GoogleFonts.instrumentSans(
                               fontSize: 13,
                               color: const Color(0xFF808080))),
@@ -631,7 +716,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 size: 14, color: Color(0xFF15A147)),
                             const SizedBox(width: 6),
                             Text(
-                              'Super Administrator',
+                              'Administrator',
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -645,8 +730,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Menu section
                 const _SectionLabel(label: 'Akun'),
                 const SizedBox(height: 10),
                 ...[
@@ -676,7 +759,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     iconBg: e.$4,
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 const _SectionLabel(label: 'Administrasi'),
                 const SizedBox(height: 10),
@@ -707,7 +789,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     iconBg: e.$4,
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 _SettingTile(
                   label: 'Keluar dari Admin',
@@ -732,7 +813,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       backgroundColor: Colors.white,
-      builder: (_) => Padding(
+      builder: (sheetCtx) => Padding(
         padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -774,7 +855,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(sheetCtx),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -790,9 +871,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).popUntil((r) => r.isFirst);
+                    onPressed: () async {
+                      Navigator.pop(sheetCtx);
+                      await AwsAuthService.instance.signOut();
+                      if (!mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (r) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE63939),
@@ -906,7 +992,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 }
 
-// ───────── Quick Action ─────────
 class _QuickAction extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -965,7 +1050,6 @@ class _QuickAction extends StatelessWidget {
   }
 }
 
-// ───────── Section Label ─────────
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
@@ -987,7 +1071,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ───────── Stat Card ─────────
 class _StatCard extends StatelessWidget {
   final String label;
   final int value;
@@ -1070,7 +1153,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ───────── Activity Types ─────────
 enum _ActivityType { pending, active, inactive, info }
 
 class _ActivityItem {
@@ -1089,7 +1171,6 @@ class _ActivityItem {
   });
 }
 
-// ───────── Activity Card ─────────
 class _ActivityCard extends StatelessWidget {
   final _ActivityItem item;
 
@@ -1127,7 +1208,6 @@ class _ActivityCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: 40,
             height: 40,
@@ -1147,7 +1227,6 @@ class _ActivityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1170,7 +1249,6 @@ class _ActivityCard extends StatelessWidget {
               ],
             ),
           ),
-          // Waktu + dot
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -1198,7 +1276,6 @@ class _ActivityCard extends StatelessWidget {
   }
 }
 
-// ───────── Setting Tile ─────────
 class _SettingTile extends StatelessWidget {
   final String label;
   final IconData icon;
