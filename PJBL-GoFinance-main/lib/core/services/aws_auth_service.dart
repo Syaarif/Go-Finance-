@@ -81,6 +81,8 @@ class AwsAuthService {
   Future<String> signIn(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();
     final cognitoUser = CognitoUser(cleanEmail, _userPool);
+    cognitoUser.setAuthenticationFlowType('USER_PASSWORD_AUTH');
+
     final authDetails = AuthenticationDetails(
       username: cleanEmail,
       password: password,
