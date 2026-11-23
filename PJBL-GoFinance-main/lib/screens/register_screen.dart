@@ -330,17 +330,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isRegistering = true);
 
     try {
-      final isConfirmed = await AwsAuthService.instance.signUp(
+      await AwsAuthService.instance.signUp(
         email: email,
         password: password,
       );
       if (!mounted) return;
       setState(() => _isRegistering = false);
 
-      if (!isConfirmed) {
-        await _showOtpDialog(email);
-        if (!mounted) return;
-      }
+      await _showOtpDialog(email);
+      if (!mounted) return;
 
       _showSnack(l10n.registerSuccess);
       Navigator.of(context).pushReplacement(
