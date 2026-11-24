@@ -90,6 +90,7 @@ class AwsAuthService {
 
     final session = await cognitoUser.authenticateUser(authDetails);
     final idToken = session?.getIdToken().getJwtToken();
+    final refreshToken = session?.getRefreshToken()?.getToken();
 
     if (idToken == null || idToken.isEmpty) {
       throw Exception('Token sesi Cognito gagal diperoleh.');
@@ -98,6 +99,9 @@ class AwsAuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('aws_jwt_token', idToken);
     await prefs.setString('aws_user_email', cleanEmail);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await prefs.setString('aws_refresh_token', refreshToken);
+    }
 
     final payload = _decodeJwtPayload(idToken);
     final groups = (payload['cognito:groups'] as List<dynamic>?)
@@ -138,10 +142,39 @@ class AwsAuthService {
     return idToken;
   }
 
-  Future<bool> hasValidSession() async {
+  /// Cek sesi tersimpan & otomatis refresh token jika idToken > 60 menit
+  Future<bool> restoreSession() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('aws_jwt_token');
-    return token != null && token.isNotEmpty && !isTokenExpired(token);
+    final email = prefs.getString('aws_user_email');
+    final refreshTokenStr = prefs.getString('aws_refresh_token');
+
+    if (token != null && token.isNotEmpty && !isTokenExpired(token)) {
+      return true;
+    }
+
+    if (email != null &&
+        email.isNotEmpty &&
+        refreshTokenStr != null &&
+        refreshTokenStr.isNotEmpty) {
+      try {
+        final cognitoUser = CognitoUser(email, _userPool);
+        final refreshToken = CognitoRefreshToken(refreshTokenStr);
+        final newSession = await cognitoUser.refreshSession(refreshToken);
+        final newIdToken = newSession?.getIdToken().getJwtToken();
+        if (newIdToken != null && newIdToken.isNotEmpty) {
+          await prefs.setString('aws_jwt_token', newIdToken);
+          return true;
+        }
+      } catch (_) {
+        await signOut();
+      }
+    }
+    return false;
+  }
+
+  Future<bool> hasValidSession() async {
+    return await restoreSession();
   }
 
   Future<bool> isAdmin() async {
@@ -158,7 +191,12 @@ class AwsAuthService {
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('aws_jwt_token');
+    final token = prefs.getString('aws_jwt_token');
+    if (token != null && isTokenExpired(token)) {
+      await restoreSession();
+      return prefs.getString('aws_jwt_token');
+    }
+    return token;
   }
 
   Future<void> signOut() async {
@@ -171,6 +209,7 @@ class AwsAuthService {
       } catch (_) {}
     }
     await prefs.remove('aws_jwt_token');
+    await prefs.remove('aws_refresh_token');
     await prefs.remove('aws_user_email');
     await prefs.remove('aws_user_role');
     await prefs.remove('aws_user_status');
