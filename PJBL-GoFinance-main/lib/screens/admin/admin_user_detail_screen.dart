@@ -18,6 +18,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     with TickerProviderStateMixin {
   late AdminUserStatus _currentStatus;
   bool _isProcessing = false;
+  bool _hasChanged = false;
 
   late AnimationController _entranceCtrl;
   late Animation<double> _entranceAnim;
@@ -175,7 +176,10 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
       );
 
       if (!mounted) return;
-      setState(() => _isProcessing = false);
+      setState(() {
+        _isProcessing = false;
+        _hasChanged = true;
+      });
 
       if (isDelete) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -238,252 +242,260 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
   Widget build(BuildContext context) {
     final user = widget.user;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F6F5),
-        body: Stack(
-          children: [
-            CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverAppBar(
-                  expandedHeight: 240,
-                  pinned: true,
-                  backgroundColor: const Color(0xFF257029),
-                  systemOverlayStyle: SystemUiOverlayStyle.light,
-                  leading: IconButton(
-                    icon: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.15),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.pop(context, _hasChanged);
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF5F6F5),
+          body: Stack(
+            children: [
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 240,
+                    pinned: true,
+                    backgroundColor: const Color(0xFF257029),
+                    systemOverlayStyle: SystemUiOverlayStyle.light,
+                    leading: IconButton(
+                      icon: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                      onPressed: () => Navigator.pop(context, _hasChanged),
+                    ),
+                    title: Text(
+                      'Detail Pengguna',
+                      style: GoogleFonts.instrumentSans(
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
-                        size: 16,
+                        fontSize: 18,
                       ),
                     ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  title: Text(
-                    'Detail Pengguna',
-                    style: GoogleFonts.instrumentSans(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    collapseMode: CollapseMode.parallax,
-                    background: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF15A147),
-                            Color(0xFF257029),
-                            Color(0xFF123D18),
+                    flexibleSpace: FlexibleSpaceBar(
+                      collapseMode: CollapseMode.parallax,
+                      background: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF15A147),
+                              Color(0xFF257029),
+                              Color(0xFF123D18),
+                            ],
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: -20,
+                              right: -20,
+                              child: Container(
+                                width: 140,
+                                height: 140,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                ),
+                              ),
+                            ),
+                            SafeArea(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Hero(
+                                    tag: 'avatar_detail_${user.id}',
+                                    child: ScaleTransition(
+                                      scale: _entranceAnim,
+                                      child: Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(0xFFE8F8EE),
+                                          border: const Border.fromBorderSide(
+                                            BorderSide(
+                                              color: Colors.white,
+                                              width: 3,
+                                            ),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.2),
+                                              blurRadius: 16,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            user.initials,
+                                            style: GoogleFonts.instrumentSans(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF15A147),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 350),
+                                    curve: Curves.easeOut,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _currentStatus.color
+                                          .withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: _currentStatus.color
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _currentStatus.label,
+                                      style: GoogleFonts.instrumentSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: _currentStatus ==
+                                                AdminUserStatus.active
+                                            ? const Color(0xFFAAFFBB)
+                                            : _currentStatus ==
+                                                    AdminUserStatus.pending
+                                                ? const Color(0xFFFFDD88)
+                                                : const Color(0xFFFFAAAA),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      child: Stack(
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         children: [
-                          Positioned(
-                            top: -20,
-                            right: -20,
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.05),
-                              ),
-                            ),
-                          ),
-                          SafeArea(
+                          StaggeredFadeSlide(
+                            delay: const Duration(milliseconds: 80),
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Hero(
-                                  tag: 'avatar_detail_${user.id}',
-                                  child: ScaleTransition(
-                                    scale: _entranceAnim,
-                                    child: Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: const Color(0xFFE8F8EE),
-                                        border: const Border.fromBorderSide(
-                                          BorderSide(
-                                            color: Colors.white,
-                                            width: 3,
-                                          ),
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.2),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          user.initials,
-                                          style: GoogleFonts.instrumentSans(
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF15A147),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                Text(
+                                  user.name,
+                                  style: GoogleFonts.instrumentSans(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1A1A1A),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 350),
-                                  curve: Curves.easeOut,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _currentStatus.color
-                                        .withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: _currentStatus.color
-                                          .withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    _currentStatus.label,
-                                    style: GoogleFonts.instrumentSans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: _currentStatus ==
-                                              AdminUserStatus.active
-                                          ? const Color(0xFFAAFFBB)
-                                          : _currentStatus ==
-                                                  AdminUserStatus.pending
-                                              ? const Color(0xFFFFDD88)
-                                              : const Color(0xFFFFAAAA),
-                                    ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  user.email,
+                                  style: GoogleFonts.instrumentSans(
+                                    fontSize: 13,
+                                    color: const Color(0xFF808080),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 20),
+                          StaggeredFadeSlide(
+                            delay: const Duration(milliseconds: 160),
+                            child: _InfoCard(
+                              rows: [
+                                ('Tanggal Daftar', user.joinDate),
+                                ('No. Telepon', user.phone),
+                                ('Kota', user.city),
+                                ('Total Transaksi', '${user.totalTx} transaksi'),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          StaggeredFadeSlide(
+                            delay: const Duration(milliseconds: 240),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _MiniStatCard(
+                                    label: 'Pemasukan',
+                                    value: user.totalIncome,
+                                    color: const Color(0xFF15A147),
+                                    bg: const Color(0xFFE8F8EE),
+                                    icon: Icons.trending_up_rounded,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _MiniStatCard(
+                                    label: 'Pengeluaran',
+                                    value: user.totalExpense,
+                                    color: const Color(0xFFE63939),
+                                    bg: const Color(0xFFFFEBEB),
+                                    icon: Icons.trending_down_rounded,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _MiniStatCard(
+                                    label: 'Tabungan',
+                                    value: user.savings,
+                                    color: const Color(0xFF3A82F7),
+                                    bg: const Color(0xFFE3EDFF),
+                                    icon: Icons.savings_rounded,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          StaggeredFadeSlide(
+                            delay: const Duration(milliseconds: 320),
+                            child: _buildActionButtons(),
+                          ),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        StaggeredFadeSlide(
-                          delay: const Duration(milliseconds: 80),
-                          child: Column(
-                            children: [
-                              Text(
-                                user.name,
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A1A1A),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user.email,
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 13,
-                                  color: const Color(0xFF808080),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        StaggeredFadeSlide(
-                          delay: const Duration(milliseconds: 160),
-                          child: _InfoCard(
-                            rows: [
-                              ('Tanggal Daftar', user.joinDate),
-                              ('No. Telepon', user.phone),
-                              ('Kota', user.city),
-                              ('Total Transaksi', '${user.totalTx} transaksi'),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        StaggeredFadeSlide(
-                          delay: const Duration(milliseconds: 240),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _MiniStatCard(
-                                  label: 'Pemasukan',
-                                  value: user.totalIncome,
-                                  color: const Color(0xFF15A147),
-                                  bg: const Color(0xFFE8F8EE),
-                                  icon: Icons.trending_up_rounded,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _MiniStatCard(
-                                  label: 'Pengeluaran',
-                                  value: user.totalExpense,
-                                  color: const Color(0xFFE63939),
-                                  bg: const Color(0xFFFFEBEB),
-                                  icon: Icons.trending_down_rounded,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _MiniStatCard(
-                                  label: 'Tabungan',
-                                  value: user.savings,
-                                  color: const Color(0xFF3A82F7),
-                                  bg: const Color(0xFFE3EDFF),
-                                  icon: Icons.savings_rounded,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        StaggeredFadeSlide(
-                          delay: const Duration(milliseconds: 320),
-                          child: _buildActionButtons(),
-                        ),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                ],
+              ),
+              if (_isProcessing)
+                Container(
+                  color: Colors.black26,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF15A147)),
                   ),
                 ),
-              ],
-            ),
-            if (_isProcessing)
-              Container(
-                color: Colors.black26,
-                child: const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF15A147)),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -519,11 +531,11 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
                   outlined: true,
                   onTap: () => _showActionSheet(
                     'Tolak Akun?',
-                    'Pengguna tidak akan bisa masuk\nke Go Finance.',
+                    'Pengguna akan dinonaktifkan dan tidak\nbisa masuk ke Go Finance.',
                     const Color(0xFFE63939),
                     Icons.cancel_rounded,
                     AdminUserStatus.inactive,
-                    apiAction: 'reject',
+                    apiAction: 'suspend',
                   ),
                 ),
               ),

@@ -33,6 +33,17 @@ class AdminUser {
     required this.totalTx,
   });
 
+  static String _formatRupiah(dynamic raw) {
+    final num val =
+        (raw is num) ? raw : (double.tryParse(raw?.toString() ?? '0') ?? 0);
+    final intVal = val.round();
+    final str = intVal.abs().toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]}.',
+        );
+    return '${intVal < 0 ? '-' : ''}Rp $str';
+  }
+
   factory AdminUser.fromApi(Map<String, dynamic> map) {
     final rawStatus = (map['status'] ?? 'pending').toString().toLowerCase();
     final parsedStatus = (rawStatus == 'active' || rawStatus == 'approved')
@@ -58,10 +69,12 @@ class AdminUser {
       city: (map['city'] ?? 'Indonesia').toString(),
       status: parsedStatus,
       joinDate: (map['created_at'] ?? '-').toString().split('T').first,
-      totalIncome: 'Rp 0',
-      totalExpense: 'Rp 0',
-      savings: 'Rp 0',
-      totalTx: (map['total_tx'] as num?)?.toInt() ?? 0,
+      totalIncome: _formatRupiah(map['total_income']),
+      totalExpense: _formatRupiah(map['total_expense']),
+      savings: _formatRupiah(map['total_balance']),
+      totalTx: (map['total_transactions'] as num?)?.toInt() ??
+          (map['total_tx'] as num?)?.toInt() ??
+          0,
     );
   }
 
@@ -173,6 +186,44 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
   }
 
   Future<void> _quickStatusAction(AdminUser user, String action) async {
+    if (action == 'delete' || action == 'suspend') {
+      final isDelete = action == 'delete';
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text(
+            isDelete ? 'Hapus Akun Permanen?' : 'Nonaktifkan Akun?',
+            style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            isDelete
+                ? 'Seluruh data transaksi, dompet, dan profil milik ${user.name} (${user.email}) akan dihapus permanen dari database.'
+                : 'Akun ${user.name} (${user.email}) tidak akan bisa login sampai diaktifkan kembali oleh Admin.',
+            style: GoogleFonts.instrumentSans(fontSize: 13.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDelete
+                    ? const Color(0xFFE63939)
+                    : const Color(0xFFFF9119),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(isDelete ? 'Hapus Permanen' : 'Nonaktifkan'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     try {
       await AwsApiService.instance.adminUserAction(
         targetUserId: user.id,
@@ -181,9 +232,14 @@ class _AdminUserListScreenState extends State<AdminUserListScreen>
       );
       await _fetchUsers();
       if (!mounted) return;
+      final label = action == 'delete'
+          ? 'dihapus permanen'
+          : action == 'suspend'
+              ? 'dinonaktifkan'
+              : 'diaktifkan';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Status ${user.name} berhasil diperbarui ($action).'),
+          content: Text('Akun ${user.name} berhasil $label.'),
           backgroundColor: const Color(0xFF15A147),
           behavior: SnackBarBehavior.floating,
         ),
@@ -492,10 +548,10 @@ class _UserCard extends StatelessWidget {
                           size: 11, color: Color(0xFFBBBBBB)),
                       const SizedBox(width: 4),
                       Text(
-                        user.joinDate,
+                        '${user.joinDate} • ${user.savings}',
                         style: GoogleFonts.instrumentSans(
                           fontSize: 11,
-                          color: const Color(0xFFBBBBBB),
+                          color: const Color(0xFF9E9E9E),
                         ),
                       ),
                     ],
