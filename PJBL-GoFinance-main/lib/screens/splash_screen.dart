@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_finance/core/services/aws_auth_service.dart';
+import 'package:go_finance/features/home/pages/home_page.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/onboarding_screen.dart';
+import 'package:go_finance/screens/login_screen.dart';
 import 'package:go_finance/screens/admin/admin_dashboard_screen.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
 /// Splash Screen - "Beranda awal 2" dari Figma (node 84:313)
-/// Background hijau muda #C0EBA6 + celengan babi mengambang + "Go Finance" + loading bar
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -57,11 +58,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       final auth = AwsAuthService.instance;
-      final hasSession = await auth.hasValidSession();
+      final hasSession = await auth.restoreSession();
       if (hasSession) {
         final admin = await auth.isAdmin();
         if (admin) {
           targetScreen = const AdminDashboardScreen();
+        } else {
+          final status = await auth.getUserStatus();
+          if (status == 'active') {
+            if (auth.onLoginSuccess != null) {
+              await auth.onLoginSuccess!();
+            }
+            targetScreen = const HomePage();
+          } else {
+            targetScreen = const LoginScreen();
+          }
         }
       }
     } catch (_) {
@@ -96,7 +107,6 @@ class _SplashScreenState extends State<SplashScreen>
           return Stack(
             fit: StackFit.expand,
             children: [
-              // Background SVG
               Positioned.fill(
                 child: SvgPicture.asset(
                   'assets/svg/bg_green.svg',
@@ -105,8 +115,6 @@ class _SplashScreenState extends State<SplashScreen>
                       Container(color: AppTheme.backgroundGreen),
                 ),
               ),
-
-              // Konten utama dengan SafeArea mobile
               SafeArea(
                 child: Column(
                   children: [
@@ -170,8 +178,6 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const Spacer(),
-
-                    // Loading Progress Bar di Bawah
                     Padding(
                       padding: const EdgeInsets.only(bottom: 48),
                       child: FadeTransition(
