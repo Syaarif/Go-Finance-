@@ -21,6 +21,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with TickerProviderStateMixin {
   int _currentTab = 0;
 
+  final ScrollController _dashboardScrollCtrl = ScrollController();
+  bool _isHeaderCollapsed = false;
+
   late AnimationController _counterCtrl;
   late Animation<double> _counterAnim;
 
@@ -37,6 +40,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   @override
   void initState() {
     super.initState();
+    _dashboardScrollCtrl.addListener(_onDashboardScroll);
     _counterCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -128,8 +132,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
+  void _onDashboardScroll() {
+    final collapsed = _dashboardScrollCtrl.hasClients &&
+        _dashboardScrollCtrl.offset > 100;
+    if (collapsed != _isHeaderCollapsed) {
+      setState(() => _isHeaderCollapsed = collapsed);
+    }
+  }
+
   @override
   void dispose() {
+    _dashboardScrollCtrl.removeListener(_onDashboardScroll);
+    _dashboardScrollCtrl.dispose();
     _counterCtrl.dispose();
     _tabAnimCtrl.dispose();
     super.dispose();
@@ -177,12 +191,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       color: const Color(0xFF15A147),
       onRefresh: _loadDashboardData,
       child: CustomScrollView(
+        controller: _dashboardScrollCtrl,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
           SliverAppBar(
-            expandedHeight: 230,
+            expandedHeight: 240,
             pinned: true,
             automaticallyImplyLeading: false,
             systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -227,6 +242,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ),
                     SafeArea(
+                      bottom: false,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                         child: Column(
@@ -247,13 +263,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                               .withValues(alpha: 0.75),
                                         ),
                                       ),
-                                      Text(
-                                        'Admin Go Finance',
-                                        style: GoogleFonts.instrumentSans(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Admin Super',
+                                            style: GoogleFonts.instrumentSans(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            '👋',
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -390,12 +416,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
               ),
             ),
-            title: Text(
-              'Admin Dashboard',
-              style: GoogleFonts.instrumentSans(
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                fontSize: 18,
+            title: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _isHeaderCollapsed ? 1.0 : 0.0,
+              child: Text(
+                'Admin Dashboard',
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
               ),
             ),
             backgroundColor: const Color(0xFF257029),
