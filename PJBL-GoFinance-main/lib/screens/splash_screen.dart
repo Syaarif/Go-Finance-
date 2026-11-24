@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_finance/core/services/aws_auth_service.dart';
 import 'package:go_finance/theme/app_theme.dart';
 import 'package:go_finance/screens/onboarding_screen.dart';
+import 'package:go_finance/screens/admin/admin_dashboard_screen.dart';
 import 'package:go_finance/widgets/floating_widget.dart';
 import 'package:go_finance/l10n/generated/app_localizations.dart';
 
@@ -20,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnim;
   late Animation<double> _progressAnim;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -42,17 +45,38 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _controller.forward();
     _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const OnboardingScreen(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
+      if (status == AnimationStatus.completed && mounted && !_isNavigating) {
+        _navigateAfterSplash();
       }
     });
+  }
+
+  Future<void> _navigateAfterSplash() async {
+    _isNavigating = true;
+    Widget targetScreen = const OnboardingScreen();
+
+    try {
+      final auth = AwsAuthService.instance;
+      final hasSession = await auth.hasValidSession();
+      if (hasSession) {
+        final admin = await auth.isAdmin();
+        if (admin) {
+          targetScreen = const AdminDashboardScreen();
+        }
+      }
+    } catch (_) {
+      targetScreen = const OnboardingScreen();
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => targetScreen,
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 
   @override

@@ -93,7 +93,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         String action = 'Menunggu persetujuan admin';
         if (st == 'approved' || st == 'active') {
           type = _ActivityType.active;
-          action = 'Akun aktif / disetujui';
+          action = 'Akun aktif • Tap untuk detail keuangan';
         } else if (st == 'suspended' || st == 'rejected') {
           type = _ActivityType.inactive;
           action = 'Akun dinonaktifkan';
@@ -105,6 +105,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           action: action,
           time: createdAt.isNotEmpty ? createdAt.split('T').first : 'Baru',
           type: type,
+          rawUser: u,
         );
       }).toList();
 
@@ -130,6 +131,177 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     if (parts.isEmpty || parts.first.isEmpty) return 'U';
     if (parts.length == 1) return parts.first[0].toUpperCase();
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  String _formatRupiah(dynamic raw) {
+    final num val =
+        (raw is num) ? raw : (double.tryParse(raw?.toString() ?? '0') ?? 0);
+    final intVal = val.round();
+    final str = intVal.abs().toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]}.',
+        );
+    return '${intVal < 0 ? '-' : ''}Rp $str';
+  }
+
+  void _showUserFinancialDetail(Map<String, dynamic> user) {
+    final name =
+        (user['full_name'] ?? user['name'] ?? user['email'] ?? 'Pengguna')
+            .toString();
+    final email = (user['email'] ?? '-').toString();
+    final status = (user['status'] ?? 'pending').toString().toUpperCase();
+    final income = user['total_income'] ?? 0;
+    final expense = user['total_expense'] ?? 0;
+    final balance = user['total_balance'] ?? 0;
+    final txCount = user['total_transactions'] ?? 0;
+    final walletCount = user['total_wallets'] ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xFFE8F8EE),
+                  child: Text(
+                    _getInitials(name),
+                    style: GoogleFonts.instrumentSans(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF15A147),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Chip(
+                  label: Text(
+                    status,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF15A147),
+                    ),
+                  ),
+                  backgroundColor: const Color(0xFFE8F8EE),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Text(
+              'Ringkasan Keuangan Pengguna',
+              style: GoogleFonts.instrumentSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.account_balance_wallet_rounded,
+                  color: Color(0xFF3A82F7)),
+              title: Text('Total Saldo & Tabungan',
+                  style: GoogleFonts.instrumentSans(fontSize: 14)),
+              subtitle: Text('$walletCount dompet aktif',
+                  style: GoogleFonts.instrumentSans(fontSize: 12)),
+              trailing: Text(
+                _formatRupiah(balance),
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: const Color(0xFF3A82F7),
+                ),
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.arrow_downward_rounded,
+                  color: Color(0xFF15A147)),
+              title: Text('Total Pemasukan',
+                  style: GoogleFonts.instrumentSans(fontSize: 14)),
+              trailing: Text(
+                _formatRupiah(income),
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: const Color(0xFF15A147),
+                ),
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.arrow_upward_rounded,
+                  color: Color(0xFFE63939)),
+              title: Text('Total Pengeluaran',
+                  style: GoogleFonts.instrumentSans(fontSize: 14)),
+              trailing: Text(
+                _formatRupiah(expense),
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: const Color(0xFFE63939),
+                ),
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.receipt_long_rounded,
+                  color: Color(0xFFFF9119)),
+              title: Text('Total Transaksi Tercatat',
+                  style: GoogleFonts.instrumentSans(fontSize: 14)),
+              trailing: Text(
+                '$txCount transaksi',
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _onDashboardScroll() {
@@ -197,10 +369,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         ),
         slivers: [
           SliverAppBar(
-            expandedHeight: 240,
+            expandedHeight: 268,
             pinned: true,
             automaticallyImplyLeading: false,
+            backgroundColor: const Color(0xFF257029),
             systemOverlayStyle: SystemUiOverlayStyle.light,
+            title: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _isHeaderCollapsed ? 1.0 : 0.0,
+              child: Text(
+                'Admin Dashboard',
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: Container(
@@ -220,33 +405,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     Positioned(
                       top: -30,
                       right: -30,
-                      child: Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.06),
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.06),
+                          ),
                         ),
                       ),
                     ),
                     Positioned(
                       bottom: -20,
                       left: -20,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
                         ),
                       ),
                     ),
                     SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
                               children: [
@@ -256,30 +446,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Selamat datang,',
+                                        'Admin Dashboard',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: GoogleFonts.instrumentSans(
-                                          fontSize: 12,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.75),
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Admin Super',
-                                            style: GoogleFonts.instrumentSans(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          const Text(
-                                            '👋',
-                                            style: TextStyle(fontSize: 18),
-                                          ),
-                                        ],
+                                      Text(
+                                        'Selamat datang, Admin Go Finance',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.instrumentSans(
+                                          fontSize: 12,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.8),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -287,8 +472,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 GestureDetector(
                                   onTap: _loadDashboardData,
                                   child: Container(
-                                    width: 42,
-                                    height: 42,
+                                    width: 40,
+                                    height: 40,
                                     margin: const EdgeInsets.only(right: 8),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
@@ -307,8 +492,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                   child: Stack(
                                     children: [
                                       Container(
-                                        width: 42,
-                                        height: 42,
+                                        width: 40,
+                                        height: 40,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.white
@@ -317,13 +502,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         child: const Icon(
                                           Icons.notifications_outlined,
                                           color: Colors.white,
-                                          size: 22,
+                                          size: 21,
                                         ),
                                       ),
                                       if (_pendingUsers > 0)
                                         Positioned(
-                                          top: 6,
-                                          right: 6,
+                                          top: 5,
+                                          right: 5,
                                           child: Container(
                                             width: 10,
                                             height: 10,
@@ -357,6 +542,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       children: [
                                         Text(
                                           'Total Pengguna Terdaftar',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.instrumentSans(
                                             fontSize: 12,
                                             color: Colors.white
@@ -371,7 +558,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                                     _counterAnim.value)
                                                 .round()),
                                             style: GoogleFonts.instrumentSans(
-                                              fontSize: 32,
+                                              fontSize: 30,
                                               fontWeight: FontWeight.w700,
                                               color: Colors.white,
                                             ),
@@ -379,6 +566,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         ),
                                         Text(
                                           'Database AWS RDS',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.instrumentSans(
                                             fontSize: 11,
                                             color: Colors.white
@@ -416,19 +605,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
               ),
             ),
-            title: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _isHeaderCollapsed ? 1.0 : 0.0,
-              child: Text(
-                'Admin Dashboard',
-                style: GoogleFonts.instrumentSans(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-            backgroundColor: const Color(0xFF257029),
           ),
 
           SliverToBoxAdapter(
@@ -626,7 +802,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: StaggeredFadeSlide(
                       delay: Duration(milliseconds: 500 + i * 80),
-                      child: _ActivityCard(item: act),
+                      child: _ActivityCard(
+                        item: act,
+                        onTap: () => _showUserFinancialDetail(act.rawUser),
+                      ),
                     ),
                   );
                 },
@@ -651,6 +830,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           systemOverlayStyle: SystemUiOverlayStyle.light,
           title: Text(
             'Profil & Pengaturan',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.instrumentSans(
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -992,6 +1173,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       const SizedBox(height: 2),
                       Text(
                         items[i].$3,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 9,
                           fontWeight: selected
@@ -1066,6 +1249,8 @@ class _QuickAction extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.instrumentSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -1154,6 +1339,8 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.instrumentSans(
                 fontSize: 11,
                 color: const Color(0xFF808080),
@@ -1191,6 +1378,7 @@ class _ActivityItem {
   final String action;
   final String time;
   final _ActivityType type;
+  final Map<String, dynamic> rawUser;
 
   const _ActivityItem({
     required this.initials,
@@ -1198,13 +1386,15 @@ class _ActivityItem {
     required this.action,
     required this.time,
     required this.type,
+    required this.rawUser,
   });
 }
 
 class _ActivityCard extends StatelessWidget {
   final _ActivityItem item;
+  final VoidCallback? onTap;
 
-  const _ActivityCard({required this.item});
+  const _ActivityCard({required this.item, this.onTap});
 
   Color get _dotColor {
     switch (item.type) {
@@ -1223,84 +1413,91 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x07000000),
-            blurRadius: 6,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _avatarBg,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x07000000),
+              blurRadius: 6,
+              offset: Offset(0, 1),
             ),
-            child: Center(
-              child: Text(
-                item.initials,
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: _dotColor,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _avatarBg,
+              ),
+              child: Center(
+                child: Text(
+                  item.initials,
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _dotColor,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  Text(
+                    item.action,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 11,
+                      color: const Color(0xFF808080),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  item.name,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _dotColor,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  item.action,
+                  item.time,
                   style: GoogleFonts.instrumentSans(
-                    fontSize: 11,
-                    color: const Color(0xFF808080),
+                    fontSize: 10,
+                    color: const Color(0xFF9E9E9E),
                   ),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _dotColor,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.time,
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 10,
-                  color: const Color(0xFF9E9E9E),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1348,6 +1545,8 @@ class _SettingTile extends StatelessWidget {
         ),
         title: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GoogleFonts.instrumentSans(
             fontSize: 14,
             fontWeight: FontWeight.w500,
